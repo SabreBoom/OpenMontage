@@ -3,6 +3,10 @@
     "firecrawl": {
       "type": "http",
       "url": "https://mcp.firecrawl.dev/v2/mcp-oauth"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
     }
   }
 }
