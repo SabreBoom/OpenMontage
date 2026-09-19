@@ -6,7 +6,28 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest"]
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium"
+      ]
+    },
+    "blender": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-for-blender"
+      ],
+      "env": {}
+    },
+    "threejs-devtools-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "threejs-devtools-mcp"
+      ],
+      "env": {}
     }
   }
 }
