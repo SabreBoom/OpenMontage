@@ -28,6 +28,15 @@
         "threejs-devtools-mcp"
       ],
       "env": {}
+    },
+    "fal-ai": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "fal-ai-mcp"
+      ],
+      "env": {}
     }
   }
 }
