@@ -1,0 +1,49 @@
+{
+  "mcpServers": {
+    "firecrawl": {
+      "type": "http",
+      "url": "https://mcp.firecrawl.dev/v2/mcp-oauth"
+    },
+    "21st": {
+      "type": "http",
+      "url": "https://21st.dev/api/mcp",
+      "headers": {
+        "x-api-key": "${API_KEY_21ST}"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium"
+      ]
+    },
+    "blender": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-for-blender"
+      ],
+      "env": {}
+    },
+    "threejs-devtools-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "threejs-devtools-mcp"
+      ],
+      "env": {}
+    },
+    "fal-ai": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "fal-ai-mcp"
+      ],
+      "env": {}
+    }
+  }
+}
