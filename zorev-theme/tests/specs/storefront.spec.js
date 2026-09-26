@@ -113,10 +113,14 @@ test.describe('storefront', () => {
     expect(await page.evaluate(() => window.__zorevNoReload)).toBe(true);
     const j = await cart(page); expect(j.item_count).toBe(3);
     await expect(page.locator('[data-cart-total]')).toContainText('$' + (j.total_price / 100).toFixed(2));
-    // remove everything
+    // remove everything; the lines block pointer events (aria-busy) while a
+    // change is in flight, which is the double-submit guard working
+    const idle = () => page.waitForFunction(() => !document.querySelector('[data-cart-lines][aria-busy="true"]'));
     while (await page.locator('.zline').count()) {
+      await idle();
+      const before = await page.locator('.zline').count();
       await page.locator('.zline').first().getByRole('button', { name: 'Remove' }).click();
-      await page.waitForTimeout(600);
+      await page.waitForFunction(n => document.querySelectorAll('.zline').length < n, before);
     }
     await expect(page.locator('.zcart__empty')).toBeVisible();
     await expect(page.locator('.zcart__empty a.btn').first()).toBeVisible();
