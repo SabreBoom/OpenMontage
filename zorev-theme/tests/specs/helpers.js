@@ -1,22 +1,28 @@
 // Shared helpers. Product and variant ids are the real store's; prices are
 // the store's intended offers and are asserted against what Shopify's own
 // cart returns, never against numbers the theme computes.
+const transport = require('./transport');
+
 const PREVIEW = process.env.PREVIEW_THEME_ID || '';
 
 const GODA = { handle: 'goda-pheromone-perfume-oil', product_id: 9424930930939, black: 49337208045819, white: 49337208078587, citrus: 49337208111355, neutral: 49337208144123, price: 4000 };
 const HOYGI = { handle: 'hoygi-calcium-multi-balm', product_id: 9424931160315, id: 49337209258235, price: 2500 };
 
-const BLOCK = /google-analytics|googletagmanager|monorail-edge|web-pixels|\/wpm@|preloads\.js|shopifycloud\/shop-js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm/;
+const BLOCK = /google-analytics|googletagmanager|monorail-edge|web-pixels|\/wpm@|preloads\.js|shopifycloud\/shop-js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm|challenge-platform/;
 
 function withPreview(path) {
   if (!PREVIEW) return path;
   return path + (path.includes('?') ? '&' : '?') + 'preview_theme_id=' + PREVIEW;
 }
 
+const STORE_HOST = new URL(process.env.BASE_URL || 'https://www.zorev.org').host;
+
 async function prep(page) {
   // Third-party beacons make "networkidle" unreachable and add nothing to
   // what is under test. Console errors from these are not the theme's.
-  await page.route('**/*', r => (BLOCK.test(r.request().url()) ? r.abort() : r.continue()));
+  // The store's own dynamic requests go through transport.js (see there
+  // for why); the real cart and the real discount engine are what answer.
+  await transport.install(page, STORE_HOST, BLOCK);
 }
 
 async function go(page, path, opts) {
