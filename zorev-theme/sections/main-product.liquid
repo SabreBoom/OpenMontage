@@ -500,9 +500,6 @@
     .pairc__tag{margin:4px 0 0;font-size:var(--zv-t-fine);color:var(--zv-moss-strong);max-width:none}
     .pairc__act{grid-column:1 / -1;display:flex;gap:var(--zv-2);flex-wrap:wrap;align-items:flex-end}
     .pairc__pick{flex:1 1 150px;display:grid;gap:4px}
-    /* Under 480px the option select and the button share too little width
-       and the button wraps; give each the full row instead. */
-    @media (max-width:479px){ .pairc__pick,.pairc__btn{flex-basis:100%} }
     .pairc__picklabel{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
       text-transform:uppercase;color:var(--zv-moss-strong)}
     .pairc__pick select{width:100%;min-height:48px;padding:0 var(--zv-4);border-radius:var(--zv-r-pill);

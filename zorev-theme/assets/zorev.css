@@ -163,6 +163,10 @@ p{ margin: 0 0 var(--zv-4); color: var(--zv-text-2); max-width: var(--zv-measure
 /* ---- product page ---- */
 .pdp{ display: grid; gap: var(--zv-7); grid-template-columns: 1fr; }
 @media (min-width: 900px){ .pdp{ grid-template-columns: 1.02fr .98fr; align-items: start; } }
+/* Pair card (sections/main-product.liquid): under 480px the option select
+   and the button share too little width and the button wraps, so each
+   takes the full row. */
+@media (max-width: 479px){ .pairc__pick, .pairc__btn{ flex-basis: 100%; } }
 .pdp__media{ display: grid; gap: var(--zv-3); }
 .pdp__thumbs{ display: flex; gap: var(--zv-2); flex-wrap: wrap; }
 .pdp__thumb{
