@@ -17,8 +17,9 @@ const os = require('os');
 const path = require('path');
 
 const FORWARD = new Set(['accept', 'accept-language', 'content-type', 'origin', 'referer', 'x-requested-with', 'user-agent']);
-// A "HeadlessChrome" user agent is challenged on sight; the browser contexts
-// used by the tests set a normal one, and this is the fallback when they do not.
+// The user agent the store sees. Always this one: a "HeadlessChrome" UA is
+// challenged on sight, and Playwright's device UAs carry build numbers no
+// released Chrome has, which is a second anomaly for bot scoring.
 const UA_FALLBACK = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
 const DROP = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'connection', 'keep-alive', 'set-cookie']);
 let seq = 0;
@@ -43,11 +44,17 @@ async function curlFetch(url, opts) {
 function curlOnce(url, { method = 'GET', headers = {}, body = null, jar }) {
   return new Promise((resolve, reject) => {
     const headerFile = path.join(os.tmpdir(), `zv-hdr-${process.pid}-${++seq}.txt`);
-    const args = ['-sS', '-L', '--max-redirs', '5', '--max-time', '45', '-D', headerFile, '-o', '-', '-b', jar, '-c', jar, '-H', 'Accept-Encoding: identity'];
+    // --compressed: ask for and decode gzip/br like any browser would (an
+    // "identity"-only client is an anomaly bot scoring notices); the
+    // content-encoding header is dropped from what the browser receives.
+    const args = ['-sS', '-L', '--max-redirs', '5', '--max-time', '45', '--compressed', '-D', headerFile, '-o', '-', '-b', jar, '-c', jar];
+    let sentUA = false;
     for (const [k, v] of Object.entries(headers)) {
       if (!FORWARD.has(k.toLowerCase())) continue;
-      args.push('-H', `${k}: ${k.toLowerCase() === 'user-agent' && /HeadlessChrome/.test(v) ? UA_FALLBACK : v}`);
+      if (k.toLowerCase() === 'user-agent') { sentUA = true; args.push('-H', `${k}: ${UA_FALLBACK}`); continue; }
+      args.push('-H', `${k}: ${v}`);
     }
+    if (!sentUA) args.push('-H', `User-Agent: ${UA_FALLBACK}`);
     // Methods that carry a body always send one, even when it is empty, so
     // the request has a Content-Length (Shopify answers 411 without it).
     const withBody = method === 'POST' || method === 'PUT' || method === 'PATCH';
