@@ -98,7 +98,7 @@ async function install(page, storeHost, block) {
     const started = Date.now();
     try {
       const r = await curlFetch(url, { method: req.method(), headers: req.headers(), body: req.postDataBuffer(), jar });
-      if (process.env.ZV_TRANSPORT_DEBUG) process.stderr.write(`[transport] ${r.status} ${req.method()} ${url.slice(0, 90)} ${Date.now() - started}ms ${r.body.length}B ${r.headers['content-type'] || ''}\n`);
+      if (process.env.ZV_TRANSPORT_DEBUG) process.stderr.write(`[transport] ${r.status} ${req.method()} ${url.slice(0, 90)} ${Date.now() - started}ms sent=${(req.postDataBuffer() || '').length}B got=${r.body.length}B ${r.headers['content-type'] || ''}\n`);
       return route.fulfill({ status: r.status, headers: r.headers, body: r.body });
     } catch (e) {
       if (process.env.ZV_TRANSPORT_DEBUG) process.stderr.write(`[transport] FAIL ${req.method()} ${url.slice(0, 90)} ${String(e).slice(0, 120)}\n`);
