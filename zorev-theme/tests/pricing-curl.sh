@@ -24,15 +24,16 @@ api() { # method path [json]
   curl "${args[@]}" -w '\n%{http_code}' "$BASE$p"
 }
 
-if [ -n "${PREVIEW_THEME_ID:-}" ]; then
-  curl -sS -o /dev/null -A "$UA" -b "$JAR" -c "$JAR" -L "$BASE/?preview_theme_id=$PREVIEW_THEME_ID"
-fi
+# The cart API is theme-independent, so PREVIEW_THEME_ID is accepted for
+# symmetry with the Playwright suite but changes nothing here.
 
 pass=0; fail=0
 check() { # name items_json expected_total expected_discount [expected_title]
   local name="$1" items="$2" total="$3" saved="$4" title="${5:-}"
   local r code body
-  r=$(api POST /cart/clear.js '{}'); sleep "$GAP"
+  # A new jar per case is a new, empty cart. Not POST /cart/clear.js: a clear
+  # followed by an add is a cart-bot signature the store challenges on sight.
+  : > "$JAR"
   r=$(api POST /cart/add.js "{\"items\":$items}"); code="${r##*$'\n'}"
   if [ "$code" != 200 ]; then echo "FAIL  $name: add returned HTTP $code"; fail=$((fail+1)); sleep "$GAP"; return; fi
   sleep "$GAP"
@@ -65,6 +66,5 @@ check "HOYGI x3 = \$63 (save \$12)"           "[{\"id\":$HOYGI,\"quantity\":3}]"
 check "Pair GODA + HOYGI = \$59 (save \$6)"   "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$HOYGI,\"quantity\":1}]" 5900 600 "The ZOREV Pair · Save \$6"
 check "GODA x2 + HOYGI x1 = \$89"             "[{\"id\":$GODA_BLACK,\"quantity\":2},{\"id\":$HOYGI,\"quantity\":1}]" 8900 1600
 check "GODA x1 + HOYGI x2 = \$78"             "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$HOYGI,\"quantity\":2}]" 7800 1200
-api POST /cart/clear.js '{}' >/dev/null
 echo "passed=$pass failed=$fail"
 [ "$fail" = 0 ]

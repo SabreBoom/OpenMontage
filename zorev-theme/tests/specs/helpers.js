@@ -59,8 +59,12 @@ async function api(page, path, method, body) {
   return JSON.parse(last.text);
 }
 
+// A fresh, empty cart. Not POST /cart/clear.js: a clear followed by an add
+// is a cart-bot signature the store challenges on sight (measured). Every
+// test starts in a new browser context with its own jar, so a fresh cart is
+// a fresh jar; this is only needed mid-test.
 async function clearCart(page) {
-  return api(page, '/cart/clear.js', 'POST');
+  transport.freshCart(page);
 }
 
 async function addItems(page, items) {

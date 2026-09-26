@@ -1,11 +1,12 @@
 // Real cart pricing. Every expectation is checked against /cart.js, which
 // is Shopify's discount engine talking — the theme never computes these.
 const { test, expect } = require('@playwright/test');
-const { GODA, HOYGI, prep, go, clearCart, addItems, cart, discountTitles } = require('./helpers');
+const { GODA, HOYGI, prep, go, addItems, cart, discountTitles } = require('./helpers');
 
 test.describe('Shopify discount engine', () => {
-  test.beforeEach(async ({ page }) => { await prep(page); await go(page, '/'); await clearCart(page); });
-  test.afterEach(async ({ page }) => { await clearCart(page).catch(() => {}); });
+  // Each test runs in a new browser context with its own cookie jar, so its
+  // cart is new and empty; nothing is cleared before or after.
+  test.beforeEach(async ({ page }) => { await prep(page); await go(page, '/'); });
 
   const cases = [
     { name: 'GODA x1 = $40',            items: [{ id: GODA.black, quantity: 1 }], total: 4000, saved: 0 },

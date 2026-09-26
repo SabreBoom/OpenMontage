@@ -4,8 +4,9 @@ const { test, expect } = require('@playwright/test');
 const { GODA, HOYGI, prep, go, clearCart, addItems, cart, noOverflow } = require('./helpers');
 
 test.describe('storefront', () => {
-  test.beforeEach(async ({ page }) => { await prep(page); await go(page, '/'); await clearCart(page); });
-  test.afterEach(async ({ page }) => { await clearCart(page).catch(() => {}); });
+  // Each test runs in a new browser context with its own cookie jar, so its
+  // cart is new and empty; nothing is cleared before or after.
+  test.beforeEach(async ({ page }) => { await prep(page); await go(page, '/'); });
 
   test('homepage renders every section, no hidden reveals, no overflow', async ({ page }) => {
     await go(page, '/');

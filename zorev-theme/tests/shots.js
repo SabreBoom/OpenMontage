@@ -55,7 +55,9 @@ async function shoot(browser, w, name, spec) {
     await page.goto(withPreview('/'), { waitUntil: 'domcontentloaded', timeout: 45000 });
     await settle(page);
     // Real cart, real discount engine: the bag is set through Shopify's AJAX API from the page itself.
-    await page.evaluate(async () => { await fetch('/cart/clear.js', { method: 'POST', credentials: 'same-origin' }); });
+    // Every shot runs in a new context with its own cookie jar, so the bag is
+    // already empty; nothing is cleared (a clear followed by an add is a
+    // cart-bot signature the store challenges).
     if (spec.items) {
       const r = await page.evaluate(async items => { const x = await fetch('/cart/add.js', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ items }) }); return x.status; }, spec.items);
       res.addStatus = r;
@@ -78,7 +80,6 @@ async function shoot(browser, w, name, spec) {
     const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, h: document.documentElement.scrollHeight, theme: (window.Shopify && window.Shopify.theme && window.Shopify.theme.id), hidden: [...document.querySelectorAll('[data-zv-reveal]')].filter(e => getComputedStyle(e).opacity === '0').length, imgsBroken: [...document.images].filter(i => i.complete && i.naturalWidth === 0 && i.src).length, plates: document.querySelectorAll('.zv-cut--plate').length, cuts: document.querySelectorAll('.zv-cut').length, liquidErrors: (document.body.innerText.match(/Liquid error/g) || []).length }));
     await page.screenshot({ path: `${out}/${name}-${w}.png`, fullPage: !spec.viewportOnly });
     res = { ...res, overflow: m.sw > m.cw ? `${m.sw}>${m.cw}` : 'ok', h: m.h, theme: m.theme, hiddenReveals: m.hidden, brokenImgs: m.imgsBroken, plates: m.plates, cuts: m.cuts, liquidErrors: m.liquidErrors, errors };
-    await page.evaluate(async () => { await fetch('/cart/clear.js', { method: 'POST', credentials: 'same-origin' }); }).catch(() => {});
   } catch (e) { res.error = String(e).slice(0, 200); }
   await ctx.close();
   return res;

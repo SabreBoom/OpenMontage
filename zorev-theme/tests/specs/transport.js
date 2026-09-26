@@ -89,10 +89,25 @@ function curlOnce(url, { method = 'GET', headers = {}, body = null, jar }) {
   });
 }
 
-// Installs the transport on a page for one store host. Returns the jar path.
+const states = new WeakMap();
+function newJar() { return path.join(os.tmpdir(), `zv-jar-${process.pid}-${Date.now()}-${++seq}.txt`); }
+
+// A fresh, empty cart for the page: the cookie jar is replaced, so the next
+// cart call starts a new cart. This is how the tests reset state instead of
+// POST /cart/clear.js, because a clear followed by an add is a cart-bot
+// signature the store's bot management challenges on sight.
+function freshCart(page) {
+  const state = states.get(page);
+  if (!state) return;
+  try { fs.unlinkSync(state.jar); } catch (e) { /* already gone */ }
+  state.jar = newJar();
+}
+
+// Installs the transport on a page for one store host.
 async function install(page, storeHost, block) {
-  const jar = path.join(os.tmpdir(), `zv-jar-${process.pid}-${Date.now()}-${++seq}.txt`);
-  page.once('close', () => { try { fs.unlinkSync(jar); } catch (e) { /* already gone */ } });
+  const state = { jar: newJar() };
+  states.set(page, state);
+  page.once('close', () => { try { fs.unlinkSync(state.jar); } catch (e) { /* already gone */ } });
   await page.route('**/*', async route => {
     const req = route.request();
     const url = req.url();
@@ -102,7 +117,7 @@ async function install(page, storeHost, block) {
     if (u.host !== storeHost || u.pathname.startsWith('/cdn/')) return route.continue();
     const started = Date.now();
     try {
-      const r = await curlFetch(url, { method: req.method(), headers: req.headers(), body: req.postDataBuffer(), jar });
+      const r = await curlFetch(url, { method: req.method(), headers: req.headers(), body: req.postDataBuffer(), jar: state.jar });
       if (process.env.ZV_TRANSPORT_DEBUG) process.stderr.write(`[transport] ${r.status} ${req.method()} ${url.slice(0, 90)} ${Date.now() - started}ms sent=${(req.postDataBuffer() || '').length}B got=${r.body.length}B ${r.headers['content-type'] || ''}\n`);
       return route.fulfill({ status: r.status, headers: r.headers, body: r.body });
     } catch (e) {
@@ -110,7 +125,7 @@ async function install(page, storeHost, block) {
       return route.abort();
     }
   });
-  return jar;
+  return state;
 }
 
-module.exports = { curlFetch, install };
+module.exports = { curlFetch, install, freshCart };
