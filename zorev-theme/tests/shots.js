@@ -37,6 +37,13 @@ async function settle(page) {
   await page.addStyleTag({ content: '#preview-bar-iframe, #PBarNextFrameWrapper { display: none !important; }' }).catch(() => {});
   const decline = page.locator('#shopify-pc__banner__btn-decline');
   if (await decline.count()) await decline.first().click({ timeout: 3000 }).catch(() => {});
+  // Every image in the document must have finished (Shopify's CDN resizes a
+  // new srcset candidate on first request, which can take seconds), else a
+  // shot shows an empty stage where a product is still arriving.
+  await page.evaluate(() => Promise.race([
+    Promise.all([...document.images].map(i => (i.complete ? null : new Promise(r => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); })))),
+    new Promise(r => setTimeout(r, 12000)),
+  ])).catch(() => {});
   await page.waitForTimeout(400);
 }
 
