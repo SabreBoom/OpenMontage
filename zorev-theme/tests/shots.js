@@ -85,7 +85,20 @@ async function shoot(browser, w, name, spec) {
       });
     }
     const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, h: document.documentElement.scrollHeight, theme: (window.Shopify && window.Shopify.theme && window.Shopify.theme.id), hidden: [...document.querySelectorAll('[data-zv-reveal]')].filter(e => getComputedStyle(e).opacity === '0').length, imgsBroken: [...document.images].filter(i => i.complete && i.naturalWidth === 0 && i.src).length, plates: document.querySelectorAll('.zv-cut--plate').length, cuts: document.querySelectorAll('.zv-cut').length, liquidErrors: (document.body.innerText.match(/Liquid error/g) || []).length }));
-    await page.screenshot({ path: `${out}/${name}-${w}.png`, fullPage: !spec.viewportOnly });
+    if (process.env.ZV_SHOT_DEBUG) console.error('[shot-debug]', name, w, JSON.stringify(await page.evaluate(() => { const b = document.querySelector('.zhp__obj--b'); if (!b) return null; const i = b.querySelector('img'); const r = b.getBoundingClientRect(); return { t: b.getAttribute('style'), x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), complete: i.complete, nat: i.naturalWidth, src: (i.currentSrc || '').slice(-30), op: getComputedStyle(b).opacity, anim: getComputedStyle(b).animationName.slice(0, 12), sy: window.scrollY }; })));
+    // A full-page capture resizes the viewport to the whole document in one
+    // step and paints during the resize, which can catch a transformed
+    // layer mid-update (the hero's back object went missing this way). So
+    // the viewport is sized to the page first, given a moment to settle,
+    // and then captured as a plain viewport shot.
+    if (spec.viewportOnly) {
+      await page.screenshot({ path: `${out}/${name}-${w}.png` });
+    } else {
+      const fullH = Math.min(await page.evaluate(() => document.documentElement.scrollHeight), 16000);
+      await page.setViewportSize({ width: w, height: fullH });
+      await page.waitForTimeout(700);
+      await page.screenshot({ path: `${out}/${name}-${w}.png` });
+    }
     res = { ...res, overflow: m.sw > m.cw ? `${m.sw}>${m.cw}` : 'ok', h: m.h, theme: m.theme, hiddenReveals: m.hidden, brokenImgs: m.imgsBroken, plates: m.plates, cuts: m.cuts, liquidErrors: m.liquidErrors, errors };
   } catch (e) { res.error = String(e).slice(0, 200); }
   await ctx.close();
