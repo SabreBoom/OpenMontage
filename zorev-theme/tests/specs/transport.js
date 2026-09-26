@@ -23,7 +23,24 @@ const UA_FALLBACK = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, 
 const DROP = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'connection', 'keep-alive', 'set-cookie']);
 let seq = 0;
 
-function curlFetch(url, { method = 'GET', headers = {}, body = null, jar }) {
+// Store requests are paced (one start every GAP_MS at most) so a test run
+// never looks like a burst to the store's rate limiting; a page has only a
+// handful of dynamic requests, so this costs little.
+const GAP_MS = Number(process.env.ZV_TRANSPORT_GAP_MS || 250);
+let nextSlot = 0;
+function paced() {
+  const now = Date.now();
+  const at = Math.max(now, nextSlot);
+  nextSlot = at + GAP_MS;
+  return new Promise(r => setTimeout(r, at - now));
+}
+
+async function curlFetch(url, opts) {
+  await paced();
+  return curlOnce(url, opts);
+}
+
+function curlOnce(url, { method = 'GET', headers = {}, body = null, jar }) {
   return new Promise((resolve, reject) => {
     const headerFile = path.join(os.tmpdir(), `zv-hdr-${process.pid}-${++seq}.txt`);
     const args = ['-sS', '-L', '--max-redirs', '5', '--max-time', '45', '-D', headerFile, '-o', '-', '-b', jar, '-c', jar, '-H', 'Accept-Encoding: identity'];

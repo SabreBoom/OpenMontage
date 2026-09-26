@@ -17,7 +17,9 @@ module.exports = defineConfig({
   expect: { timeout: 15000 },
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 1,
+  // No automatic retries: a retry doubles the traffic a failing test sends
+  // the store, and a pricing failure is a real finding, not noise.
+  retries: Number(process.env.RETRIES || 0),
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'report' }]],
   use: {
     baseURL: process.env.BASE_URL || 'https://www.zorev.org',
