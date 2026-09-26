@@ -16,7 +16,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const FORWARD = new Set(['accept', 'accept-language', 'content-type', 'origin', 'referer', 'x-requested-with', 'user-agent']);
+// Only what the request needs to be understood. A half-browser header set
+// (origin, referer, accept-language, Chrome's accept string, but none of
+// the client hints a real Chrome sends) scores as an anomaly and gets
+// challenged; the minimal profile, which is what plain curl sends, has not
+// been challenged once in this store's testing.
+const FORWARD = new Set(['accept', 'content-type', 'user-agent']);
 // The user agent the store sees. Always this one: a "HeadlessChrome" UA is
 // challenged on sight, and Playwright's device UAs carry build numbers no
 // released Chrome has, which is a second anomaly for bot scoring.
