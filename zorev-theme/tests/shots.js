@@ -25,7 +25,9 @@ const allPages = {
 };
 const pages = (process.env.PAGES || 'home,goda,hoygi,cart,cartfull,drawer,menu').split(',').map(k => [k, allPages[k]]);
 const widths = (process.env.WIDTHS || '360,375,390,412,768,1024,1280,1440,1920').split(',').map(Number);
-const BLOCK = /google-analytics|googletagmanager|monorail-edge|web-pixels|\/wpm@|preloads\.js|shopifycloud\/shop-js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm|challenge-platform/;
+// Same list as specs/helpers.js: analytics and telemetry that is not under
+// test and whose volume alone trips the store's rate limiting.
+const BLOCK = /google-analytics|googletagmanager|monorail|web-pixels|\/wpm@|preloads\.js|shopifycloud\/shop-js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm|challenge-platform|\.well-known\/shopify|\/api\/collect|\/api\/unstable\/graphql|privacy-banner|consent-tracking/;
 const withPreview = p => base + p + (previewId ? (p.includes('?') ? '&' : '?') + 'preview_theme_id=' + previewId : '');
 
 async function settle(page) {

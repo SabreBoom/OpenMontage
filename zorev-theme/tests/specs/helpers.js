@@ -8,7 +8,11 @@ const PREVIEW = process.env.PREVIEW_THEME_ID || '';
 const GODA = { handle: 'goda-pheromone-perfume-oil', product_id: 9424930930939, black: 49337208045819, white: 49337208078587, citrus: 49337208111355, neutral: 49337208144123, price: 4000 };
 const HOYGI = { handle: 'hoygi-calcium-multi-balm', product_id: 9424931160315, id: 49337209258235, price: 2500 };
 
-const BLOCK = /google-analytics|googletagmanager|monorail-edge|web-pixels|\/wpm@|preloads\.js|shopifycloud\/shop-js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm|challenge-platform/;
+// Third-party and Shopify analytics traffic: beacons, pixels, consent and
+// the storefront's own telemetry POSTs (monorail batches, /api/collect,
+// fec/produce). None of it is under test, and on this store its volume
+// alone is enough to trip the cart endpoints' rate limiting.
+const BLOCK = /google-analytics|googletagmanager|monorail|web-pixels|\/wpm@|preloads\.js|shopifycloud\/shop-js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm|challenge-platform|\.well-known\/shopify|\/api\/collect|\/api\/unstable\/graphql|privacy-banner|consent-tracking/;
 
 function withPreview(path) {
   if (!PREVIEW) return path;
