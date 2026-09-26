@@ -1,0 +1,418 @@
+{%- comment -%}
+  ZOREV — slide-out cart drawer.
+
+  The shell is rendered server-side so the panel and its focus anchors exist
+  before any JS runs; the lines themselves are painted from /cart.js by
+  zorev.js. That split matters: a drawer whose entire markup is client-built
+  flashes empty on open, and a drawer built entirely in Liquid goes stale the
+  moment a line changes.
+
+  Every control is a real <button> inside a labelled dialog, so the drawer is
+  reachable by keyboard and announced by a screen reader. With JS off the
+  header cart link is an ordinary <a href="/cart"> and this never opens — the
+  cart page is the fallback, not a dead end.
+
+  The panel used to be a hardcoded near-black (rgba(23,19,24,.94)) from the
+  old dark design. Once the palette moved to warm paper, the text tokens
+  resolved to ink and the whole drawer became dark text on a dark panel —
+  unreadable, on the one surface where that matters most. It is warm paper
+  now, matching the header's mobile drawer, and its colours come from tokens
+  so this cannot drift again.
+{%- endcomment -%}
+
+<div class="cd" id="cart-drawer" data-cart-drawer
+     data-money-format="{{ shop.money_format | strip_html | escape }}"
+     aria-hidden="true" hidden>
+
+  <div class="cd__scrim" data-cd-close tabindex="-1"></div>
+
+  <aside class="cd__panel" role="dialog" aria-modal="true"
+         aria-labelledby="cd-title" tabindex="-1">
+
+    <header class="cd__head">
+      <h2 class="cd__title" id="cd-title">Your bag</h2>
+      <button class="cd__x" type="button" data-cd-close aria-label="Close bag">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+          <path d="M1 1l16 16M17 1L1 17" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        </svg>
+      </button>
+    </header>
+
+    {%- comment -%}
+      The pair offer follows the lines inside the same scrolling area, so it
+      reads as the next line of the bag ("and this goes with it") instead of
+      a card pinned above the total with empty space around it. It is still
+      a sibling of the body zorev.js repaints, so it is never wiped
+      mid-render. Filled by the script below from the real cart.
+    {%- endcomment -%}
+    <div class="cd__scroll">
+      <div class="cd__body" data-cd-body>
+        <p class="cd__loading fine">Loading your bag&hellip;</p>
+      </div>
+      <div class="cd__pair" data-cd-pair hidden></div>
+    </div>
+
+    <footer class="cd__foot" data-cd-foot hidden>
+      <div class="cd__savings" data-cd-savings hidden></div>
+      <div class="cd__row">
+        <span class="cd__rowk">Subtotal</span>
+        <span class="cd__rowv" data-cd-subtotal>&mdash;</span>
+      </div>
+      <p class="cd__note fine">Shipping is free, worldwide. Taxes, where they apply, are shown at checkout.</p>
+      <form action="{{ routes.cart_url }}" method="post">
+        <button class="btn btn--block" type="submit" name="checkout">Checkout</button>
+      </form>
+      <a class="cd__link fine" href="{{ routes.cart_url }}">View full bag</a>
+    </footer>
+
+    {%- comment -%} Announces line changes without moving focus. {%- endcomment -%}
+    <p class="visually-hidden" role="status" aria-live="polite" data-cd-live></p>
+  </aside>
+</div>
+
+
+{% render 'pair-data' %}
+{%- capture zic_check -%}{% render 'zicon', name: 'check' %}{%- endcapture -%}
+<script>
+/* The pair offer in the bag.
+
+   It only ever claims a saving Shopify will actually give. The engine's
+   rule, measured against the real discount engine rather than assumed:
+   the pair applies when the bag holds at least as many of product A as of
+   product B. So the offer appears in exactly two cases —
+     · some A, no B   → add one B      (A >= 1 = B)
+     · one B,  no A   → add one A      (1 = 1)
+   — and nowhere else. With two or more B and no A, one more A would not
+   trigger the saving, so nothing is offered.
+
+   The confirmation is stricter still: it appears only when Shopify's own
+   discount list for this cart contains the pair discount's title. */
+(function () {
+  'use strict';
+  /* The icon arrives JSON-escaped: the snippet's markup has line breaks,
+     and a raw newline inside a JS string literal is a syntax error. */
+  var ICON_CHECK = {{ zic_check | strip_newlines | json }};
+  var slot = document.querySelector('[data-cd-pair]');
+  var cfgEl = document.querySelector('[data-pair-config]');
+  if (!slot || !cfgEl) return;
+  var cfg; try { cfg = JSON.parse(cfgEl.textContent); } catch (e) { return; }
+  /* "Complete your ZOREV Pair", not "Complete your The ZOREV Pair". */
+  var bare = String(cfg.name || '').replace(/^the\s+/i, '');
+  var drawer = document.querySelector('[data-cart-drawer]');
+  var fmt = drawer ? drawer.getAttribute('data-money-format') : null;
+  if (fmt && fmt.indexOf('&') > -1) { var t = document.createElement('textarea'); t.innerHTML = fmt; fmt = t.value; }
+  function money(c) { return window.ZorevMoney ? window.ZorevMoney(c, fmt) : '$' + (c / 100).toFixed(2); }
+  /* Promotional figures read as "$6", "$59"; line prices and totals keep
+     their cents because they are what the customer is charged. */
+  function short(c) { var s = money(c); return c % 100 === 0 ? s.replace(/[.,]00(?=\D*$)/, '') : s; }
+  function esc(x) { return String(x == null ? '' : x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function qtyOf(c, pid) {
+    return (c.items || []).reduce(function (n, i) { return n + (i.product_id === pid ? i.quantity : 0); }, 0);
+  }
+  function firstAvailable(p) {
+    for (var i = 0; i < p.variants.length; i++) { if (p.variants[i].available) return p.variants[i]; }
+    return null;
+  }
+  function hide() { slot.hidden = true; slot.innerHTML = ''; slot.removeAttribute('data-state'); }
+
+  function confirmRow(amount) {
+    slot.hidden = false;
+    slot.setAttribute('data-state', 'applied');
+    slot.innerHTML =
+      '<p class="cd__pairok">' +
+        '<span class="cd__pairokic" aria-hidden="true">' + ICON_CHECK + '</span>' +
+        '<span><strong>' + esc(cfg.name) + '</strong> &middot; You&rsquo;re saving ' + esc(short(amount)) + '</span>' +
+      '</p>';
+  }
+
+  function offer(which, haveOther) {
+    var p = cfg[which], v = firstAvailable(p);
+    if (!v) { hide(); return; }
+    var both = cfg.a.price + cfg.b.price - cfg.save;
+    var line = haveOther > 1
+      ? esc(p.short) + ' for ' + esc(short(p.price - cfg.save)) + ' with your ' + esc(cfg[which === 'a' ? 'b' : 'a'].short)
+      : esc(short(both)) + ' together';
+    var pick = '';
+    var avail = p.variants.filter(function (x) { return x.available; });
+    if (avail.length > 1) {
+      pick = '<label class="cd__pairpick"><span class="cd__picklabel">' + esc(p.short) + ' option</span>' +
+        '<select data-cd-pairvar>' + avail.map(function (x) {
+          return '<option value="' + x.id + '">' + esc(x.title) + '</option>';
+        }).join('') + '</select></label>';
+    }
+    slot.hidden = false;
+    slot.setAttribute('data-state', 'offer');
+    slot.innerHTML =
+      '<div class="cd__paircard">' +
+        (p.image ? '<span class="cd__pairimg' + (p.cutout ? ' cd__pairimg--stage' : '') + '"><img src="' + esc(p.image) + '" alt="" width="56" height="56" loading="lazy"></span>' : '') +
+        '<div class="cd__pairtxt">' +
+          '<p class="cd__pairk">Complete your ' + esc(bare) + '</p>' +
+          '<p class="cd__pairh">Add ' + esc(p.short) + ' and save ' + esc(short(cfg.save)) + '</p>' +
+          '<p class="cd__pairl">' + line + '</p>' +
+        '</div>' +
+        '<div class="cd__pairact">' + pick +
+          '<button type="button" class="cd__pairbtn" data-cd-pairadd="' + (avail.length ? avail[0].id : v.id) + '">Add ' + esc(p.short) + '</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function render(c) {
+    if (!c || !c.item_count) { hide(); return; }
+    var a = qtyOf(c, cfg.a.id), b = qtyOf(c, cfg.b.id);
+    var list = window.ZorevDiscountsOf ? window.ZorevDiscountsOf(c) : [];
+    var hit = list.filter(function (d) { return d.title === cfg.title; })[0];
+    if (hit) { confirmRow(hit.amount); return; }
+    if (a >= 1 && b === 0) { offer('b', a); return; }
+    if (b === 1 && a === 0) { offer('a', b); return; }
+    hide();
+  }
+
+  document.addEventListener('cart:painted', function (e) { render(e.detail); });
+
+  slot.addEventListener('change', function (e) {
+    var sel = e.target.closest('[data-cd-pairvar]');
+    if (!sel) return;
+    var btn = slot.querySelector('[data-cd-pairadd]');
+    if (btn) btn.setAttribute('data-cd-pairadd', sel.value);
+  });
+
+  slot.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-cd-pairadd]');
+    if (!btn || btn.getAttribute('aria-busy') === 'true') return;
+    var label = btn.textContent;
+    btn.setAttribute('aria-busy', 'true');
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ items: [{ id: Number(btn.getAttribute('data-cd-pairadd')), quantity: 1 }] })
+    })
+      .then(function (r) { return r.ok ? r.json() : r.json().then(function (j) { throw new Error(j && j.description); }); })
+      .then(function () {
+        if (window.ZorevCart) { window.ZorevCart.say('Added to your bag.'); return window.ZorevCart.fetch(); }
+        document.dispatchEvent(new CustomEvent('cart:updated'));
+      })
+      .catch(function (err) {
+        btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = label;
+        if (window.ZorevCart) window.ZorevCart.say((err && err.message) || 'That could not be added. Please try again.');
+      });
+  });
+})();
+</script>
+
+<style>
+/* .visually-hidden lives in zorev-tokens.css. */
+
+/* ---------------------------------------------------------------- Cart drawer */
+html.cd-locked{overflow:hidden}
+
+/* Above the header (60) via the token scale rather than a guessed number. */
+.cd{position:fixed;inset:0;z-index:var(--zv-z-toast)}
+.cd[hidden]{display:none}
+.cd__scrim{
+  position:absolute;inset:0;
+  /* ink rather than pure black: the page behind it is warm, and #000 at 62%
+     reads as a grey hole rather than the page dimmed */
+  background:rgba(16,19,16,.52);
+  backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:0;transition:opacity var(--zv-d-drawer) var(--zv-ease);
+}
+.cd.is-open .cd__scrim{opacity:1}
+
+.cd__panel{
+  position:absolute;top:0;right:0;height:100%;
+  width:min(440px,100%);
+  display:flex;flex-direction:column;
+  background:var(--zv-warm);
+  color:var(--zv-ink);
+  border-left:1px solid var(--zv-line);
+  box-shadow:var(--zv-sh-4);
+  transform:translateX(100%);
+  transition:transform var(--zv-d-drawer) var(--zv-ease-drawer);
+  outline:none;
+  /* the notch and the home indicator both live inside this panel */
+  padding-top:env(safe-area-inset-top, 0px);
+}
+/* Solid, not frosted. At 94% the page behind still showed through as a
+   soft grey blob in the empty part of the bag — decoration that read as a
+   rendering fault. The scrim already separates the drawer from the page. */
+.cd.is-open .cd__panel{transform:none}
+
+.cd__head{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--zv-4);
+  padding:var(--zv-4) var(--zv-gutter);
+  border-bottom:1px solid var(--zv-line);flex:0 0 auto;
+}
+.cd__title{
+  font-family:var(--zv-sans);font-size:var(--zv-t-micro);font-weight:600;
+  letter-spacing:var(--zv-tr-caps);text-transform:uppercase;
+  color:var(--zv-ink);margin:0;
+}
+.cd__x{
+  width:44px;height:44px;min-width:44px;
+  display:grid;place-items:center;border-radius:50%;cursor:pointer;
+  background:transparent;border:1px solid var(--zv-line-input);color:var(--zv-text-2);
+  transition:color var(--zv-d-hover) var(--zv-ease),
+             border-color var(--zv-d-hover) var(--zv-ease),
+             background var(--zv-d-hover) var(--zv-ease);
+}
+@media (hover:hover) and (pointer:fine){
+  .cd__x:hover{color:var(--zv-ink);border-color:var(--zv-accent);background:var(--zv-bg-sunken)}
+}
+
+.cd__scroll{
+  flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.cd__body{padding:0 var(--zv-gutter)}
+.cd__body[aria-busy="true"]{opacity:.55}
+.cd__loading{padding-block:var(--zv-6)}
+.cd__empty{padding-block:var(--zv-8);display:grid;gap:var(--zv-4);justify-items:start}
+
+.cd__line{
+  display:grid;grid-template-columns:72px 1fr auto;gap:var(--zv-3);align-items:start;
+  padding:var(--zv-4) 0;border-bottom:1px solid var(--zv-line);
+}
+/* Supplier photography is shot on white, so the thumbnail carries the same
+   plate as the rest of the site — with the boundary token for an edge, or a
+   white square on warm paper has no shape. */
+.cd__thumb{
+  width:72px;height:72px;object-fit:contain;background:var(--zv-white);
+  border-radius:var(--zv-r-sm);
+  box-shadow:inset 0 0 0 1px rgba(16,19,16,.22);
+}
+.cd__thumb--empty{background:var(--zv-bg-sunken);box-shadow:inset 0 0 0 1px var(--zv-line-input)}
+/* A cutout sits on the sunken ground with a little air, not on a white plate. */
+.cd__thumb--stage{display:grid;place-items:center;padding:5px;background:var(--zv-bg-sunken);
+  box-shadow:inset 0 0 0 1px rgba(16,19,16,.08)}
+.cd__thumb--stage img{width:100%;height:100%;object-fit:contain;display:block}
+.cd__lineinfo{min-width:0}
+/* min-height 44, not just the text box: measured at 21px for a one-line name
+   and 43px for two, and this is the link back to the product from the bag.
+   The row is already ~108px tall (72px thumbnail, 44px quantity control), so
+   giving the name a real target box costs nothing visually. */
+.cd__name{
+  display:flex;align-items:center;min-height:44px;
+  font-family:var(--zv-serif);font-size:var(--zv-t-body);
+  line-height:var(--zv-lh-snug);color:var(--zv-ink);margin-bottom:var(--zv-1);
+  text-decoration:none;text-wrap:balance;
+}
+@media (hover:hover) and (pointer:fine){
+  .cd__name:hover{text-decoration:underline;text-underline-offset:3px}
+}
+.cd__var{margin:0 0 var(--zv-2);color:var(--zv-text-2);font-size:var(--zv-t-fine)}
+
+.cd__qty{display:inline-flex;align-items:center;
+  border:1px solid var(--zv-line-input);border-radius:var(--zv-r-pill);overflow:hidden}
+.cd__step{
+  width:44px;height:44px;min-width:44px;
+  display:grid;place-items:center;background:none;border:0;cursor:pointer;
+  color:var(--zv-text-2);font-size:1.05rem;line-height:1;
+  transition:color var(--zv-d-hover) var(--zv-ease),
+             background var(--zv-d-hover) var(--zv-ease);
+}
+@media (hover:hover) and (pointer:fine){
+  .cd__step:hover{color:var(--zv-ink);background:var(--zv-bg-sunken)}
+}
+.cd__n{min-width:2ch;text-align:center;font-variant-numeric:tabular-nums;
+  font-size:var(--zv-t-sm);color:var(--zv-ink)}
+
+.cd__lineend{display:grid;gap:var(--zv-2);justify-items:end;text-align:right}
+.cd__lp{color:var(--zv-ink);font-size:var(--zv-t-body);font-weight:600;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.cd__rm{
+  background:none;border:0;padding:0;cursor:pointer;
+  font-family:var(--zv-sans);font-size:var(--zv-t-fine);color:var(--zv-muted);
+  text-decoration:underline;text-underline-offset:3px;
+  /* The 44pt target is met by the invisible box, not the text. */
+  min-height:44px;display:inline-flex;align-items:center;
+}
+@media (hover:hover) and (pointer:fine){ .cd__rm:hover{color:var(--zv-ink)} }
+
+.cd__foot{
+  flex:0 0 auto;
+  padding:var(--zv-4) var(--zv-gutter) calc(var(--zv-4) + env(safe-area-inset-bottom));
+  border-top:1px solid var(--zv-line);
+  background:var(--zv-bg-sunken);
+  /* --zv-muted is 4.13:1 on this ground, so the tertiary token is re-pointed
+     here exactly as it is for the footer and the raised bands. */
+  --zv-text-3:var(--zv-moss-strong);
+  --text-3:var(--zv-moss-strong);
+}
+.cd__row{display:flex;justify-content:space-between;align-items:baseline;
+  gap:var(--zv-4);margin-bottom:var(--zv-1)}
+.cd__rowk{font-family:var(--zv-sans);font-size:var(--zv-t-micro);font-weight:600;
+  letter-spacing:var(--zv-tr-caps);text-transform:uppercase;color:var(--zv-text-3)}
+.cd__rowv{font-family:var(--zv-sans);font-size:var(--zv-t-h4);font-weight:600;
+  color:var(--zv-ink);font-variant-numeric:tabular-nums}
+.cd__note{margin:0 0 var(--zv-4);color:var(--zv-text-3)}
+.cd__link{display:inline-flex;align-items:center;min-height:44px;margin-top:var(--zv-2);
+  color:var(--zv-text-2);text-decoration:underline;text-underline-offset:3px}
+
+/* ---- itemised savings: Shopify's own discount titles and amounts ---- */
+.cd__savings{margin:0 0 var(--zv-3);padding-bottom:var(--zv-3);border-bottom:1px solid var(--zv-line)}
+.cd__disc{list-style:none;margin:0;padding:0;display:grid;gap:var(--zv-1)}
+.cd__disc li{display:flex;justify-content:space-between;align-items:baseline;gap:var(--zv-3);
+  font-size:var(--zv-t-fine);color:var(--zv-text-2)}
+.cd__disct{min-width:0}
+.cd__disca{font-variant-numeric:tabular-nums;color:var(--zv-forest);font-weight:600;white-space:nowrap}
+.cd__saved{display:flex;justify-content:space-between;margin:var(--zv-2) 0 0;max-width:none;
+  font-family:var(--zv-sans);font-size:var(--zv-t-sm);font-weight:600;color:var(--zv-forest);
+  font-variant-numeric:tabular-nums}
+
+/* ---- the pair offer ---- */
+.cd__pair{padding:var(--zv-4) var(--zv-gutter) var(--zv-5);
+  animation:cd-pair-in var(--zv-d-ui) var(--zv-ease) both}
+@keyframes cd-pair-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.cd__paircard{
+  display:grid;grid-template-columns:56px minmax(0,1fr);gap:var(--zv-3);align-items:center;
+  padding:var(--zv-4);border-radius:var(--zv-r-md);
+  background:var(--zv-bg-raised);box-shadow:0 0 0 1px rgba(16,19,16,.08);
+}
+.cd__pairimg{width:56px;height:56px;display:grid;place-items:center;border-radius:var(--zv-r-sm);
+  background:var(--zv-white);box-shadow:inset 0 0 0 1px rgba(16,19,16,.22);overflow:hidden}
+.cd__pairimg img{width:100%;height:100%;object-fit:contain;display:block}
+.cd__pairimg--stage{background:var(--zv-bg-sunken);box-shadow:inset 0 0 0 1px rgba(16,19,16,.08);padding:4px}
+.cd__pairtxt{min-width:0}
+.cd__pairk{margin:0;font-family:var(--zv-sans);font-size:var(--zv-t-micro);font-weight:600;
+  letter-spacing:var(--zv-tr-caps);text-transform:uppercase;color:var(--zv-forest)}
+.cd__pairh{margin:2px 0 0;font-family:var(--zv-serif);font-size:var(--zv-t-body);
+  line-height:var(--zv-lh-snug);color:var(--zv-ink)}
+.cd__pairl{margin:2px 0 0;font-size:var(--zv-t-fine);color:var(--zv-text-2);font-variant-numeric:tabular-nums}
+.cd__pairact{grid-column:1 / -1;display:flex;gap:var(--zv-2);align-items:flex-end}
+.cd__pairpick{flex:1 1 auto;min-width:0;display:grid;gap:4px}
+.cd__picklabel{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
+  text-transform:uppercase;color:var(--zv-moss-strong)}
+.cd__pairpick select{width:100%;min-height:44px;padding:0 var(--zv-3);border-radius:var(--zv-r-pill);
+  border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);
+  font:inherit;font-size:var(--zv-t-sm)}
+/* Outline, not filled: Checkout is the one primary action in the bag. */
+.cd__pairbtn{flex:1 0 auto;min-height:44px;padding:0 var(--zv-5);border-radius:var(--zv-r-pill);
+  border:1px solid var(--zv-forest);background:transparent;color:var(--zv-forest);cursor:pointer;
+  font-family:var(--zv-sans);font-size:var(--zv-t-fine);font-weight:600;
+  letter-spacing:var(--zv-tr-wide);text-transform:uppercase;
+  transition:background var(--zv-d-hover) var(--zv-ease),color var(--zv-d-hover) var(--zv-ease),transform var(--zv-d-press) var(--zv-ease)}
+@media (hover:hover) and (pointer:fine){ .cd__pairbtn:hover{background:var(--zv-forest);color:var(--zv-warm)} }
+.cd__pairbtn:active{transform:scale(.97)}
+.cd__pairbtn[aria-busy="true"]{cursor:progress;opacity:.8}
+.cd__pairbtn:focus-visible,.cd__pairpick select:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
+/* Applied: one quiet line, not a banner. */
+.cd__pairok{display:flex;align-items:center;gap:var(--zv-2);margin:0;max-width:none;
+  font-size:var(--zv-t-sm);color:var(--zv-forest)}
+.cd__pairok strong{font-weight:600}
+.cd__pairokic{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;
+  background:var(--zv-forest);color:var(--zv-warm);flex:0 0 auto}
+.cd__pairokic .zicon{width:14px;height:14px}
+@media(prefers-reduced-motion:reduce){.cd__pair{animation:none}}
+
+@media(max-width:520px){
+  .cd__panel{width:100%}
+  .cd__line{grid-template-columns:60px 1fr auto;gap:var(--zv-2)}
+  .cd__thumb{width:60px;height:60px}
+}
+@media(prefers-reduced-motion:reduce){
+  .cd__panel,.cd__scrim{transition-duration:120ms}
+}
+</style>

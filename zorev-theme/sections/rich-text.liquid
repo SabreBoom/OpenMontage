@@ -1,0 +1,45 @@
+{%- comment -%}
+  A quiet text band. Measure is capped by .zv-wrap--narrow rather than by a
+  character count on the paragraph, so a long line never runs the full 1240px
+  and becomes unreadable on a desktop.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+-%}
+
+<section class="zv-section{% if s.raised %} zsec--raised{% endif %}{% if s.dark %} zv-dark zsec--dark{% endif %}">
+  <div class="zv-wrap zv-wrap--narrow zsec__center" data-zv-reveal>
+    {%- if s.eyebrow != blank -%}
+      <span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>
+    {%- endif -%}
+    {%- if s.heading != blank -%}
+      <h2 class="zv-h2">{{ s.heading }}</h2>
+    {%- endif -%}
+    {%- if s.body != blank -%}
+      <div class="zv-lead zsec__lead">{{ s.body }}</div>
+    {%- endif -%}
+    {%- if s.cta_label != blank -%}
+      <a class="zv-btn zsec__cta" href="{{ s.cta_link | default: routes.all_products_collection_url }}">
+        {{ s.cta_label | escape }}
+      </a>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Rich text",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading" },
+    { "type": "richtext", "id": "body", "label": "Body" },
+    { "type": "text", "id": "cta_label", "label": "Button" },
+    { "type": "url", "id": "cta_link", "label": "Button link" },
+    { "type": "checkbox", "id": "raised", "label": "Raised background", "default": false },
+    { "type": "checkbox", "id": "dark", "label": "Dark band", "default": false,
+      "info": "Flips the section onto the ink ground. Use it once on a page at most." }
+  ],
+  "presets": [{ "name": "Rich text" }]
+}
+{% endschema %}

@@ -1,0 +1,53 @@
+{%- comment -%}
+  The pair offer as data, rendered once per page for the scripts that need
+  it (cart drawer, product page). Prices and variants come from the real
+  products; the saving and the discount title from theme settings, which
+  have to match the automatic discount in Discounts.
+
+  Shopify's Buy X Get Y engine only applies the pair when the bag holds at
+  least as many of product A (the one that receives the saving) as of
+  product B. That rule was measured against the real discount engine, not
+  assumed, and every script that reads this follows it.
+{%- endcomment -%}
+{%- liquid
+  assign pa = settings.pair_product_a
+  assign pb = settings.pair_product_b
+  assign ca = pa.metafields.zorev.cutouts.value
+  assign cb = pb.metafields.zorev.cutouts.value
+  assign img_a = pa.featured_media.preview_image
+  assign img_b = pb.featured_media.preview_image
+  comment
+    The file lists iterate but do not index (ca[0] is not an image), so the
+    first cutout is picked with a one-item loop.
+  endcomment
+  for c in ca limit: 1
+    assign img_a = c
+  endfor
+  for c in cb limit: 1
+    assign img_b = c
+  endfor
+-%}
+{%- if settings.pair_enabled and pa != blank and pb != blank and pa.title != blank and pb.title != blank -%}
+<script type="application/json" data-pair-config>
+{
+  "save": {{ settings.pair_save_cents | default: 0 | json }},
+  "title": {{ settings.pair_discount_title | json }},
+  "name": {{ settings.pair_name | json }},
+  "tagline": {{ settings.pair_tagline | json }},
+  "a": {
+    "id": {{ pa.id | json }}, "short": {{ pa.vendor | upcase | json }}, "title": {{ pa.title | json }},
+    "url": {{ pa.url | json }}, "price": {{ pa.price | json }},
+    "image": {{ img_a | image_url: width: 160 | json }},
+    "cutout": {% if ca.size > 0 %}true{% else %}false{% endif %},
+    "variants": [{%- for v in pa.variants -%}{%- capture vl -%}{% render 'zvlabel', t: v.title %}{%- endcapture -%}{"id":{{ v.id }},"title":{{ vl | strip | json }},"available":{{ v.available }}}{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
+  },
+  "b": {
+    "id": {{ pb.id | json }}, "short": {{ pb.vendor | upcase | json }}, "title": {{ pb.title | json }},
+    "url": {{ pb.url | json }}, "price": {{ pb.price | json }},
+    "image": {{ img_b | image_url: width: 160 | json }},
+    "cutout": {% if cb.size > 0 %}true{% else %}false{% endif %},
+    "variants": [{%- for v in pb.variants -%}{%- capture vl -%}{% render 'zvlabel', t: v.title %}{%- endcapture -%}{"id":{{ v.id }},"title":{{ vl | strip | json }},"available":{{ v.available }}}{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]
+  }
+}
+</script>
+{%- endif -%}

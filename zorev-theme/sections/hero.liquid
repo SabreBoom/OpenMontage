@@ -1,0 +1,595 @@
+{%- comment -%}
+  ZOREV — cinematic hero. Five layers, in paint order:
+
+    1  poster      real responsive <picture>, the LCP. Never lazy, never
+                   behind JS, separate mobile composition (not a shrink).
+    2a near        a second crop of the same plate, masked to the lower
+                   frame and drifting at a different rate — parallax depth.
+    2b light       WebGL warm light field, screen-blended: light moving
+                   through canopy. This is the "wind" cue.
+    2c video       optional real footage, only if a URL is set AND it can
+                   actually play. It sits ON TOP of the poster and fades in,
+                   so a missing/slow/broken video is simply never seen.
+    3  veil        readability scrim, weighted left where the text lives.
+    4  copy        eyebrow / h1 / body
+    5  cta         buttons
+
+  Why the motion is built from a still rather than a clip: the only footage
+  in this shop's Files is 640x800, two seconds long. That is a portrait
+  product loop from the old fragrance build — it cannot fill a wide desktop
+  hero, and upscaling 640px to 1920 looks exactly like the "AI slop" this is
+  supposed to avoid. So the movement here is a slow camera push on a real
+  photograph plus a parallax foreground and a drifting light field: all
+  transform and opacity, all on the compositor, zero extra bytes. Drop a
+  real 6-12s wide clip into "Video URL" and layer 2c takes over.
+
+  Nothing here animates a layout property. Nothing here touches the header.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign poster = s.poster
+  assign poster_m = s.poster_mobile
+  if poster_m == blank
+    assign poster_m = poster
+  endif
+  assign alt = poster.alt
+  if alt == blank
+    assign alt = s.poster_alt
+  endif
+-%}
+
+<section class="zhero zv-dark" id="zhero-{{ section.id }}" data-zhero
+         data-video="{{ s.video_url | strip | escape }}"
+         data-video-mobile="{{ s.video_url_mobile | strip | escape }}">
+
+  {%- comment -%} ---------------------------------------- 1 : poster / LCP {%- endcomment -%}
+  <div class="zhero__sky" data-zhero-sky>
+    {%- if poster != blank -%}
+      <picture>
+        {%- comment -%}
+          A genuinely different mobile composition: 3:4 portrait, cropped to
+          the side the detail sits on, so the phone gets a tall frame with
+          its own negative space instead of a letterboxed sliver of the
+          desktop plate.
+        {%- endcomment -%}
+        <source media="(max-width: 699px)"
+                srcset="{{ poster_m | image_url: width: 640,  height: 854,  crop: s.focal_mobile }} 640w,
+                        {{ poster_m | image_url: width: 860,  height: 1147, crop: s.focal_mobile }} 860w,
+                        {{ poster_m | image_url: width: 1080, height: 1440, crop: s.focal_mobile }} 1080w"
+                sizes="100vw">
+        <source media="(max-width: 1023px)"
+                srcset="{{ poster | image_url: width: 1024, height: 1024, crop: s.focal }} 1024w,
+                        {{ poster | image_url: width: 1536, height: 1536, crop: s.focal }} 1536w"
+                sizes="100vw">
+        <img class="zhero__posterimg"
+             src="{{ poster | image_url: width: 1600 }}"
+             srcset="{{ poster | image_url: width: 1200 }} 1200w,
+                     {{ poster | image_url: width: 1600 }} 1600w,
+                     {{ poster | image_url: width: 2048 }} 2048w"
+             sizes="100vw"
+             width="{{ poster.width | default: 2048 }}"
+             height="{{ poster.height | default: 1152 }}"
+             alt="{{ alt | strip_html | escape }}"
+             fetchpriority="high" decoding="async">
+      </picture>
+    {%- endif -%}
+  </div>
+
+  {%- comment -%} -------------------------------------- 2a : parallax depth {%- endcomment -%}
+  {%- if poster != blank and s.motion -%}
+    <div class="zhero__near" data-zhero-near aria-hidden="true"
+         style="background-image:url({{ poster | image_url: width: 1400, height: 700, crop: 'bottom' }})"></div>
+  {%- endif -%}
+
+  {%- comment -%} ---------------------------------------- 2b : light / wind {%- endcomment -%}
+  {%- if s.motion -%}
+    <canvas class="zhero__light" data-zhero-light aria-hidden="true"></canvas>
+  {%- endif -%}
+
+  {%- comment -%} ----------------------------------- 2c : optional footage {%- endcomment -%}
+  {%- if s.motion -%}<div class="zhero__vid" data-zhero-vid aria-hidden="true"></div>{%- endif -%}
+
+  {%- comment -%} ------------------------------------------------- 3 : veil {%- endcomment -%}
+  <div class="zhero__veil" aria-hidden="true"></div>
+
+  <div class="zv-wrap zhero__in">
+    <div class="zhero__copy">
+      {%- if s.eyebrow != blank -%}
+        <span class="zv-eyebrow zhero__eyebrow">{{ s.eyebrow | escape }}</span>
+      {%- endif -%}
+      {%- if s.heading != blank -%}
+        <h1 class="zhero__h1">{{ s.heading }}</h1>
+      {%- endif -%}
+      {%- if s.body != blank -%}
+        <div class="zv-lead zhero__body">{{ s.body }}</div>
+      {%- endif -%}
+
+      {%- if s.cta_label != blank or s.cta2_label != blank -%}
+        <div class="zhero__cta">
+          {%- if s.cta_label != blank -%}
+            <a class="zv-btn zhero__cta1" href="{{ s.cta_link | default: routes.all_products_collection_url }}">
+              {{ s.cta_label | escape }}
+            </a>
+          {%- endif -%}
+          {%- if s.cta2_label != blank -%}
+            <a class="zv-btn zv-btn--ghost zhero__cta2" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">
+              {{ s.cta2_label | escape }}
+            </a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      {%- if s.note != blank -%}
+        <p class="zv-fine zhero__note">{{ s.note | escape }}</p>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+<style>
+  #zhero-{{ section.id }}{
+    position: relative;
+    display: grid; align-items: end;
+    overflow: hidden;
+    isolation: isolate;
+    /* A real ground underneath every layer, so a failed image, a blocked
+       CDN or a first paint before decode is still a considered dark frame
+       rather than a white flash or an empty box. */
+    background:
+      radial-gradient(70% 60% at 30% 24%, rgba(120,132,109,.22), transparent 70%),
+      radial-gradient(60% 50% at 84% 78%, rgba(38,55,44,.60), transparent 72%),
+      var(--zv-ink);
+    min-height: 92vh;
+    min-height: 92svh;
+  }
+  @media (min-width: 900px){
+    /* 80, not 88: the edge of the first light section shows below the
+       photograph on a laptop screen, so the page visibly continues. */
+    #zhero-{{ section.id }}{ min-height: 80vh; min-height: 80svh; align-items: center; }
+  }
+
+  /* ---------------------------------------------------- 1 : poster / LCP */
+  #zhero-{{ section.id }} .zhero__sky,
+  #zhero-{{ section.id }} .zhero__near,
+  #zhero-{{ section.id }} .zhero__light,
+  #zhero-{{ section.id }} .zhero__vid{
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  #zhero-{{ section.id }} .zhero__sky{ z-index: 0; }
+  #zhero-{{ section.id }} .zhero__sky picture{ display: block; width: 100%; height: 100%; }
+  #zhero-{{ section.id }} .zhero__posterimg{
+    width: 100%; height: 100%; display: block;
+    object-fit: cover;
+    object-position: {{ s.focal_x | default: 62 }}% {{ s.focal_y | default: 50 }}%;
+    /* the push happens on the image, so the section box never moves */
+    transform-origin: {{ s.focal_x | default: 62 }}% {{ s.focal_y | default: 50 }}%;
+  }
+  @media (max-width: 699px){
+    #zhero-{{ section.id }} .zhero__posterimg{
+      object-position: {{ s.focal_x_mobile | default: 50 }}% {{ s.focal_y_mobile | default: 42 }}%;
+      transform-origin: {{ s.focal_x_mobile | default: 50 }}% {{ s.focal_y_mobile | default: 42 }}%;
+    }
+  }
+
+  /* -------------------------------------------------- 2a : parallax depth */
+  #zhero-{{ section.id }} .zhero__near{
+    z-index: 1;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: 50% 100%;
+    /* only the lower frame, faded out upward: a foreground plane, not a
+       second full copy of the picture sitting on the first one */
+    -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 26%, transparent 58%);
+            mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,.72) 26%, transparent 58%);
+    opacity: .55;
+    will-change: transform;
+  }
+
+  /* ------------------------------------------------------ 2b : light field */
+  #zhero-{{ section.id }} .zhero__light{
+    z-index: 2;
+    width: 100%; height: 100%; display: block;
+    opacity: .42;
+  }
+  @supports (mix-blend-mode: screen){
+    #zhero-{{ section.id }} .zhero__light{ mix-blend-mode: screen; opacity: .58; }
+  }
+
+  /* --------------------------------------------------------- 2c : footage */
+  #zhero-{{ section.id }} .zhero__vid{ z-index: 3; overflow: hidden; }
+  #zhero-{{ section.id }} .zhero__vid video{
+    width: 100%; height: 100%; display: block;
+    object-fit: cover;
+    object-position: {{ s.focal_x | default: 62 }}% {{ s.focal_y | default: 50 }}%;
+    opacity: 0;
+    transition: opacity 900ms var(--zv-ease);
+  }
+  #zhero-{{ section.id }} .zhero__vid video.is-live{ opacity: 1; }
+
+  /* ------------------------------------------------------------- 3 : veil */
+  #zhero-{{ section.id }} .zhero__veil{
+    position: absolute; inset: 0; z-index: 4; pointer-events: none;
+    background:
+      linear-gradient(96deg,
+        rgba(16,19,16,.86) 0%,
+        rgba(16,19,16,.62) 34%,
+        rgba(16,19,16,.22) 64%,
+        rgba(16,19,16,.34) 100%),
+      linear-gradient(to top, rgba(16,19,16,.72) 0%, transparent 46%);
+  }
+  @media (max-width: 699px){
+    /* On a tall phone frame the copy sits low, so the weight moves to the
+       bottom instead of the left — otherwise the headline lands on the
+       brightest part of the portrait crop. */
+    #zhero-{{ section.id }} .zhero__veil{
+      background:
+        linear-gradient(to top, rgba(16,19,16,.92) 0%, rgba(16,19,16,.64) 34%, rgba(16,19,16,.18) 72%),
+        linear-gradient(to bottom, rgba(16,19,16,.42) 0%, transparent 34%);
+    }
+  }
+
+  /* --------------------------------------------------------- 4/5 : content */
+  #zhero-{{ section.id }} .zhero__in{
+    position: relative; z-index: 5;
+    padding-top: calc(var(--zv-9) + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--zv-8);
+  }
+  @media (min-width: 900px){
+    #zhero-{{ section.id }} .zhero__in{ padding-top: var(--zv-9); padding-bottom: var(--zv-9); }
+  }
+  /* The column is sized in rem and the headline is capped in ch inside it.
+     Capping the whole column at 20ch sounded tidy but it also clamped the
+     body copy, which then wrapped every four words and pushed the primary
+     CTA below a 900px-tall fold — the one thing the hero has to keep above
+     it. */
+  #zhero-{{ section.id }} .zhero__copy{
+    display: flex; flex-direction: column; align-items: flex-start;
+    gap: var(--zv-4);
+    max-width: min(36rem, 100%);
+  }
+  @media (max-width: 899px){ #zhero-{{ section.id }} .zhero__copy{ max-width: 100%; } }
+  /* Wide screens: room for the headline to set in two lines instead of
+     three, which lifts the buttons and reads as one confident statement. */
+  @media (min-width: 1100px){ #zhero-{{ section.id }} .zhero__copy{ max-width: min(46rem, 100%); } }
+  #zhero-{{ section.id }} .zhero__eyebrow{ color: var(--zv-sand); }
+  #zhero-{{ section.id }} .zhero__h1{
+    margin: 0;
+    font-family: var(--zv-serif); font-weight: 400;
+    font-size: var(--zv-t-display);
+    line-height: var(--zv-lh-tight);
+    letter-spacing: var(--zv-tr-tight);
+    color: var(--zv-warm);
+    text-wrap: balance;
+    /* two or three lines at display size, never four */
+    max-width: 19ch;
+    /* a hair of shadow so the headline survives a brighter frame than the
+       one this was tuned against */
+    text-shadow: 0 1px 24px rgba(16,19,16,.55);
+  }
+  #zhero-{{ section.id }} .zhero__body{
+    color: var(--zv-sand); max-width: 34ch;
+    text-shadow: 0 1px 18px rgba(16,19,16,.5);
+  }
+  #zhero-{{ section.id }} .zhero__body > :first-child{ margin-top: 0; }
+  #zhero-{{ section.id }} .zhero__body > :last-child{ margin-bottom: 0; }
+  #zhero-{{ section.id }} .zhero__cta{
+    display: flex; flex-wrap: wrap; gap: var(--zv-3); margin-top: var(--zv-2);
+  }
+  @media (max-width: 420px){
+    #zhero-{{ section.id }} .zhero__cta{ display: grid; grid-template-columns: 1fr; width: 100%; }
+    #zhero-{{ section.id }} .zhero__cta > .zv-btn{ width: 100%; justify-content: center; }
+  }
+  #zhero-{{ section.id }} .zhero__cta2{
+    color: var(--zv-warm);
+    border-color: rgba(244,242,236,.46);
+    background: rgba(244,242,236,.07);
+  }
+  @media (hover: hover) and (pointer: fine){
+    #zhero-{{ section.id }} .zhero__cta2:hover{
+      background: rgba(244,242,236,.15);
+      border-color: rgba(244,242,236,.84);
+      box-shadow: none;
+    }
+  }
+  #zhero-{{ section.id }} .zhero__note{
+    margin: var(--zv-1) 0 0;
+    color: var(--zv-sand);
+    text-shadow: 0 1px 14px rgba(16,19,16,.6);
+  }
+
+  /* --------------------------------------------------------------- motion
+     Keyframes, not JS: the drift runs on the compositor whether or not any
+     script executes, and it is the reason the hero moves even when WebGL is
+     missing and no video is set. Only transform and opacity. */
+  @media (prefers-reduced-motion: no-preference){
+    #zhero-{{ section.id }}.zhero--motion .zhero__posterimg{
+      animation: zhero-push-{{ section.id }} 38s var(--zv-ease) infinite alternate;
+    }
+    #zhero-{{ section.id }}.zhero--motion .zhero__near{
+      animation: zhero-near-{{ section.id }} 26s var(--zv-ease) infinite alternate;
+    }
+  }
+  @keyframes zhero-push-{{ section.id }}{
+    from{ transform: scale(1.005) translate3d(0,0,0); }
+    to  { transform: scale(1.055) translate3d(-1.1%, -0.7%, 0); }
+  }
+  @keyframes zhero-near-{{ section.id }}{
+    from{ transform: scale(1.10) translate3d(0.9%, 0.5%, 0); opacity: .50; }
+    to  { transform: scale(1.16) translate3d(-1.4%, -0.9%, 0); opacity: .60; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    /* Static poster, full stop. Nothing hidden, nothing collapsed, no gap
+       where a layer used to be — the frame just stops moving. */
+    #zhero-{{ section.id }} .zhero__posterimg,
+    #zhero-{{ section.id }} .zhero__near{
+      animation: none !important; transform: none !important; will-change: auto;
+    }
+    #zhero-{{ section.id }} .zhero__light{ display: none; }
+  }
+</style>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.getElementById('zhero-{{ section.id }}');
+  if (!root) { return; }
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var near   = root.querySelector('[data-zhero-near]'); /* CSS-driven only */
+  var canvas = root.querySelector('[data-zhero-light]');
+  var vidbox = root.querySelector('[data-zhero-vid]');
+
+  /* The CSS drift is gated on this class so a reduced-motion visitor, and
+     anyone whose JS never runs, both land on the static plate. */
+  if (!reduced) { root.classList.add('zhero--motion'); }
+
+  /* ------------------------------------------------------- light field */
+  var gl = null, uni = {}, live = false, visible = true, raf = null;
+  var tx = 0, ty = 0, cx = 0, cy = 0;
+
+  function initGL() {
+    if (!canvas || reduced) { return false; }
+    try {
+      gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: false, powerPreference: 'low-power' });
+    } catch (e) { return false; }
+    if (!gl) { return false; }
+
+    var vs = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+    var fs = [
+      'precision mediump float;',
+      'uniform vec2 uRes; uniform float uT; uniform vec2 uM;',
+      'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+      'float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);',
+      ' return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}',
+      'float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p*=2.03;a*=.5;}return v;}',
+      'void main(){',
+      '  vec2 uv=gl_FragCoord.xy/uRes.xy;',
+      '  vec2 q=uv; q.x*=uRes.x/uRes.y;',
+      '  q+=uM*0.035;',
+      '  float t=uT*0.021;',
+      /* two drifting octaves at different speeds read as canopy moving in
+         front of a light source, rather than one sheet sliding across */
+      '  float a=fbm(q*2.6+vec2(t,t*0.42));',
+      '  float b=fbm(q*4.7-vec2(t*0.66,t*0.31));',
+      '  float f=a*0.68+b*0.32;',
+      /* only the top of the curve lights up: mostly nothing, occasional
+         warm wisp. Keyed alpha means this is additive-looking even with no
+         blend-mode support, and never darkens the photograph. */
+      '  float k=smoothstep(0.54,0.86,f);',
+      '  float warm=pow(k,1.7);',
+      '  vec3 col=mix(vec3(0.42,0.47,0.38),vec3(0.86,0.83,0.74),warm);',
+      /* fade the field out toward the left so it never brightens the area
+         the headline sits on */
+      '  float guard=smoothstep(0.06,0.52,uv.x);',
+      '  gl_FragColor=vec4(col*warm,warm*0.85*guard);',
+      '}'
+    ].join('\n');
+
+    function sh(type, src) {
+      var o = gl.createShader(type);
+      gl.shaderSource(o, src); gl.compileShader(o);
+      return gl.getShaderParameter(o, gl.COMPILE_STATUS) ? o : null;
+    }
+    var v = sh(gl.VERTEX_SHADER, vs), f = sh(gl.FRAGMENT_SHADER, fs);
+    if (!v || !f) { return false; }
+    var prog = gl.createProgram();
+    gl.attachShader(prog, v); gl.attachShader(prog, f); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { return false; }
+    gl.useProgram(prog);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    uni.res = gl.getUniformLocation(prog, 'uRes');
+    uni.t   = gl.getUniformLocation(prog, 'uT');
+    uni.m   = gl.getUniformLocation(prog, 'uM');
+    return true;
+  }
+
+  /* Compare against the backing store, never clientWidth: assigning
+     canvas.width reallocates and clears the drawing buffer. */
+  function sizeGL() {
+    if (!gl) { return; }
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.75) * 0.55;
+    var w = Math.floor(canvas.clientWidth * dpr);
+    var h = Math.floor(canvas.clientHeight * dpr);
+    if (w > 0 && h > 0 && (canvas.width !== w || canvas.height !== h)) {
+      canvas.width = w; canvas.height = h;
+      gl.viewport(0, 0, w, h);
+    }
+  }
+
+  live = initGL();
+  if (!live && canvas) { canvas.style.display = 'none'; }
+
+  function onPointer(e) {
+    tx = (e.clientX / window.innerWidth - 0.5) * 2;
+    ty = (e.clientY / window.innerHeight - 0.5) * 2;
+  }
+  var wantsPointer = !reduced && window.matchMedia('(pointer: fine)').matches;
+  if (wantsPointer) { window.addEventListener('pointermove', onPointer, { passive: true }); }
+
+  var ioVis = null;
+  if ('IntersectionObserver' in window) {
+    ioVis = new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, { threshold: 0.01 });
+    ioVis.observe(root);
+  }
+
+  var t0 = performance.now();
+  function loop(now) {
+    raf = requestAnimationFrame(loop);
+    if (!visible || document.hidden) { return; }
+    cx += (tx - cx) * 0.05;
+    cy += (ty - cy) * 0.05;
+    /* No pointer transform on .zhero__near: a var() inside a keyframe
+       transform pulls that animation off the compositor, which is a real
+       cost for a subtle effect. The pointer moves the light field through
+       uM instead — same depth read, stays on the GPU. */
+    if (live) {
+      sizeGL();
+      gl.uniform2f(uni.res, canvas.width, canvas.height);
+      gl.uniform1f(uni.t, (now - t0) / 1000);
+      gl.uniform2f(uni.m, cx, cy);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+  }
+  if (live) { raf = requestAnimationFrame(loop); }
+
+  /* ------------------------------------------------------------- footage
+     Everything about this is deferred. The poster is already the LCP by the
+     time any of it runs, and if any single check fails the video is simply
+     never created — the poster is not a placeholder for it, it IS the
+     hero. */
+  var vidEl = null;
+  function maybeVideo() {
+    if (reduced || !vidbox) { return; }
+    var wide = window.matchMedia('(min-width: 700px)').matches;
+    var src = (wide ? root.dataset.video : (root.dataset.videoMobile || root.dataset.video)) || '';
+    src = src.trim();
+    if (!src) { return; }
+
+    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (c) {
+      if (c.saveData) { return; }
+      var et = c.effectiveType || '';
+      if (et === 'slow-2g' || et === '2g' || et === '3g') { return; }
+    }
+
+    var v = document.createElement('video');
+    v.muted = true; v.defaultMuted = true;
+    v.loop = true; v.autoplay = true;
+    v.playsInline = true; v.setAttribute('playsinline', '');
+    v.setAttribute('aria-hidden', 'true');
+    v.tabIndex = -1;
+    v.preload = 'auto';
+    v.disableRemotePlayback = true;
+    v.src = src;
+
+    function drop() {
+      if (v.parentNode) { v.parentNode.removeChild(v); }
+      vidEl = null;
+    }
+    v.addEventListener('error', drop);
+    v.addEventListener('stalled', drop);
+    /* Only reveal once there are enough frames buffered to loop without a
+       hitch. A clip that never gets there never shows. */
+    v.addEventListener('canplaythrough', function () {
+      var p = v.play();
+      if (p && p.catch) { p.catch(drop); }
+      requestAnimationFrame(function () { v.classList.add('is-live'); });
+    });
+
+    vidbox.appendChild(v);
+    vidEl = v;
+  }
+
+  function armVideo() {
+    if ('requestIdleCallback' in window) { requestIdleCallback(maybeVideo, { timeout: 2500 }); }
+    else { setTimeout(maybeVideo, 900); }
+  }
+  if (document.readyState === 'complete') { armVideo(); }
+  else { window.addEventListener('load', armVideo, { once: true }); }
+
+  function pauseState() {
+    if (!vidEl) { return; }
+    if (document.hidden || !visible) { vidEl.pause(); }
+    else { var p = vidEl.play(); if (p && p.catch) { p.catch(function () {}); } }
+  }
+  document.addEventListener('visibilitychange', pauseState);
+
+  document.addEventListener('shopify:section:unload', function (e) {
+    if (!e.target || !e.target.contains(root)) { return; }
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    window.removeEventListener('pointermove', onPointer);
+    document.removeEventListener('visibilitychange', pauseState);
+    if (ioVis) { ioVis.disconnect(); }
+    if (vidEl) { vidEl.pause(); vidEl.removeAttribute('src'); vidEl.load(); }
+    if (gl) {
+      var lose = gl.getExtension('WEBGL_lose_context');
+      if (lose) { lose.loseContext(); }
+      gl = null;
+    }
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Hero",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading" },
+    { "type": "richtext", "id": "body", "label": "Body" },
+    { "type": "text", "id": "note", "label": "Fine print",
+      "info": "One short true line. Do not put a delivery estimate here unless the supplier guarantees it." },
+
+    { "type": "header", "content": "Background plate" },
+    { "type": "image_picker", "id": "poster", "label": "Desktop plate",
+      "info": "Wide, 16:9 or wider, at least 2000px. This is the page's largest image and loads at highest priority — it is never lazy-loaded." },
+    { "type": "text", "id": "poster_alt", "label": "Plate description",
+      "info": "Used only if the image itself has no alt text set in Content > Files." },
+    { "type": "image_picker", "id": "poster_mobile", "label": "Mobile plate",
+      "info": "Optional. A tall composition for phones. Left empty, the desktop plate is re-cropped to 3:4 rather than shrunk." },
+    { "type": "select", "id": "focal", "label": "Tablet crop", "default": "center",
+      "options": [
+        { "value": "top", "label": "Top" }, { "value": "center", "label": "Centre" },
+        { "value": "bottom", "label": "Bottom" }, { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ] },
+    { "type": "select", "id": "focal_mobile", "label": "Mobile crop", "default": "center",
+      "options": [
+        { "value": "top", "label": "Top" }, { "value": "center", "label": "Centre" },
+        { "value": "bottom", "label": "Bottom" }, { "value": "left", "label": "Left" },
+        { "value": "right", "label": "Right" }
+      ] },
+    { "type": "range", "id": "focal_x", "label": "Desktop focus — across", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 62,
+      "info": "Push this right to keep the detail on the right and the quiet area under the headline." },
+    { "type": "range", "id": "focal_y", "label": "Desktop focus — down", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 50 },
+    { "type": "range", "id": "focal_x_mobile", "label": "Mobile focus — across", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 50 },
+    { "type": "range", "id": "focal_y_mobile", "label": "Mobile focus — down", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 42 },
+
+    { "type": "header", "content": "Motion" },
+    { "type": "checkbox", "id": "motion", "label": "Animate the background", "default": true,
+      "info": "Slow camera push, a parallax foreground and a drifting light field. Transform and opacity only. Visitors who ask for reduced motion always get the still plate." },
+    { "type": "text", "id": "video_url", "label": "Desktop video URL",
+      "info": "Optional. A direct .mp4 or .webm link from Content > Files — 6-12s, muted, loopable, wide, under about 3MB. It fades in over the plate only once it can play through, so a slow or broken file is never seen. Leave empty to run on the plate's own motion." },
+    { "type": "text", "id": "video_url_mobile", "label": "Mobile video URL",
+      "info": "Optional. A separate vertical cut. Leave empty and phones use the still plate rather than a letterboxed desktop clip." },
+
+    { "type": "header", "content": "Buttons" },
+    { "type": "text", "id": "cta_label", "label": "Primary button" },
+    { "type": "url", "id": "cta_link", "label": "Primary link" },
+    { "type": "text", "id": "cta2_label", "label": "Secondary button" },
+    { "type": "url", "id": "cta2_link", "label": "Secondary link" }
+  ],
+  "presets": [{ "name": "Hero" }]
+}
+{% endschema %}

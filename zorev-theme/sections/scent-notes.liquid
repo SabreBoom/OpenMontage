@@ -1,0 +1,112 @@
+{%- comment -%}
+  Scent notes. Blocks are image + copy pairs; the image reveals on scroll via
+  IntersectionObserver, so it costs nothing while idle.
+
+  The figure is only rendered when a block actually has an image. Rendering
+  it unconditionally turns an image-less block into an empty 1:1 void, which
+  is what a text-only note (top / heart / base) would otherwise look like.
+{%- endcomment -%}
+<section class="band {% if section.settings.raised %}band--raised{% endif %}" data-notes>
+  <div class="wrap">
+    {%- if section.settings.eyebrow != blank -%}<span class="eyebrow">{{ section.settings.eyebrow | escape }}</span>{%- endif -%}
+    {%- if section.settings.heading != blank -%}<h2>{{ section.settings.heading }}</h2>{%- endif -%}
+
+    <div class="notes">
+      {%- for b in section.blocks -%}
+        <article class="note{% unless b.settings.image %} note--text{% endunless %}" data-note {{ b.shopify_attributes }}>
+          {%- if b.settings.image -%}
+            <div class="note__fig">
+              <img src="{{ b.settings.image | image_url: width: 900 }}"
+                   alt="{{ b.settings.image.alt | default: b.settings.title | escape }}"
+                   width="900" height="900" loading="lazy" decoding="async">
+            </div>
+          {%- endif -%}
+          <div class="note__copy">
+            {%- if b.settings.kicker != blank -%}<span class="note__k">{{ b.settings.kicker | escape }}</span>{%- endif -%}
+            {%- if b.settings.title != blank -%}<h3>{{ b.settings.title | escape }}</h3>{%- endif -%}
+            {%- if b.settings.body != blank -%}<div class="rte">{{ b.settings.body }}</div>{%- endif -%}
+          </div>
+        </article>
+      {%- endfor -%}
+    </div>
+  </div>
+
+  <style>
+    .notes{display:grid;gap:clamp(1.2rem,3vw,2.2rem);margin-top:2.4rem}
+    @media(min-width:860px){.notes{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}}
+    /* --zv-line-input, not --line. This card sits on the sunken ground, a
+       1.07:1 difference, so the decorative hairline at 1.28:1 left it with no
+       visible edge at all. */
+    .note{background:var(--zv-bg-raised);border:1px solid var(--zv-line-input);
+      border-radius:var(--r);overflow:hidden;
+      opacity:0;transform:translateY(18px);
+      transition:opacity var(--zv-d-reveal) var(--zv-ease),
+                 transform var(--zv-d-reveal) var(--zv-ease)}
+    .note.is-in{opacity:1;transform:none}
+    /* Was background:#000 — a black square behind every image on a
+       warm-paper page, and a black box for the moment before a lazy image
+       decoded. object-fit:cover means the photo fills this box entirely, so
+       the ground only ever shows while loading: the sunken surface reads as
+       a placeholder. The bottom hairline is what separates the image from
+       the copy below it; without it the figure and the card are both white
+       and the card has no internal structure at all. */
+    .note__fig{aspect-ratio:1/1;background:var(--zv-bg-sunken);
+      border-bottom:1px solid var(--zv-line-input)}
+    .note__fig img{width:100%;height:100%;object-fit:cover}
+    .note__copy{padding:1.4rem 1.5rem 1.7rem}
+    /* A text-only note has no figure to give it height, so it earns its own. */
+    .note--text .note__copy{padding:2rem 1.75rem 2.2rem}
+    .note--text{border-top:2px solid var(--zv-accent)}
+    .note__k{display:block;font-family:var(--zv-sans);font-size:var(--zv-t-micro);
+      font-weight:600;letter-spacing:var(--zv-tr-caps);text-transform:uppercase;
+      color:var(--zv-accent);margin-bottom:.6rem}
+    .note__copy .rte p:last-child{margin-bottom:0}
+    /* Reduced motion: shorter and opacity-only, not dead. */
+    @media(prefers-reduced-motion:reduce){
+      .note{opacity:1;transform:none;transition-duration:120ms}
+    }
+  </style>
+  <script>
+  (function(){
+    var els=[].slice.call(document.querySelectorAll('[data-note]'));
+    if(!els.length) return;
+    if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      els.forEach(function(e){e.classList.add('is-in')}); return;
+    }
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e,i){ if(e.isIntersecting){
+        setTimeout(function(){e.target.classList.add('is-in')}, i*90);
+        io.unobserve(e.target);
+      }});
+    },{threshold:.15});
+    els.forEach(function(e){io.observe(e)});
+    /* Anything already on screen at load must not wait for a scroll. */
+    requestAnimationFrame(function(){
+      els.forEach(function(e){
+        var r=e.getBoundingClientRect();
+        if(r.top<window.innerHeight&&r.bottom>0) e.classList.add('is-in');
+      });
+    });
+  })();
+  </script>
+</section>
+{% schema %}
+{
+  "name": "Scent notes",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The composition" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "What it's built from." },
+    { "type": "checkbox", "id": "raised", "label": "Raised background", "default": true }
+  ],
+  "blocks": [
+    { "type": "note", "name": "Note", "settings": [
+      { "type": "image_picker", "id": "image", "label": "Image", "info": "Optional. Leave empty for a text-only note." },
+      { "type": "text", "id": "kicker", "label": "Kicker" },
+      { "type": "text", "id": "title", "label": "Title" },
+      { "type": "richtext", "id": "body", "label": "Body" }
+    ] }
+  ],
+  "presets": [{ "name": "Scent notes", "blocks": [{ "type": "note" }, { "type": "note" }] }]
+}
+{% endschema %}

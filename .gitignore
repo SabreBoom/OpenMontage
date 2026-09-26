@@ -104,3 +104,9 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# ZOREV theme tests (Playwright) — installed deps and run output
+zorev-theme/tests/node_modules/
+zorev-theme/tests/report/
+zorev-theme/tests/test-results/
+zorev-theme/tests/playwright-report/

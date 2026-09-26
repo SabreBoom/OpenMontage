@@ -1,0 +1,105 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "hero": {
+      "type": "hero-product",
+      "settings": {
+        "eyebrow": "Perfume oil · Balm stick",
+        "heading": "Made for wherever you're headed.",
+        "body": "<p>A 15 ml perfume oil and a 9 g balm stick. Both small enough for a pocket, both free to ship worldwide.</p>",
+        "note": "",
+        "cta_label": "Shop Zorev",
+        "cta_link": "#line",
+        "cta2_label": "The Pair · $59",
+        "cta2_link": "#pair"
+      }
+    },
+    "products": {
+      "type": "product-showcase",
+      "settings": {
+        "eyebrow": "The line",
+        "heading": "Two essentials.",
+        "body": "<p>One goes on your skin, one goes on your pulse points. Both travel without a liquids bag.</p>",
+        "raised": false
+      },
+      "blocks": {
+        "p1": { "type": "product", "settings": { "product": "goda-pheromone-perfume-oil", "line": "A 15 ml perfume oil, worn from a dropper. Oil rather than alcohol, so it sits close to the skin.", "facts": "<ul><li><strong>15 ml glass bottle</strong> with a dropper</li><li><strong>Four options</strong> — Black, White, Citrus and Neutral</li><li><strong>One or two drops</strong> at the pulse points is enough</li></ul>" } },
+        "p2": { "type": "product", "settings": { "product": "hoygi-calcium-multi-balm", "line": "A 9 g twist-up balm stick. Goes on dry to the touch and melts on contact with skin.", "facts": "<ul><li><strong>9 g twist-up stick</strong> — no lid of cream, no liquids bag</li><li><strong>Glide it on</strong> wherever skin runs dry, then warm it in</li><li><strong>Keep below 25°C</strong> — it softens in a hot car</li></ul>" } }
+      },
+      "block_order": ["p1", "p2"]
+    },
+    "savings": {
+      "type": "quantity-savings",
+      "settings": {
+        "eyebrow": "Multi-buy",
+        "heading": "The more you take, the less each one costs.",
+        "body": "<p>Savings are applied automatically in your bag — no code to hunt for. On GODA, mix any of the four options and the saving still counts.</p>"
+      },
+      "blocks": {
+        "q1": { "type": "product", "settings": { "product": "goda-pheromone-perfume-oil" } },
+        "q2": { "type": "product", "settings": { "product": "hoygi-calcium-multi-balm" } }
+      },
+      "block_order": ["q1", "q2"]
+    },
+    "pair": {
+      "type": "bundle-builder",
+      "settings": { "body": "" }
+    },
+    "why": {
+      "type": "value-strip",
+      "settings": {
+        "eyebrow": "Why Zorev",
+        "heading": "Four things we can actually promise."
+      },
+      "blocks": {
+        "v1": { "type": "point", "settings": { "num": "Shipping", "title": "Free, everywhere.", "body": "Every order ships free to every country we deliver to. No minimum, and no paid upgrade at checkout." } },
+        "v2": { "type": "point", "settings": { "num": "Dispatch", "title": "Out within one business day.", "body": "Orders go to our fulfilment network within one business day, and tracking follows by email as soon as the carrier scans the parcel." } },
+        "v3": { "type": "point", "settings": { "num": "Savings", "title": "Applied for you.", "body": "Multi-buy and pair savings appear in your bag before you pay. There are no codes to find." } },
+        "v4": { "type": "point", "settings": { "num": "Listings", "title": "Straight about the makers.", "body": "Each page says who makes the product and where the maker's claims stop and ours begin." } }
+      },
+      "block_order": ["v1", "v2", "v3", "v4"]
+    },
+    "after": {
+      "type": "after-order",
+      "settings": {
+        "eyebrow": "After you order",
+        "heading": "What happens next.",
+        "reviews_eyebrow": "Reviews",
+        "raised": true
+      },
+      "blocks": {
+        "s1": { "type": "step", "settings": { "icon": "check", "title": "Savings are applied in your bag", "body": "You see every discount, by name, before you pay." } },
+        "s2": { "type": "step", "settings": { "icon": "box", "title": "It goes out within one business day", "body": "To our fulfilment network, with no charge for shipping." } },
+        "s3": { "type": "step", "settings": { "icon": "mail", "title": "Tracking arrives by email", "body": "As soon as the carrier scans the parcel." } },
+        "s4": { "type": "step", "settings": { "icon": "shield", "title": "Something wrong? We make it right", "body": "If it arrives damaged, defective or wrong, email a photo and we sort it out." } },
+        "r1": { "type": "rproduct", "settings": { "product": "goda-pheromone-perfume-oil" } },
+        "r2": { "type": "rproduct", "settings": { "product": "hoygi-calcium-multi-balm" } }
+      },
+      "block_order": ["s1", "s2", "s3", "s4", "r1", "r2"]
+    },
+    "closer": {
+      "type": "story",
+      "settings": {
+        "image": "shopify://shop_images/zorev-hero-forest-basalt.jpg",
+        "image_alt": "Misty forest floor with wet basalt rock and morning light",
+        "eyebrow": "Zorev",
+        "heading": "Two essentials. One simple order.",
+        "body": "<p>Free shipping worldwide, savings applied in your bag, and a person on the other end of the email.</p>",
+        "cta_label": "Shop Zorev",
+        "cta_link": "/collections/all",
+        "cta2_label": "The Pair · $59",
+        "cta2_link": "#pair",
+        "framing": "full"
+      }
+    }
+  },
+  "order": ["hero", "products", "savings", "pair", "why", "after", "closer"]
+}

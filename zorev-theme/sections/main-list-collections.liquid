@@ -1,0 +1,33 @@
+<section class="zv-section">
+  <div class="zv-wrap">
+    <header class="zsec__head" data-zv-reveal>
+      <h1 class="zv-h1">Collections</h1>
+    </header>
+
+    <div class="zgrid zgrid--3">
+      {%- for c in collections -%}
+        {%- assign ci = c.featured_image -%}
+        <a class="zcoll" href="{{ c.url }}" data-zv-reveal>
+          <div class="zcoll__fig">
+            {%- if ci -%}
+              {%- comment -%} width/height reserve the box so the grid does not jump {%- endcomment -%}
+              <img src="{{ ci | image_url: width: 800 }}"
+                   srcset="{{ ci | image_url: width: 400 }} 400w, {{ ci | image_url: width: 800 }} 800w"
+                   sizes="(min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw"
+                   width="{{ ci.width }}" height="{{ ci.height }}"
+                   alt="" loading="lazy" decoding="async">
+            {%- endif -%}
+          </div>
+          <h2 class="zcoll__t">{{ c.title | escape }}</h2>
+          <p class="zv-fine">{{ c.products_count }} item{% if c.products_count != 1 %}s{% endif %}</p>
+        </a>
+      {%- else -%}
+        <p class="zv-body">No collections yet.</p>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{ "name": "Collections list", "tag": "section", "settings": [] }
+{% endschema %}

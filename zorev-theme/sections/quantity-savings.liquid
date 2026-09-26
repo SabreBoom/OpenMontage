@@ -1,0 +1,112 @@
+{%- comment -%}
+  Quantity savings.
+
+  A price ladder per product, set as ruled rows — not a third grid of
+  cards. Every number is computed from the product's real price and its
+  "Quantity offer" metafield, the same data the product page's selector
+  reads and the same amounts the automatic discounts apply. Change a
+  discount in Discounts and the metafield has to change with it.
+{%- endcomment -%}
+{%- assign s = section.settings -%}
+<section class="zqs band--raised" aria-labelledby="zqs-h-{{ section.id }}">
+  <div class="zv-wrap">
+    <div class="zqs__grid">
+      <header class="zqs__head" data-zv-reveal>
+        {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
+        <h2 class="zv-h2" id="zqs-h-{{ section.id }}">{{ s.heading }}</h2>
+        {%- if s.body != blank -%}<div class="zqs__lead">{{ s.body }}</div>{%- endif -%}
+      </header>
+
+      <div class="zqs__ladders">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign p = block.settings.product
+            assign offer = p.metafields.zorev.offer.value
+            assign one = offer.unit | default: 'item'
+            assign many = offer.units | default: 'items'
+          -%}
+          {%- if p != blank and p.title != blank -%}
+            <div class="zqs__col" data-zv-reveal {{ block.shopify_attributes }}>
+              <div class="zqs__prod">
+                <span class="zqs__fig">{% render 'product-cutout', product: p, sizes: '48px', alt: '' %}</span>
+                <div>
+                  <h3 class="zqs__name">{{ p.vendor | upcase | escape }}</h3>
+                  {%- if p.type != blank -%}<p class="zqs__type">{{ p.type | escape }}</p>{%- endif -%}
+                </div>
+              </div>
+              <table class="zqs__t">
+                <caption class="visually-hidden">{{ p.title | escape }} multi-buy prices</caption>
+                <tbody>
+                  <tr>
+                    <th scope="row"><span class="zqs__qty">1 {{ one | escape }}</span></th>
+                    <td class="zqs__tot">{{ p.price | money_without_trailing_zeros }}</td>
+                  </tr>
+                  {%- for t in offer.breaks -%}
+                    {%- assign tot = p.price | times: t.qty | minus: t.save -%}
+                    <tr>
+                      <th scope="row"><span class="zqs__qty">{{ t.qty }} {{ many | escape }}</span> <span class="zqs__save">Save {{ t.save | money_without_trailing_zeros }}</span></th>
+                      <td class="zqs__tot">{{ tot | money_without_trailing_zeros }}</td>
+                    </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+              <a class="zqs__link" href="{{ p.url }}">Shop {{ p.vendor | upcase | escape }}<span aria-hidden="true">&nbsp;&rarr;</span></a>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .zqs{padding-block:var(--zv-section);background:var(--zv-bg-sunken);
+      --zv-text-3:var(--zv-moss-strong);--text-3:var(--zv-moss-strong)}
+    .zqs__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,4vw,56px)}
+    @media(min-width:980px){.zqs__grid{grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);align-items:start}}
+    .zqs__head .zv-h2{margin:0 0 var(--zv-3)}
+    .zqs__lead p{color:var(--zv-text-2);margin:0 0 var(--zv-3)}
+    .zqs__lead p:last-child{margin:0}
+    .zqs__ladders{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(28px,3vw,40px)}
+    @media(min-width:680px){.zqs__ladders{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    /* Set as a printed price list on the band, not as two more white cards:
+       a product line, then ruled rows. */
+    .zqs__col{padding:0}
+    .zqs__prod{display:flex;align-items:center;gap:var(--zv-3);margin-bottom:var(--zv-4)}
+    .zqs__fig{width:52px;height:52px;border-radius:var(--zv-r-sm);overflow:hidden;flex:0 0 auto;
+      background:var(--zv-white);box-shadow:var(--zv-plate-edge);display:grid;place-items:center;padding:3px}
+    .zqs__fig .zv-cut{width:100%;height:100%;object-fit:contain;filter:none}
+    .zqs__name{margin:0;font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;
+      letter-spacing:var(--zv-tr-wide);color:var(--zv-ink)}
+    .zqs__type{margin:0;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
+    .zqs__t{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+    .zqs__t tr{border-top:1px solid var(--zv-hairline-2)}
+    .zqs__t tr:last-child{border-bottom:1px solid var(--zv-hairline-2)}
+    .zqs__t th,.zqs__t td{padding:14px 0;text-align:left;font-weight:400;vertical-align:baseline}
+    .zqs__t th{color:var(--zv-ink);font-size:var(--zv-t-body)}
+    .zqs__t tr:first-child th,.zqs__t tr:first-child td{color:var(--zv-text-2)}
+    .zqs__qty{margin-right:12px}
+    .zqs__save{display:inline-block;color:var(--zv-forest);font-size:var(--zv-t-micro);font-weight:600;
+      letter-spacing:var(--zv-tr-wide);text-transform:uppercase;white-space:nowrap}
+    .zqs__tot{text-align:right !important;font-weight:600;font-size:var(--zv-t-lead);color:var(--zv-ink);white-space:nowrap;padding-left:12px !important;letter-spacing:-0.01em}
+    .zqs__link{display:inline-block;padding-block:12px;line-height:1.4;margin-top:var(--zv-2);
+      font-size:var(--zv-t-sm);font-weight:600;color:var(--zv-forest);text-decoration:none}
+    @media (hover:hover) and (pointer:fine){ .zqs__link:hover{text-decoration:underline;text-underline-offset:4px} }
+    .zqs__link:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
+  </style>
+</section>
+{% schema %}
+{
+  "name": "Quantity savings",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Multi-buy" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "The more you take, the less each one costs." },
+    { "type": "richtext", "id": "body", "label": "Intro" }
+  ],
+  "blocks": [
+    { "type": "product", "name": "Product", "limit": 4,
+      "settings": [ { "type": "product", "id": "product", "label": "Product" } ] }
+  ],
+  "presets": [{ "name": "Quantity savings", "blocks": [{ "type": "product" }, { "type": "product" }] }]
+}
+{% endschema %}

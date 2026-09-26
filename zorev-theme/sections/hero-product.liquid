@@ -1,0 +1,196 @@
+{%- comment -%}
+  ZOREV — product hero.
+
+  The first thing on the page is the two products, not a landscape: a
+  15 ml bottle and a 9 g stick set on warm paper, lit from above, with a
+  contact shadow each, one in front of the other. The photograph is the
+  maker's own, cut clean (product.metafields.zorev.cutouts), so nothing
+  here is invented — it is the real bottle and the real box.
+
+  Depth, in order of cost:
+    1  layout    the front object is larger and lower on the ground plane
+                 than the back one. That alone reads as depth with no JS.
+    2  shadows   a real element under each object, so the two shadows fall
+                 on the same floor and the products sit rather than float.
+    3  entrance  a 700ms settle on first paint, CSS only, gated on .zv-js.
+    4  parallax  zorev-enhance.js moves [data-zv-depth] layers a few pixels
+                 against the pointer on a fine-pointer device, and a few
+                 pixels with the scroll everywhere. Transform only. Off
+                 under prefers-reduced-motion and with JS unavailable.
+
+  The copy stays readable, and the products stay visible, with every one
+  of those switched off.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign pa = s.product_a | default: settings.pair_product_a
+  assign pb = s.product_b | default: settings.pair_product_b
+  assign has_a = false
+  assign has_b = false
+  if pa != blank and pa.title != blank
+    assign has_a = true
+  endif
+  if pb != blank and pb.title != blank
+    assign has_b = true
+  endif
+-%}
+<section class="zhp" id="zhp-{{ section.id }}" aria-labelledby="zhp-h-{{ section.id }}">
+  <div class="zv-wrap zhp__in">
+    <div class="zhp__copy">
+      {%- if s.eyebrow != blank -%}
+        <span class="zv-eyebrow zhp__eyebrow">{{ s.eyebrow | escape }}</span>
+      {%- endif -%}
+      <h1 class="zhp__h1" id="zhp-h-{{ section.id }}">{{ s.heading | default: shop.name }}</h1>
+      {%- if s.body != blank -%}
+        <div class="zv-lead zhp__body">{{ s.body }}</div>
+      {%- endif -%}
+      {%- if s.cta_label != blank or s.cta2_label != blank -%}
+        <div class="zhp__cta">
+          {%- if s.cta_label != blank -%}
+            <a class="zv-btn" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ s.cta_label | escape }}</a>
+          {%- endif -%}
+          {%- if s.cta2_label != blank -%}
+            <a class="zv-btn zv-btn--ghost" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">{{ s.cta2_label | escape }}</a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+      {%- if s.note != blank -%}
+        <p class="zv-fine zhp__note">{{ s.note | escape }}</p>
+      {%- endif -%}
+    </div>
+
+    {%- if has_a or has_b -%}
+      <div class="zhp__stage" data-zv-scene data-zv-scene-pointer="14" data-zv-scene-scroll="0.12">
+        <div class="zhp__light" aria-hidden="true"></div>
+        {%- if has_b -%}
+          <a class="zhp__obj zhp__obj--b" href="{{ pb.url }}" data-zv-depth="0.45" aria-label="{{ pb.title | escape }}">
+            {% render 'product-cutout', product: pb, sizes: '(min-width: 900px) 24vw, 46vw', alt: pb.title, eager: true %}
+            <span class="zhp__shadow" aria-hidden="true"></span>
+          </a>
+        {%- endif -%}
+        {%- if has_a -%}
+          <a class="zhp__obj zhp__obj--a" href="{{ pa.url }}" data-zv-depth="1" aria-label="{{ pa.title | escape }}">
+            {% render 'product-cutout', product: pa, sizes: '(min-width: 900px) 30vw, 58vw', alt: pa.title, eager: true %}
+            <span class="zhp__shadow" aria-hidden="true"></span>
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  #zhp-{{ section.id }}{
+    position: relative; isolation: isolate; overflow: hidden;
+    background:
+      radial-gradient(70% 55% at 78% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%),
+      radial-gradient(60% 40% at 20% 100%, rgba(215,208,195,.35), rgba(215,208,195,0) 70%),
+      var(--zv-warm);
+    color: var(--zv-ink);
+  }
+  #zhp-{{ section.id }} .zhp__in{
+    display: grid; gap: clamp(28px, 5vw, 56px);
+    padding-top: clamp(40px, 7vw, 88px);
+    padding-bottom: clamp(24px, 5vw, 72px);
+    align-items: center;
+  }
+  @media (min-width: 900px){
+    #zhp-{{ section.id }} .zhp__in{
+      grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+      min-height: min(82svh, 760px);
+      padding-top: clamp(40px, 6vw, 72px);
+      padding-bottom: clamp(40px, 6vw, 72px);
+    }
+  }
+
+  /* ---- copy ---- */
+  #zhp-{{ section.id }} .zhp__copy{
+    display: flex; flex-direction: column; align-items: flex-start;
+    gap: var(--zv-4); max-width: 34rem; position: relative; z-index: 2;
+  }
+  #zhp-{{ section.id }} .zhp__eyebrow{ color: var(--zv-moss-strong); }
+  #zhp-{{ section.id }} .zhp__h1{
+    margin: 0; font-family: var(--zv-serif); font-weight: 400;
+    font-size: var(--zv-t-display); line-height: 1.02; letter-spacing: -0.022em;
+    color: var(--zv-ink); text-wrap: balance; max-width: 15ch;
+  }
+  #zhp-{{ section.id }} .zhp__body{ color: var(--zv-text-2); max-width: 32ch; }
+  #zhp-{{ section.id }} .zhp__body > :first-child{ margin-top: 0; }
+  #zhp-{{ section.id }} .zhp__body > :last-child{ margin-bottom: 0; }
+  #zhp-{{ section.id }} .zhp__cta{ display: flex; flex-wrap: wrap; gap: var(--zv-3); margin-top: var(--zv-2); }
+  @media (max-width: 420px){
+    #zhp-{{ section.id }} .zhp__cta{ display: grid; grid-template-columns: 1fr; width: 100%; }
+  }
+  #zhp-{{ section.id }} .zhp__note{ margin: var(--zv-1) 0 0; }
+
+  /* ---- stage ----
+     A square, so the composition is the same shape on every screen; the
+     two objects are placed in percentages of it. Front object lower and
+     larger, back object higher and smaller: the only perspective cue that
+     costs nothing. */
+  #zhp-{{ section.id }} .zhp__stage{
+    position: relative; width: 100%; max-width: 640px; margin-inline: auto;
+    aspect-ratio: 1 / 1; z-index: 1;
+  }
+  @media (max-width: 899px){
+    #zhp-{{ section.id }} .zhp__stage{ max-width: 520px; aspect-ratio: 5 / 4; }
+  }
+  #zhp-{{ section.id }} .zhp__light{
+    position: absolute; inset: -6% -10% 4%; z-index: 0; pointer-events: none;
+    background: radial-gradient(55% 48% at 50% 44%, rgba(255,255,255,.9), rgba(255,255,255,0) 72%);
+  }
+  #zhp-{{ section.id }} .zhp__obj{
+    position: absolute; display: block; text-decoration: none;
+    will-change: transform;
+  }
+  #zhp-{{ section.id }} .zhp__obj .zv-cut{ position: relative; z-index: 1; height: auto; }
+  #zhp-{{ section.id }} .zhp__obj--a{ left: 2%; bottom: 6%; width: 60%; z-index: 2; }
+  #zhp-{{ section.id }} .zhp__obj--b{ right: 0; bottom: 15%; width: 47%; z-index: 1; }
+  /* Ground contact: an ellipse under each object, on the same floor. The
+     back object's shadow is smaller and paler, as a farther shadow is. */
+  #zhp-{{ section.id }} .zhp__shadow{
+    position: absolute; left: 50%; bottom: -4%; width: 78%; height: 9%;
+    transform: translateX(-50%); z-index: 0; pointer-events: none;
+    background: var(--zv-stage-shadow); filter: blur(7px);
+  }
+  #zhp-{{ section.id }} .zhp__obj--b .zhp__shadow{ opacity: .7; width: 70%; }
+  #zhp-{{ section.id }} .zhp__obj:focus-visible{ outline: 2px solid var(--zv-focus); outline-offset: 6px; border-radius: var(--zv-r-md); }
+  @media (hover: hover) and (pointer: fine){
+    #zhp-{{ section.id }} .zhp__obj .zv-cut{ transition: transform var(--zv-d-ui) var(--zv-ease); }
+    #zhp-{{ section.id }} .zhp__obj:hover .zv-cut{ transform: translateY(-4px); }
+  }
+
+  /* ---- entrance ---- */
+  @media (prefers-reduced-motion: no-preference){
+    .zv-js #zhp-{{ section.id }} .zhp__obj{ animation: zhp-settle-{{ section.id }} 760ms var(--zv-ease) both; }
+    .zv-js #zhp-{{ section.id }} .zhp__obj--b{ animation-delay: 90ms; }
+    .zv-js #zhp-{{ section.id }} .zhp__copy > *{ animation: zhp-rise-{{ section.id }} 640ms var(--zv-ease) both; }
+    .zv-js #zhp-{{ section.id }} .zhp__copy > :nth-child(2){ animation-delay: 60ms; }
+    .zv-js #zhp-{{ section.id }} .zhp__copy > :nth-child(3){ animation-delay: 120ms; }
+    .zv-js #zhp-{{ section.id }} .zhp__copy > :nth-child(4){ animation-delay: 180ms; }
+  }
+  @keyframes zhp-settle-{{ section.id }}{ from{ opacity: 0; transform: translateY(18px); } to{ opacity: 1; transform: none; } }
+  @keyframes zhp-rise-{{ section.id }}{ from{ opacity: 0; transform: translateY(10px); } to{ opacity: 1; transform: none; } }
+</style>
+
+{% schema %}
+{
+  "name": "Product hero",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "The two products, cut clean from the makers' photographs, on warm paper. Leave the product pickers empty to use the pair from Theme settings > Offers." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Perfume oil · Balm stick" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Made for wherever you're headed." },
+    { "type": "richtext", "id": "body", "label": "Body", "default": "<p>A 15 ml perfume oil and a 9 g balm stick. Both small enough for a pocket, both free to ship worldwide.</p>" },
+    { "type": "text", "id": "note", "label": "Fine print", "info": "One short true line, or nothing." },
+    { "type": "product", "id": "product_a", "label": "Front product" },
+    { "type": "product", "id": "product_b", "label": "Back product" },
+    { "type": "header", "content": "Buttons" },
+    { "type": "text", "id": "cta_label", "label": "Primary button", "default": "Shop Zorev" },
+    { "type": "url", "id": "cta_link", "label": "Primary link" },
+    { "type": "text", "id": "cta2_label", "label": "Secondary button", "default": "The Pair · $59" },
+    { "type": "url", "id": "cta2_link", "label": "Secondary link" }
+  ],
+  "presets": [{ "name": "Product hero" }]
+}
+{% endschema %}

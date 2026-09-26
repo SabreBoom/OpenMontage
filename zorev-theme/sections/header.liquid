@@ -1,0 +1,393 @@
+{%- comment -%}
+  Header — sticky, with two resting states.
+
+  overlay ON  : transparent over a hero, then solidifies on scroll.
+  overlay OFF : solid from the first pixel (collection, product, page, cart).
+
+  The scroll state is driven by an IntersectionObserver on a 1px sentinel,
+  not a scroll listener — a scroll handler firing on every frame to toggle
+  one class is the classic way a header costs you INP.
+
+  The wordmark has to survive both states. Over a photograph it carries a
+  text-shadow and sits on a scrim; once solid the shadow is removed, because
+  a shadow on warm paper reads as a printing fault.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign overlay = false
+  if s.overlay and request.page_type == 'index'
+    assign overlay = true
+  endif
+-%}
+
+<div data-hdr-sentinel aria-hidden="true"></div>
+
+<header class="zhdr{% if overlay %} zhdr--overlay{% endif %}" data-hdr
+        {% if overlay %}data-overlay="true"{% endif %}>
+  {%- comment -%}
+    The bar is its own element so the scrim and the dark token scope stop at
+    the bar. With them on <header> the scrim's inset:0 also covered the open
+    drawer, which put a grey wash behind warm-paper menu links.
+  {%- endcomment -%}
+  <div class="zhdr__bar{% if overlay %} zv-dark{% endif %}" data-hdr-bar>
+  <div class="zv-wrap zhdr__in">
+
+    <a class="zhdr__mark" href="{{ routes.root_url }}"
+       {% if request.page_type == 'index' %}aria-current="page"{% endif %}>
+      {%- if s.logo != blank -%}
+        <img src="{{ s.logo | image_url: width: 320 }}"
+             srcset="{{ s.logo | image_url: width: 160 }} 160w, {{ s.logo | image_url: width: 320 }} 320w"
+             sizes="{{ s.logo_width | default: 104 }}px"
+             width="{{ s.logo_width | default: 104 }}"
+             height="{{ s.logo_width | default: 104 | divided_by: s.logo.aspect_ratio | round }}"
+             alt="{{ shop.name | escape }}" fetchpriority="high">
+      {%- else -%}
+        <span class="zhdr__wordmark">{{ shop.name | escape }}</span>
+      {%- endif -%}
+    </a>
+
+    <nav class="zhdr__nav" aria-label="Primary">
+      {%- for link in s.menu.links -%}
+        <a href="{{ link.url }}"
+           {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+      {%- endfor -%}
+    </nav>
+
+    <div class="zhdr__end">
+      {%- if s.cta_label != blank -%}
+        <a class="zv-btn zhdr__cta" href="{{ s.cta_link | default: routes.all_products_collection_url }}">
+          {{ s.cta_label | escape }}
+        </a>
+      {%- endif -%}
+
+      <a class="zhdr__bag" href="{{ routes.cart_url }}" data-cart-link>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 8h12l-1 12H7L6 8z"/><path d="M9.5 8V6.2a2.5 2.5 0 0 1 5 0V8"/>
+        </svg>
+        <span class="zhdr__count zv-num" data-cart-count
+              {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+        <span class="zhdr__sr">
+          Bag, <span data-cart-count-text>{{ cart.item_count }}</span> item{% unless cart.item_count == 1 %}s{% endunless %}
+        </span>
+      </a>
+
+      <button class="zhdr__burger" type="button" data-nav-toggle
+              aria-expanded="false" aria-controls="zhdr-drawer">
+        <span class="zhdr__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="zhdr__sr" data-burger-label>Open menu</span>
+      </button>
+    </div>
+  </div>
+  </div>
+
+  {%- comment -%}
+    The desktop nav is hidden below 900px, so without this drawer a phone has
+    no navigation at all. It is a sibling of the bar INSIDE the header so the
+    header's own stacking context contains both — an overlay stacked above
+    the header buries the close control inside it, which is a real bug and an
+    easy one to ship.
+  {%- endcomment -%}
+  <div class="zhdr__drawer" id="zhdr-drawer" data-nav-drawer hidden>
+    <nav class="zv-wrap" aria-label="Primary, mobile">
+      {%- for link in s.menu.links -%}
+        <a href="{{ link.url }}"
+           {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+      {%- endfor -%}
+      {%- if s.cta_label != blank -%}
+        <a class="zv-btn zhdr__drawer-cta" href="{{ s.cta_link | default: routes.all_products_collection_url }}">
+          {{ s.cta_label | escape }}
+        </a>
+      {%- endif -%}
+    </nav>
+  </div>
+</header>
+
+<style>
+  [data-hdr-sentinel]{ height: 1px; margin-bottom: -1px; pointer-events: none; }
+  .zhdr{ position: sticky; top: 0; z-index: var(--zv-z-header); }
+  .zhdr__bar{
+    position: relative;
+    background: var(--zv-bg);
+    border-bottom: 1px solid var(--zv-line);
+    transition: background var(--zv-d-ui) var(--zv-ease),
+                border-color var(--zv-d-ui) var(--zv-ease),
+                box-shadow var(--zv-d-ui) var(--zv-ease);
+  }
+  .zhdr__in{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--zv-4);
+    /* viewport-fit=cover is on, so the bar pays the notch itself */
+    padding-top: max(var(--zv-3), env(safe-area-inset-top, 0px));
+    padding-bottom: var(--zv-3);
+    min-height: 64px;
+  }
+
+  /* --- overlay state: sits on the hero, no chrome --- */
+  .zhdr--overlay{ position: fixed; left: 0; right: 0; }
+  .zhdr--overlay .zhdr__bar{
+    background: transparent;
+    border-bottom-color: transparent;
+  }
+  .zhdr--overlay .zhdr__bar::before{
+    /* a top-down scrim so nav labels never land on a highlight in the photo.
+       Scoped to the bar — on the header it would also tint the open drawer. */
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(16,19,16,.58), rgba(16,19,16,.12));
+    opacity: 1; transition: opacity var(--zv-d-ui) var(--zv-ease);
+  }
+  .zhdr--overlay .zhdr__wordmark,
+  .zhdr--overlay .zhdr__nav a,
+  .zhdr--overlay .zhdr__bag{ text-shadow: 0 1px 12px rgba(0,0,0,.55); }
+
+  /* --- scrolled: solid, readable, quiet --- */
+  .zhdr.is-stuck .zhdr__bar{
+    background: color-mix(in srgb, var(--zv-warm) 88%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    border-bottom-color: var(--zv-line);
+    box-shadow: var(--zv-sh-1);
+  }
+  /* No backdrop-filter support -> a solid bar, never a see-through one */
+  @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))){
+    .zhdr.is-stuck .zhdr__bar{ background: var(--zv-warm); }
+  }
+  .zhdr--overlay.is-stuck .zhdr__bar::before{ opacity: 0; }
+  .zhdr--overlay.is-stuck .zhdr__wordmark,
+  .zhdr--overlay.is-stuck .zhdr__nav a,
+  .zhdr--overlay.is-stuck .zhdr__bag{ text-shadow: none; }
+  /* the dark token scope only holds while the bar is actually over the hero */
+  .zhdr--overlay.is-stuck .zhdr__bar{
+    --zv-text: var(--zv-ink); --zv-text-3: var(--zv-muted);
+    --zv-accent: var(--zv-forest); --zv-on-accent: var(--zv-warm);
+    --zv-focus: var(--zv-forest); --zv-hairline: var(--zv-line);
+    color: var(--zv-ink);
+  }
+
+  /* --- mark --- */
+  .zhdr__mark{ display: inline-flex; align-items: center; min-height: 44px;
+    text-decoration: none; color: var(--zv-text);
+    padding-block: var(--zv-2); padding-right: var(--zv-2); }
+  .zhdr__wordmark{ font-family: var(--zv-sans); font-size: 0.875rem; font-weight: 700;
+    letter-spacing: 0.4em; text-transform: uppercase; }
+  .zhdr__mark img{ display: block; height: auto; }
+
+  /* --- nav --- */
+  .zhdr__nav{ display: none; align-items: center; gap: var(--zv-1); }
+  @media (min-width: 900px){ .zhdr__nav{ display: flex; } }
+  .zhdr__nav a{
+    display: inline-flex; align-items: center; min-height: 44px;
+    padding: 0 var(--zv-4); border-radius: var(--zv-r-pill);
+    font-family: var(--zv-sans); font-size: var(--zv-t-sm); font-weight: 500;
+    color: var(--zv-text); text-decoration: none; opacity: .74;
+    transition: opacity var(--zv-d-hover) var(--zv-ease),
+                background var(--zv-d-hover) var(--zv-ease);
+  }
+  .zhdr__nav a[aria-current="page"]{ opacity: 1; box-shadow: inset 0 0 0 1px var(--zv-hairline-2); }
+  @media (hover: hover) and (pointer: fine){
+    .zhdr__nav a:hover{ opacity: 1; background: color-mix(in srgb, currentColor 8%, transparent); }
+  }
+
+  /* --- end cluster --- */
+  .zhdr__end{ display: flex; align-items: center; gap: var(--zv-2); }
+  .zhdr__cta{ display: none; min-height: 44px; padding-inline: var(--zv-5);
+    font-size: var(--zv-t-micro); }
+  @media (min-width: 900px){ .zhdr__cta{ display: inline-flex; } }
+  /* Over the hero the pill goes ghost — a filled sand pill on forest reads as
+     a different button from the forest pill you get once scrolled, and a
+     control that changes identity mid-scroll looks broken. Outline -> filled
+     is one control in two states. */
+  .zhdr--overlay:not(.is-stuck) .zhdr__cta{
+    background: transparent; color: var(--zv-warm);
+    box-shadow: inset 0 0 0 1px rgba(244,242,236,.62);
+    text-shadow: 0 1px 10px rgba(0,0,0,.45);
+  }
+  @media (hover: hover) and (pointer: fine){
+    .zhdr--overlay:not(.is-stuck) .zhdr__cta:hover{
+      background: rgba(244,242,236,.14);
+      box-shadow: inset 0 0 0 1px rgba(244,242,236,.9);
+    }
+  }
+
+  .zhdr__bag{ position: relative; display: inline-flex; align-items: center; gap: 6px;
+    min-width: 48px; min-height: 48px; justify-content: center;
+    color: var(--zv-text); text-decoration: none; border-radius: var(--zv-r-pill);
+    transition: background var(--zv-d-hover) var(--zv-ease); }
+  @media (hover: hover) and (pointer: fine){
+    .zhdr__bag:hover{ background: color-mix(in srgb, currentColor 8%, transparent); }
+  }
+  .zhdr__count{ font-family: var(--zv-sans); font-size: var(--zv-t-micro); font-weight: 600;
+    min-width: 1.25em; text-align: left; }
+  .zhdr__sr{ position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+  /* --- burger --- */
+  .zhdr__burger{ display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; padding: 0; border: 0; background: transparent;
+    color: var(--zv-text); cursor: pointer; border-radius: var(--zv-r-pill); }
+  @media (min-width: 900px){ .zhdr__burger{ display: none; } }
+  .zhdr__bars{ display: flex; flex-direction: column; gap: 5px; }
+  .zhdr__bars i{ display: block; width: 20px; height: 1.5px; background: currentColor;
+    transition: transform var(--zv-d-ui) var(--zv-ease), opacity var(--zv-d-press) var(--zv-ease); }
+  [aria-expanded="true"] .zhdr__bars i:nth-child(1){ transform: translateY(6.5px) rotate(45deg); }
+  [aria-expanded="true"] .zhdr__bars i:nth-child(2){ opacity: 0; }
+  [aria-expanded="true"] .zhdr__bars i:nth-child(3){ transform: translateY(-6.5px) rotate(-45deg); }
+
+  /* --- drawer --- */
+  .zhdr__drawer{ background: var(--zv-warm); border-top: 1px solid var(--zv-line);
+    box-shadow: var(--zv-sh-3);
+    /* landscape phone: the list must scroll rather than run off the screen */
+    max-height: calc(100svh - 64px); overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom, 0px); }
+  @supports not (height: 100svh){ .zhdr__drawer{ max-height: calc(100vh - 64px); } }
+  /* the drawer is warm paper regardless of what the bar above it is doing */
+  .zhdr__drawer{ --zv-text: var(--zv-ink); --zv-text-3: var(--zv-muted);
+    --zv-accent: var(--zv-forest); --zv-on-accent: var(--zv-warm);
+    --zv-focus: var(--zv-forest); --zv-hairline: var(--zv-line);
+    color: var(--zv-ink); }
+  .zhdr__drawer nav{ display: flex; flex-direction: column; padding-block: var(--zv-2) var(--zv-5); }
+  /* :not(.zv-btn) matters — `.zhdr__drawer a` outweighs `.zv-btn`, so without
+     it the CTA got ink text on the forest pill: 1.48:1, unreadable. */
+  .zhdr__drawer a:not(.zv-btn){ display: flex; align-items: center; min-height: 52px;
+    padding-block: var(--zv-3); border-bottom: 1px solid var(--zv-line);
+    font-family: var(--zv-sans); font-size: 1.0625rem; color: var(--zv-ink);
+    text-decoration: none; text-shadow: none; }
+  .zhdr__drawer a:not(.zv-btn)[aria-current="page"]{ font-weight: 600; }
+  .zhdr__drawer a:not(.zv-btn):last-of-type{ border-bottom: 0; }
+  .zhdr__drawer-cta{ margin-top: var(--zv-4); justify-content: center; }
+  @media (min-width: 900px){ .zhdr__drawer{ display: none; } }
+
+  @media (prefers-reduced-motion: reduce){
+    .zhdr__bar, .zhdr__bar::before, .zhdr__bars i,
+    .zhdr__nav a, .zhdr__bag, .zhdr__cta{ transition-duration: 120ms; }
+  }
+</style>
+
+<script>
+(function () {
+  'use strict';
+  var hdr = document.querySelector('[data-hdr]');
+  var sentinel = document.querySelector('[data-hdr-sentinel]');
+  if (!hdr) return;
+
+  /* Scroll state from a sentinel, not a scroll handler. */
+  if (sentinel && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      hdr.classList.toggle('is-stuck', !entries[0].isIntersecting);
+    }, { threshold: 0 }).observe(sentinel);
+  } else {
+    hdr.classList.add('is-stuck');   /* no IO: solid is the safe state */
+  }
+
+  /* ---- mobile drawer: focus is trapped while it is open ---- */
+  var btn = hdr.querySelector('[data-nav-toggle]');
+  var drawer = hdr.querySelector('[data-nav-drawer]');
+  var label = hdr.querySelector('[data-burger-label]');
+
+  var FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+  if (btn && drawer) { wireDrawer(); }
+
+  function wireDrawer() {
+
+  function setOpen(open) {
+    btn.setAttribute('aria-expanded', String(open));
+    drawer.hidden = !open;
+    if (label) label.textContent = open ? 'Close menu' : 'Open menu';
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (open) {
+      var first = drawer.querySelector(FOCUSABLE);
+      if (first) first.focus();
+    }
+  }
+
+  btn.addEventListener('click', function () {
+    setOpen(btn.getAttribute('aria-expanded') !== 'true');
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (btn.getAttribute('aria-expanded') !== 'true') return;
+    if (e.key === 'Escape') { setOpen(false); btn.focus(); return; }
+    if (e.key !== 'Tab') return;
+    /* keep Tab inside the drawer, plus the button that opened it */
+    var items = [btn].concat([].slice.call(drawer.querySelectorAll(FOCUSABLE)));
+    var i = items.indexOf(document.activeElement);
+    if (i === -1) return;
+    var next = e.shiftKey ? i - 1 : i + 1;
+    if (next < 0) next = items.length - 1;
+    if (next >= items.length) next = 0;
+    e.preventDefault();
+    items[next].focus();
+  });
+
+  /* close on resize into the desktop layout, or the drawer is stranded open */
+  var mq = window.matchMedia('(min-width: 900px)');
+  var onWide = function (e) { if (e.matches && btn.getAttribute('aria-expanded') === 'true') setOpen(false); };
+  if (mq.addEventListener) { mq.addEventListener('change', onWide); }
+  else if (mq.addListener) { mq.addListener(onWide); }
+
+  /* a tap outside the header closes it — expected on every phone menu */
+  document.addEventListener('click', function (e) {
+    if (btn.getAttribute('aria-expanded') !== 'true') return;
+    if (!hdr.contains(e.target)) setOpen(false);
+  });
+  }
+
+  /* ---- cart count, updated in place ---- */
+  function paintCount(n) {
+    var nodes = hdr.querySelectorAll('[data-cart-count]');
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = n;
+      nodes[i].hidden = (n === 0);
+    }
+    var t = hdr.querySelector('[data-cart-count-text]');
+    if (t) t.textContent = n;
+  }
+  function readCount(detail) {
+    if (!detail || typeof detail !== 'object') { return null; }
+    if (typeof detail.item_count === 'number') { return detail.item_count; }
+    if (detail.cart && typeof detail.cart.item_count === 'number') { return detail.cart.item_count; }
+    return null;
+  }
+
+  var pending = false;
+  function refetchCount() {
+    if (pending || !window.fetch) { return; }
+    pending = true;
+    fetch(window.Shopify && window.Shopify.routes && window.Shopify.routes.root
+      ? window.Shopify.routes.root + 'cart.js'
+      : '/cart.js', { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (c) { if (c && typeof c.item_count === 'number') { paintCount(c.item_count); } })
+      .catch(function () { /* count just stays as rendered */ })
+      .then(function () { pending = false; });
+  }
+
+  /* the theme's own drawer fires this; other apps fire their own names */
+  ['cart:updated', 'cart:refresh', 'cart:change'].forEach(function (name) {
+    document.addEventListener(name, function (e) {
+      var n = readCount(e && e.detail);
+      if (n === null) { refetchCount(); } else { paintCount(n); }
+    });
+  });
+
+  /* coming back via the back/forward cache serves a stale count */
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { refetchCount(); } });
+})();
+</script>
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" },
+    { "type": "image_picker", "id": "logo", "label": "Logo", "info": "Falls back to the shop name as a letter-spaced wordmark." },
+    { "type": "range", "id": "logo_width", "min": 60, "max": 220, "step": 4, "unit": "px", "label": "Logo width", "default": 104 },
+    { "type": "checkbox", "id": "overlay", "label": "Sit over the hero on the homepage", "default": true,
+      "info": "Transparent over the hero, then solid once scrolled. Turn off for a solid bar everywhere." },
+    { "type": "text", "id": "cta_label", "label": "Header button" },
+    { "type": "url", "id": "cta_link", "label": "Header button link" }
+  ]
+}
+{% endschema %}

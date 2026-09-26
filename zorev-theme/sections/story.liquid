@@ -1,0 +1,135 @@
+{%- comment -%}
+  Storytelling band — a full-bleed photograph with copy set into it.
+
+  This is the homepage's second dark moment, and its job is rhythm: it
+  breaks the run of light product sections so the page does not read as one
+  long scroll of white cards.
+
+  The image is a real responsive <img> rather than a CSS background, so it
+  participates in srcset and can be described for a screen reader. It is
+  lazy — unlike the hero plate, this one is always below the fold.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign img = s.image
+-%}
+<section class="zstory zv-dark{% if img == blank %} zstory--flat{% endif %}{% if s.framing == 'detail' %} zstory--detail{% endif %}" data-zstory>
+  {%- if img != blank -%}
+    <img class="zstory__img"
+         src="{{ img | image_url: width: 1600 }}"
+         srcset="{{ img | image_url: width: 800 }} 800w,
+                 {{ img | image_url: width: 1200 }} 1200w,
+                 {{ img | image_url: width: 1600 }} 1600w,
+                 {{ img | image_url: width: 2048 }} 2048w"
+         sizes="100vw"
+         width="{{ img.width | default: 2048 }}" height="{{ img.height | default: 1152 }}"
+         alt="{{ img.alt | default: s.image_alt | strip_html | escape }}"
+         loading="lazy" decoding="async">
+  {%- endif -%}
+  <div class="zstory__veil" aria-hidden="true"></div>
+
+  <div class="zv-wrap zstory__in">
+    <div class="zstory__copy" data-zv-reveal>
+      {%- if s.eyebrow != blank -%}
+        <span class="zv-eyebrow zstory__eyebrow">{{ s.eyebrow | escape }}</span>
+      {%- endif -%}
+      {%- if s.heading != blank -%}<h2 class="zstory__h">{{ s.heading }}</h2>{%- endif -%}
+      {%- if s.body != blank -%}<div class="zv-lead zstory__b">{{ s.body }}</div>{%- endif -%}
+      {%- if s.cta_label != blank or s.cta2_label != blank -%}
+        <div class="zstory__acts">
+          {%- if s.cta_label != blank -%}
+            <a class="zv-btn zstory__cta1" href="{{ s.cta_link | default: routes.all_products_collection_url }}">
+              {{ s.cta_label | escape }}
+            </a>
+          {%- endif -%}
+          {%- if s.cta2_label != blank -%}
+            <a class="zv-btn zv-btn--ghost zstory__cta" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">
+              {{ s.cta2_label | escape }}
+            </a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <style>
+    .zstory{
+      position: relative; isolation: isolate; overflow: hidden;
+      display: grid; align-items: end;
+      min-height: 64vh; min-height: 64svh;
+      background:
+        radial-gradient(70% 60% at 26% 30%, rgba(83,99,75,.30), transparent 72%),
+        var(--zv-ink);
+    }
+    @media (min-width: 900px){ .zstory{ min-height: 58vh; min-height: 58svh; align-items: center; } }
+    .zstory--flat{ min-height: 44vh; min-height: 44svh; }
+    .zstory__img{
+      position: absolute; inset: 0; z-index: 0;
+      width: 100%; height: 100%; object-fit: cover;
+      object-position: 50% 44%;
+    }
+    /* "Detail" framing: the same photograph as the hero, closed in on its
+       lower third, so the closing band reads as a second look at the place
+       rather than the opening frame repeated. */
+    .zstory--detail .zstory__img{object-position:50% 84%;transform:scale(1.24);transform-origin:50% 88%}
+    .zstory__veil{
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        linear-gradient(88deg, rgba(16,19,16,.84) 0%, rgba(16,19,16,.54) 40%, rgba(16,19,16,.22) 78%),
+        linear-gradient(to top, rgba(16,19,16,.66) 0%, transparent 52%);
+    }
+    .zstory__in{
+      position: relative; z-index: 2;
+      padding-top: clamp(2.6rem, 7vw, 5rem);
+      padding-bottom: clamp(2.6rem, 7vw, 5rem);
+    }
+    .zstory__copy{ display: flex; flex-direction: column; align-items: flex-start; gap: var(--zv-4); max-width: 30rem; }
+    .zstory__eyebrow{ color: var(--zv-sand); }
+    .zstory__h{
+      margin: 0;
+      font-family: var(--zv-serif); font-weight: 400;
+      font-size: var(--zv-t-h1); line-height: var(--zv-lh-tight);
+      letter-spacing: var(--zv-tr-tight);
+      color: var(--zv-warm); text-wrap: balance;
+      text-shadow: 0 1px 22px rgba(16,19,16,.55);
+    }
+    .zstory__b{ color: var(--zv-sand); text-shadow: 0 1px 16px rgba(16,19,16,.5); }
+    .zstory__b > :first-child{ margin-top: 0; }
+    .zstory__b > :last-child{ margin-bottom: 0; }
+    /* Ghost on ink: the default hairline is 1.48:1 here, so it gets a warm
+       edge of its own, exactly as the hero's secondary button does. */
+    .zstory__acts{display:flex;flex-wrap:wrap;gap:var(--zv-3)}
+    @media(max-width:420px){ .zstory__acts{display:grid;width:100%} .zstory__acts .zv-btn{justify-content:center} }
+    .zstory__cta{
+      color: var(--zv-warm);
+      border-color: rgba(244,242,236,.46);
+      background: rgba(244,242,236,.07);
+    }
+    @media (hover: hover) and (pointer: fine){
+      .zstory__cta:hover{ background: rgba(244,242,236,.15); border-color: rgba(244,242,236,.84); box-shadow: none; }
+    }
+  </style>
+</section>
+{% schema %}
+{
+  "name": "Story band",
+  "tag": "section",
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Photograph",
+      "info": "Wide and dark on the left, where the copy sits. Lazy-loaded — do not use this section above the fold." },
+    { "type": "text", "id": "image_alt", "label": "Photograph description",
+      "info": "Used only if the image has no alt text in Content > Files." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading" },
+    { "type": "richtext", "id": "body", "label": "Body" },
+    { "type": "text", "id": "cta_label", "label": "Button" },
+    { "type": "text", "id": "cta2_label", "label": "Second button" },
+    { "type": "url", "id": "cta2_link", "label": "Second button link" },
+    { "type": "url", "id": "cta_link", "label": "Button link" },
+    { "type": "select", "id": "framing", "label": "Photo framing", "default": "full",
+      "options": [ { "value": "full", "label": "Full frame" }, { "value": "detail", "label": "Detail (closer crop)" } ],
+      "info": "Use Detail when this band repeats a photo used higher up the page." }
+  ],
+  "presets": [{ "name": "Story band" }]
+}
+{% endschema %}

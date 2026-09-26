@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+<head>
+  <meta charset="utf-8">
+  {%- comment -%}
+    viewport-fit=cover so the page can run under a notch; the sections pay
+    the safe-area insets themselves.
+  {%- endcomment -%}
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="{{ settings.bg | default: '#101310' }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {%- if settings.favicon != blank -%}
+    <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64 }}">
+  {%- endif -%}
+  {%- comment -%}
+    The homepage's title and description come from Online Store >
+    Preferences, which on this store still read "Zorev" / "Zorev". Until
+    those are filled in, Theme settings > SEO supplies real ones here, so
+    the homepage never ships a one-word title or an empty description.
+  {%- endcomment -%}
+  {%- liquid
+    assign seo_title = page_title
+    assign seo_desc = page_description
+    if request.page_type == 'index'
+      if settings.seo_home_title != blank
+        assign seo_title = settings.seo_home_title
+      endif
+      if seo_desc == blank or seo_desc == shop.name
+        if settings.seo_home_description != blank
+          assign seo_desc = settings.seo_home_description
+        endif
+      endif
+    endif
+    assign seo_title_lc = seo_title | downcase
+    assign shop_name_lc = shop.name | downcase
+  -%}
+  <title>{{ seo_title }}{% if current_page != 1 %} &ndash; {{ current_page }}{% endif %}{% unless seo_title_lc contains shop_name_lc %} &ndash; {{ shop.name }}{% endunless %}</title>
+  {%- if seo_desc != blank -%}<meta name="description" content="{{ seo_desc | strip_html | escape }}">{%- endif -%}
+
+  {% render 'meta-tags', seo_desc: seo_desc, seo_title: seo_title %}
+
+  {{ content_for_header }}
+
+  {%- comment -%}
+    Newsreader for editorial headings, Public Sans for UI and body. Both
+    variable, both legible at 13px on a phone. display=swap so a slow font
+    never blocks first paint — the fallback stacks in zorev-tokens.css are
+    real, not decorative. Only the weights the stylesheets use are asked
+    for: 400/500/600 sans and one 700 for the wordmark.
+  {%- endcomment -%}
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap">
+  </noscript>
+
+  {%- comment -%} Tokens first, so zorev.css can still override anything. {%- endcomment -%}
+  <link rel="stylesheet" href="{{ 'zorev-tokens.css' | asset_url }}">
+  <link rel="stylesheet" href="{{ 'zorev-cards.css' | asset_url }}">
+  <link rel="stylesheet" href="{{ 'zorev-pages.css' | asset_url }}">
+  <link rel="stylesheet" href="{{ 'zorev.css' | asset_url }}">
+
+  {%- comment -%}
+    Marks the document as scripted. Scroll-reveal styles are scoped to
+    .zv-js, so with JS off (or broken, or a crawler) every section renders
+    at its final visible state instead of staying at opacity 0 forever.
+  {%- endcomment -%}
+  <script>document.documentElement.classList.add('zv-js');</script>
+
+  <script src="{{ 'zorev.js' | asset_url }}" defer></script>
+  {%- comment -%}
+    After zorev.js: it adds the scroll-reveal observer the .zv-js reveal
+    styles need, and syncs the one cart-count attribute zorev.js leaves alone.
+    It deliberately does NOT touch add-to-cart — zorev.js owns that.
+  {%- endcomment -%}
+  <script src="{{ 'zorev-enhance.js' | asset_url }}" defer></script>
+</head>
+<body class="tpl-{{ template.name }}">
+  <a class="skip" href="#main">Skip to content</a>
+  {%- comment -%}
+    Above the header and in normal flow, so it scrolls away and the sticky
+    header takes over. This relies on the header's overlay mode being off —
+    see config/settings_data.json.
+  {%- endcomment -%}
+  {% section 'announcement-bar' %}
+  {% section 'header' %}
+  <main id="main" role="main">{{ content_for_layout }}</main>
+  {% section 'footer' %}
+  {% render 'cutout-data' %}
+  {% render 'cart-drawer' %}
+</body>
+</html>

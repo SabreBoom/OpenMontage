@@ -1,0 +1,13 @@
+{
+  "name": "zorev-theme-tests",
+  "private": true,
+  "description": "Playwright tests for the ZOREV Shopify theme. Run against the live store or a draft theme via PREVIEW_THEME_ID.",
+  "scripts": {
+    "test": "playwright test",
+    "test:preview": "PREVIEW_THEME_ID=187617018107 playwright test",
+    "shots": "node shots.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
