@@ -1,0 +1,23 @@
+{%- comment -%}
+  404. A dead end with a single "go home" link wastes the visit; with a
+  two-product catalogue we can just show both and let them carry on.
+{%- endcomment -%}
+<section class="zv-section">
+  <div class="zv-wrap zsec__center" data-zv-reveal>
+    <span class="zv-eyebrow">404</span>
+    <h1 class="zv-h1">That page doesn&rsquo;t exist.</h1>
+    <p class="zv-lead zsec__lead">It may have moved, or the link may be wrong. Here is everything we make.</p>
+  </div>
+
+  <div class="zv-wrap z404__grid">
+    <div class="zgrid zgrid--pair">
+      {%- for p in collections.all.products limit: 2 -%}
+        {% render 'product-card', card_product: p, eager: forloop.first, heading_level: 2 %}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{ "name": "404", "tag": "section", "settings": [] }
+{% endschema %}

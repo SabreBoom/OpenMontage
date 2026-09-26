@@ -1,0 +1,326 @@
+/* ==========================================================================
+   ZOREV — design tokens
+   One source of truth for colour, type, space, depth, motion and breakpoints.
+   Loaded before zorev.css so the theme can still override anything.
+
+   Every colour pair used for text in this file has been measured against
+   WCAG 2.1 contrast. Three values from the original palette did not pass and
+   are handled explicitly rather than silently shipped:
+
+     MOSS  #78846D on warm white = 3.53:1  -> fails body text.
+           Kept as a DECORATIVE token only. --zv-moss-text (#68725F, 4.51:1)
+           and --zv-moss-strong (#4D5446, 7.02:1) exist for text use.
+     BORDER #D9D8D1 on warm white = 1.28:1 -> decorative hairline only.
+           Form fields and other meaningful boundaries use
+           --zv-line-input (#8D8C88, 3.01:1) to satisfy WCAG 1.4.11.
+     FOCUS  forest on warm white = 11.26:1 but on ink only 1.48:1.
+           The focus ring therefore FLIPS: forest on light grounds, sand on
+           dark ones. A single ring colour cannot pass on both.
+   ========================================================================== */
+
+:root {
+  /* ---- raw palette -------------------------------------------------- */
+  --zv-ink:         #101310;   /* near-black, green cast          */
+  --zv-charcoal:    #171B18;
+  --zv-forest:      #26372C;   /* deep accent, 11.26:1 on warm    */
+  --zv-olive:       #53634B;   /*  5.76:1 on warm                 */
+  --zv-moss:        #78846D;   /* DECORATIVE ONLY — 3.53:1        */
+  --zv-moss-text:   #68725F;   /*  4.51:1 on warm — AA body       */
+  --zv-moss-strong: #4D5446;   /*  7.02:1 on warm — AAA body      */
+  --zv-sand:        #D7D0C3;
+  --zv-warm:        #F4F2EC;   /* warm off-white, not sterile     */
+  --zv-white:       #FFFFFF;
+  --zv-line:        #D9D8D1;   /* decorative hairline             */
+  --zv-line-input:  #8D8C88;   /*  3.01:1 — fields, real edges    */
+  --zv-muted:       #6B706A;   /*  4.52:1 on warm                 */
+
+  /* ---- semantic, light ground (the site's default) ------------------ */
+  --zv-bg:          var(--zv-warm);
+  --zv-bg-raised:   var(--zv-white);
+  --zv-bg-sunken:   #EBE8E0;
+  --zv-text:        var(--zv-ink);
+  --zv-text-2:      #3D423C;          /* 10.4:1 on warm */
+  --zv-text-3:      var(--zv-muted);
+  --zv-accent:      var(--zv-forest);
+  --zv-accent-hover:#1B2820;
+  --zv-on-accent:   var(--zv-warm);
+  --zv-hairline:    var(--zv-line);
+  --zv-hairline-2:  #C6C4BB;
+  --zv-focus:       var(--zv-forest);
+
+  /* ---- type --------------------------------------------------------- */
+  --zv-sans: "Public Sans", ui-sans-serif, system-ui, -apple-system,
+             "Segoe UI", Helvetica, Arial, sans-serif;
+  --zv-serif: "Newsreader", Georgia, "Times New Roman", serif;
+
+  /* Fluid scale. Body is 17px at every width — the one size that never
+     shrinks, because shrinking body copy is how mobile gets unreadable. */
+  --zv-t-micro:  0.75rem;                                        /* 12 */
+  --zv-t-fine:   0.8125rem;                                      /* 13 */
+  --zv-t-sm:     0.9375rem;                                      /* 15 */
+  --zv-t-body:   1.0625rem;                                      /* 17 */
+  --zv-t-lead:   clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);   /* 18-21 */
+  --zv-t-h4:     clamp(1.1875rem, 1.1rem + 0.4vw, 1.4375rem);    /* 19-23 */
+  --zv-t-h3:     clamp(1.375rem, 1.24rem + 0.6vw, 1.75rem);      /* 22-28 */
+  --zv-t-h2:     clamp(1.75rem, 1.45rem + 1.35vw, 2.625rem);     /* 28-42 */
+  --zv-t-h1:     clamp(2.125rem, 1.68rem + 2vw, 3.5rem);         /* 34-56 */
+  --zv-t-display: clamp(2.5rem, 1.7rem + 3.6vw, 5rem);           /* 40-80 */
+
+  --zv-lh-tight: 1.06;
+  --zv-lh-snug:  1.25;
+  --zv-lh-body:  1.6;
+  --zv-lh-loose: 1.72;
+  --zv-tr-tight: -0.018em;
+  --zv-tr-flat:   0em;
+  --zv-tr-wide:   0.12em;
+  --zv-tr-caps:   0.2em;
+  --zv-measure:   62ch;      /* running text never exceeds this */
+
+  /* ---- space: 4px base, doubling where it matters ------------------- */
+  --zv-1: 4px;   --zv-2: 8px;   --zv-3: 12px;  --zv-4: 16px;
+  --zv-5: 24px;  --zv-6: 32px;  --zv-7: 48px;  --zv-8: 64px;
+  --zv-9: 96px;  --zv-10: 128px;
+  --zv-section:  clamp(56px, 7vw, 112px);   /* vertical section rhythm */
+  --zv-gutter:   max(20px, 4vw);            /* never below 20px        */
+  --zv-container: 1240px;
+  --zv-container-narrow: 760px;
+
+  /* ---- radii + edges ------------------------------------------------ */
+  /* Radii were 10 / 16. Stepped down to 8 / 12 in the final design pass:
+     at 16px every plate and panel read as an app card, and the pill buttons
+     are already the one soft shape the brand needs. */
+  --zv-r-xs: 2px;  --zv-r-sm: 6px;  --zv-r-md: 8px;
+  --zv-r-lg: 12px; --zv-r-xl: 18px; --zv-r-pill: 999px;
+  --zv-border: 1px solid var(--zv-hairline);
+
+  /* ---- depth: layered and soft. No single hard drop shadow. -------- */
+  --zv-sh-1: 0 1px 2px rgba(16,19,16,.05),
+             0 2px 6px rgba(16,19,16,.04);
+  --zv-sh-2: 0 2px 4px rgba(16,19,16,.05),
+             0 8px 18px rgba(16,19,16,.06);
+  --zv-sh-3: 0 4px 8px rgba(16,19,16,.06),
+             0 18px 40px rgba(16,19,16,.08);
+  --zv-sh-4: 0 8px 16px rgba(16,19,16,.07),
+             0 36px 70px rgba(16,19,16,.11);
+  --zv-sh-inset: inset 0 1px 0 rgba(255,255,255,.5);
+  /* Photo plates. Supplier photography is shot on white, so a product sits
+     on a white plate on warm paper. A 3:1 outline made every plate look like
+     a form field; a faint ink edge plus a long, soft shadow reads as a print
+     laid on paper instead: the rim is 1.6:1 against the white plate (the
+     house minimum for a photo edge), and 3:1 is kept for controls. */
+  --zv-plate-edge: 0 0 0 1px rgba(16,19,16,.22),
+                   0 14px 34px -20px rgba(16,19,16,.28);
+
+  /* ---- product stage: the ground a cutout sits on ------------------- */
+  /* The catalogue's clean cutouts (product.metafields.zorev.cutouts) have
+     no background of their own, so every place they appear draws the same
+     quiet studio: a warm plate lit from the top with a soft fall-off, and a
+     contact shadow under the object. One recipe, so the hero, the line-up,
+     the pair and the gallery read as one photo shoot. */
+  --zv-stage-light: radial-gradient(90% 70% at 50% 18%, rgba(255,255,255,.9), rgba(255,255,255,0) 70%);
+  --zv-stage-floor: linear-gradient(to top, rgba(16,19,16,.06), rgba(16,19,16,0) 42%);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(16,19,16,.30), rgba(16,19,16,.12) 46%, rgba(16,19,16,0) 72%);
+  --zv-cut-drop: drop-shadow(0 18px 22px rgba(16,19,16,.18)) drop-shadow(0 2px 4px rgba(16,19,16,.10));
+
+  /* ---- motion ------------------------------------------------------- */
+  --zv-ease:        cubic-bezier(.23, 1, .32, 1);      /* strong ease-out */
+  --zv-ease-inout:  cubic-bezier(.77, 0, .175, 1);
+  --zv-ease-drawer: cubic-bezier(.32, .72, 0, 1);
+  --zv-d-press:  140ms;
+  --zv-d-hover:  200ms;
+  --zv-d-ui:     260ms;   /* dropdowns, toggles — under the 300ms budget */
+  --zv-d-drawer: 420ms;
+  --zv-d-reveal: 620ms;   /* editorial reveals may run longer */
+  --zv-lift: -3px;        /* the one hover translate used site-wide */
+
+  /* ---- z-index scale: named, so nothing guesses a number ----------- */
+  --zv-z-base: 0;
+  --zv-z-raised: 10;
+  --zv-z-sticky: 30;
+  --zv-z-overlay: 40;
+  --zv-z-header: 60;      /* ABOVE the overlay — see the note below */
+  --zv-z-toast: 80;
+
+  /* Breakpoints, for reference. CSS cannot read a custom property in a
+     media query, so these are documented here and hand-written in the
+     sections: 480 / 640 / 768 / 900 / 1100 / 1400. */
+}
+
+/* Dark bands (hero, spotlight, final CTA) flip the semantic layer. Scoped
+   to a class, not prefers-color-scheme: these are brand surfaces the design
+   chooses, not a user theme preference. */
+.zv-dark {
+  --zv-bg:          var(--zv-ink);
+  --zv-bg-raised:   var(--zv-charcoal);
+  --zv-bg-sunken:   #0A0C0A;
+  --zv-text:        var(--zv-warm);
+  --zv-text-2:      #CFCCC2;       /* 11.6:1 on ink */
+  --zv-text-3:      #A5A79C;       /*  6.9:1 on ink */
+  --zv-accent:      var(--zv-sand);
+  --zv-accent-hover:#E6E0D5;
+  --zv-on-accent:   var(--zv-ink);
+  --zv-hairline:    rgba(244,242,236,.12);
+  --zv-hairline-2:  rgba(244,242,236,.22);
+  --zv-focus:       var(--zv-sand);   /* forest is 1.48:1 here — unusable */
+  --zv-stage-light: radial-gradient(70% 60% at 50% 30%, rgba(215,208,195,.16), rgba(215,208,195,0) 70%);
+  --zv-stage-floor: linear-gradient(to top, rgba(0,0,0,.28), rgba(0,0,0,0) 46%);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.70), rgba(0,0,0,.30) 46%, rgba(0,0,0,0) 72%);
+  --zv-cut-drop: drop-shadow(0 22px 26px rgba(0,0,0,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.35));
+  --zv-sh-1: 0 1px 2px rgba(0,0,0,.4);
+  --zv-sh-2: 0 6px 18px rgba(0,0,0,.45);
+  --zv-sh-3: 0 16px 40px rgba(0,0,0,.5);
+  --zv-sh-4: 0 34px 70px rgba(0,0,0,.55);
+  --zv-sh-inset: inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* ---- primitives every section inherits ------------------------------ */
+/* Without this every .zv-wrap is width:100% PLUS two gutters, i.e. 40px
+   wider than the viewport on a phone. Measured at 390px: 430px wide, the
+   burger 20px off-screen. It has to be a global reset, not a local one,
+   because the same trap is waiting in every padded full-width box. */
+*, *::before, *::after { box-sizing: border-box; }
+
+.zv-wrap {
+  width: 100%;
+  max-width: var(--zv-container);
+  margin-inline: auto;
+  padding-inline: var(--zv-gutter);
+}
+.zv-wrap--narrow { max-width: var(--zv-container-narrow); }
+
+/* At 200% text (WCAG 1.4.4) a single long word in a display heading is
+   wider than a phone. Break it rather than push the page sideways. */
+h1, h2, h3, h4, p, li, dt, dd, figcaption, blockquote,
+.zv-h1, .zv-h2, .zv-h3 { overflow-wrap: break-word; }
+h1, h2, h3, .zv-h1, .zv-h2, .zv-h3 { hyphens: manual; text-wrap: balance; }
+p, li, dd, figcaption { text-wrap: pretty; }
+.zv-section { padding-block: var(--zv-section); background: var(--zv-bg); color: var(--zv-text); }
+
+.zv-eyebrow {
+  font-family: var(--zv-sans);
+  font-size: var(--zv-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--zv-tr-caps);
+  text-transform: uppercase;
+  color: var(--zv-text-3);
+}
+.zv-h1, .zv-h2, .zv-h3 { font-family: var(--zv-serif); font-weight: 400;
+  line-height: var(--zv-lh-tight); letter-spacing: var(--zv-tr-tight);
+  text-wrap: balance; color: var(--zv-text); margin: 0; }
+.zv-h1 { font-size: var(--zv-t-h1); }
+.zv-h2 { font-size: var(--zv-t-h2); }
+.zv-h3 { font-size: var(--zv-t-h3); line-height: var(--zv-lh-snug); }
+.zv-lead { font-size: var(--zv-t-lead); line-height: var(--zv-lh-body);
+  color: var(--zv-text-2); max-width: 46ch; }
+.zv-body { font-size: var(--zv-t-body); line-height: var(--zv-lh-body);
+  color: var(--zv-text-2); max-width: var(--zv-measure); }
+.zv-fine { font-size: var(--zv-t-fine); line-height: var(--zv-lh-body);
+  color: var(--zv-text-3); }
+.zv-num { font-variant-numeric: tabular-nums; }
+
+/* Visually hidden — present for a screen reader, absent on screen.
+   display:none would remove it from the accessibility tree too, which
+   silences every live region in the theme. Lives here, in the first
+   stylesheet, so no snippet has to carry its own copy. */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
+
+/* Buttons. 48px minimum on touch, per the brief; desktop keeps it tighter
+   only where a pointer is confirmed fine.
+   .btn is the same control under its older name — the product page, cart
+   and forms still use it — so both names share one rule rather than two
+   copies that drift apart. */
+.zv-btn, .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--zv-2);
+  min-height: 48px; padding: 0 var(--zv-5);
+  font-family: var(--zv-sans); font-size: var(--zv-t-fine); font-weight: 600;
+  letter-spacing: var(--zv-tr-wide); text-transform: uppercase; text-decoration: none;
+  border: 1px solid var(--zv-accent); border-radius: var(--zv-r-pill);
+  background: var(--zv-accent); color: var(--zv-on-accent); cursor: pointer;
+  transition: transform var(--zv-d-press) var(--zv-ease),
+              background var(--zv-d-hover) var(--zv-ease),
+              border-color var(--zv-d-hover) var(--zv-ease),
+              box-shadow var(--zv-d-hover) var(--zv-ease);
+}
+.zv-btn--ghost, .btn--ghost { background: transparent; color: var(--zv-text);
+  border-color: var(--zv-hairline-2); }
+.zv-btn--block, .btn--block { width: 100%; }
+@media (hover: hover) and (pointer: fine) {
+  .zv-btn:hover, .btn:hover { background: var(--zv-accent-hover); transform: translateY(var(--zv-lift));
+    box-shadow: var(--zv-sh-2); }
+  .zv-btn--ghost:hover, .btn--ghost:hover { background: var(--zv-bg-raised); border-color: var(--zv-accent);
+    box-shadow: none; }
+}
+.zv-btn:active, .btn:active { transform: scale(.97); }
+.zv-btn[aria-busy="true"], .btn[aria-busy="true"] { opacity: .7; cursor: progress; }
+.zv-btn[disabled], .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ---- product cutouts on the stage ----------------------------------
+   .zv-cut is a transparent product photograph; .zv-stage is the ground it
+   sits on. The shadow is a real element under the object, not a filter on
+   it, so it can flatten as the product lifts on hover and it never costs a
+   repaint of the image itself. */
+.zv-stage { position: relative; isolation: isolate;
+  background: var(--zv-stage-light), var(--zv-stage-floor), var(--zv-bg-sunken); }
+.zv-cut { display: block; width: 100%; height: 100%; object-fit: contain;
+  filter: var(--zv-cut-drop); }
+.zv-stage__shadow { position: absolute; left: 50%; bottom: 6%; width: 62%; height: 9%;
+  transform: translateX(-50%); background: var(--zv-stage-shadow); filter: blur(6px);
+  pointer-events: none; z-index: -1; }
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--zv-focus);
+  outline-offset: 3px;
+  border-radius: var(--zv-r-xs);
+}
+
+/* Scroll reveal. The resting state is VISIBLE — an element is only hidden
+   once JS has confirmed it can reveal it, so a JS failure or a crawler sees
+   the full page rather than an empty one. */
+[data-zv-reveal] { will-change: auto; }
+.zv-js [data-zv-reveal] {
+  opacity: 0; transform: translateY(14px);
+  transition: opacity var(--zv-d-reveal) var(--zv-ease),
+              transform var(--zv-d-reveal) var(--zv-ease);
+}
+.zv-js [data-zv-reveal].is-in { opacity: 1; transform: none; }
+/* Fail-safe. The inline script in <head> marks the document scripted before
+   the deferred file that performs the reveal has loaded, so if that file
+   never arrives — a blocked CDN, an extension, a flaky connection — every
+   revealed section would sit at opacity 0 for good. zorev-enhance.js adds
+   .zv-reveal the moment it takes over; until it does, this animation shows
+   everything after two seconds regardless. Measured: it happened. */
+.zv-js:not(.zv-reveal) [data-zv-reveal] {
+  animation: zv-reveal-failsafe 1ms linear 2s both;
+}
+@keyframes zv-reveal-failsafe { to { opacity: 1; transform: none; } }
+
+/* Reduced motion means FEWER and GENTLER, not none. Zeroing every transition
+   with a blanket !important is the usual shortcut and it costs real usability:
+   a state change with no transition at all reads as a glitch rather than a
+   change, and people who set this preference still need to see that something
+   happened. So: kill travel, looping and parallax; keep colour, opacity and
+   background changes but cap them short. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    /* no looping or long-running animation, and nothing that travels */
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    scroll-behavior: auto !important;
+    transition-delay: 0ms !important;
+    /* a hard cap, not a kill — 120ms still reads as a transition */
+    transition-duration: 120ms !important;
+    transition-timing-function: linear !important;
+  }
+  /* travel and scale are the parts that actually cause trouble */
+  *, *::before, *::after {
+    transition-property: color, background-color, border-color, outline-color,
+                         box-shadow, opacity, fill, stroke, backdrop-filter !important;
+  }
+  .zv-js [data-zv-reveal] { opacity: 1 !important; transform: none !important; }
+  .zv-btn:hover, .zv-btn:active { transform: none; }
+}

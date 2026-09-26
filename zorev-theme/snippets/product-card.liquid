@@ -1,0 +1,149 @@
+{%- comment -%}
+  Product card.
+
+    {% render 'product-card', card_product: product, eager: forloop.first,
+                              sizes: '(min-width: 1100px) 33vw, (min-width: 700px) 50vw, 100vw' %}
+
+  Written against the real catalogue, which is two products:
+    - the oil: 4 images, 4 variants, no per-variant images
+    - the balm: ONE image, ONE variant
+
+  So the hover swap has to be conditional (a one-image product must not
+  crossfade to nothing) and quick-add only appears where a single variant
+  means there is genuinely nothing to choose. Anything with options goes to
+  the product page, because a card cannot ask which one you want.
+
+  Every image in the catalogue has empty alt text, so alt falls back to the
+  product title rather than shipping an unlabelled image.
+
+  heading_level exists because the correct level depends on what is above the
+  card. In a grid under a section h2 the title is an h3; in a collection or
+  search grid sitting directly under the page h1 it has to be an h2, or the
+  document outline jumps h1 -> h3. Defaults to 3.
+{%- endcomment -%}
+
+{%- liquid
+  assign p = card_product
+  assign media_count = p.media.size
+  assign img = p.featured_media.preview_image
+  assign hover_img = nil
+  if media_count > 1
+    assign hover_img = p.media[1].preview_image
+  endif
+
+  assign sizes = sizes | default: '(min-width: 1100px) 360px, (min-width: 700px) 44vw, 88vw'
+  assign loading = 'lazy'
+  assign fetch = 'auto'
+  if eager
+    assign loading = 'eager'
+    assign fetch = 'high'
+  endif
+
+  assign alt = img.alt | default: p.title | escape
+
+  comment
+    Quick-add is only honest when there is exactly one purchasable variant.
+  endcomment
+  assign single = false
+  if p.variants.size == 1 and p.variants.first.available
+    assign single = true
+  endif
+
+  assign hl = heading_level | default: 3
+  if hl < 2
+    assign hl = 2
+  elsif hl > 6
+    assign hl = 6
+  endif
+-%}
+
+<article class="zcard{% unless p.available %} zcard--out{% endunless %}" data-zv-reveal>
+  <a class="zcard__link" href="{{ p.url }}" aria-label="{{ p.title | escape }}">
+    <div class="zcard__fig">
+      {%- if img -%}
+        <img class="zcard__img"
+             src="{{ img | image_url: width: 800 }}"
+             srcset="{{ img | image_url: width: 320 }} 320w,
+                     {{ img | image_url: width: 480 }} 480w,
+                     {{ img | image_url: width: 640 }} 640w,
+                     {{ img | image_url: width: 800 }} 800w,
+                     {{ img | image_url: width: 1100 }} 1100w"
+             sizes="{{ sizes }}"
+             width="{{ img.width }}" height="{{ img.height }}"
+             alt="{{ alt }}" loading="{{ loading }}" fetchpriority="{{ fetch }}" decoding="async">
+        {%- if hover_img -%}
+          <img class="zcard__img zcard__img--alt"
+               src="{{ hover_img | image_url: width: 800 }}"
+               srcset="{{ hover_img | image_url: width: 480 }} 480w,
+                       {{ hover_img | image_url: width: 800 }} 800w"
+               sizes="{{ sizes }}"
+               width="{{ hover_img.width }}" height="{{ hover_img.height }}"
+               alt="" loading="lazy" decoding="async" aria-hidden="true">
+        {%- endif -%}
+      {%- else -%}
+        <div class="zcard__blank" aria-hidden="true"></div>
+      {%- endif -%}
+
+      {%- unless p.available -%}
+        <span class="zcard__flag">Sold out</span>
+      {%- endunless -%}
+    </div>
+
+    <div class="zcard__body">
+      <h{{ hl }} class="zcard__t">{{ p.title | escape }}</h{{ hl }}>
+      <p class="zcard__meta">
+        <span class="zcard__price zv-num">
+          {%- if p.price_varies -%}
+            From {{ p.price_min | money_without_trailing_zeros }}
+          {%- else -%}
+            {{ p.price | money_without_trailing_zeros }}
+          {%- endif -%}
+        </span>
+        {%- if p.compare_at_price > p.price -%}
+          <s class="zcard__was zv-num">{{ p.compare_at_price | money_without_trailing_zeros }}</s>
+        {%- endif -%}
+        {%- if p.variants.size > 1 -%}
+          <span class="zcard__opts">{{ p.variants.size }} options</span>
+        {%- endif -%}
+      </p>
+      {%- comment -%}
+        The multi-buy line comes from the product's "Quantity offer"
+        metafield — the same numbers the product page and the automatic
+        discounts use — so a card can never quote a different deal.
+      {%- endcomment -%}
+      {%- assign zoffer = p.metafields.zorev.offer.value -%}
+      {%- if zoffer.breaks.size > 0 -%}
+        <p class="zcard__multi zv-num">
+          {%- for t in zoffer.breaks -%}
+            {%- assign ztot = p.price | times: t.qty | minus: t.save -%}
+            {{ t.qty }} for {{ ztot | money_without_trailing_zeros }}{% unless forloop.last %} &middot; {% endunless %}
+          {%- endfor -%}
+        </p>
+      {%- endif -%}
+    </div>
+  </a>
+
+  {%- comment -%}
+    The form sits OUTSIDE the anchor. A <button> inside an <a> is invalid
+    HTML and browsers resolve the click unpredictably — you get navigation
+    where you wanted an add-to-cart.
+
+    No JS here and no second submit handler: zorev.js already binds every
+    form[action*="/cart/add"], opens the drawer and refetches the cart. A
+    handler of our own would POST twice and add the item twice. With JS off
+    this posts normally and lands on the cart page.
+  {%- endcomment -%}
+  {%- if single -%}
+    <form class="zcard__form" action="{{ routes.cart_add_url }}" method="post">
+      <input type="hidden" name="id" value="{{ p.variants.first.id }}">
+      <input type="hidden" name="quantity" value="1">
+      <button class="zv-btn zv-btn--ghost zcard__add" type="submit" data-add>
+        Add to bag
+      </button>
+    </form>
+  {%- elsif p.available -%}
+    <a class="zv-btn zv-btn--ghost zcard__add" href="{{ p.url }}" tabindex="-1" aria-hidden="true">
+      Choose options
+    </a>
+  {%- endif -%}
+</article>

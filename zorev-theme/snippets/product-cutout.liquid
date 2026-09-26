@@ -1,0 +1,63 @@
+{%- comment -%}
+  One clean product photograph.
+
+    {% render 'product-cutout', product: p, index: 0, sizes: '(min-width: 900px) 40vw, 90vw', eager: false, alt: 'GODA bottle and box' %}
+
+  Reads the product's "Clean product cutouts" metafield (zorev.cutouts, a
+  list of images in variant order): transparent PNGs cut from the maker's
+  own photographs, so the product is exactly the product — same bottle,
+  same box, same label — without the maker's infographic around it. Every
+  surface that shows a product goes through this snippet, so the hero, the
+  line-up, the pair, the gallery and the bag all show the same object.
+
+  Falls back to the featured image on a white plate when a product has no
+  cutouts yet, so a new product never renders as an empty stage.
+
+  index      which cutout, usually the selected variant's index. Clamped to
+             the last one, so a product with one cutout and four options
+             still shows something.
+  eager      true for the LCP candidate only.
+{%- endcomment -%}
+{%- liquid
+  assign cuts = product.metafields.zorev.cutouts.value
+  assign i = index | default: 0
+  assign cut = nil
+  if cuts.size > 0
+    if i >= cuts.size
+      assign i = cuts.size | minus: 1
+    endif
+    if i < 0
+      assign i = 0
+    endif
+    comment
+      A list.file_reference value iterates fine but does not index: cuts[i]
+      hands image_url an object it rejects ("invalid url input"). A one-item
+      loop at the offset is the reliable way to pick a single file.
+    endcomment
+    for c in cuts offset: i limit: 1
+      assign cut = c
+    endfor
+  endif
+  assign alt_text = alt | default: product.title
+  assign sizes_attr = sizes | default: '(min-width: 900px) 40vw, 90vw'
+-%}
+{%- if cut -%}
+  <img class="zv-cut{% if class != blank %} {{ class }}{% endif %}"
+       src="{{ cut | image_url: width: 900 }}"
+       srcset="{{ cut | image_url: width: 360 }} 360w, {{ cut | image_url: width: 540 }} 540w, {{ cut | image_url: width: 720 }} 720w, {{ cut | image_url: width: 900 }} 900w, {{ cut | image_url: width: 1200 }} 1200w"
+       sizes="{{ sizes_attr }}"
+       width="{{ cut.width | default: 900 }}" height="{{ cut.height | default: 1200 }}"
+       alt="{{ alt_text | strip_html | escape }}"
+       {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+{%- else -%}
+  {%- assign img = product.featured_media.preview_image -%}
+  {%- if img -%}
+    <img class="zv-cut zv-cut--plate{% if class != blank %} {{ class }}{% endif %}"
+         src="{{ img | image_url: width: 900 }}"
+         srcset="{{ img | image_url: width: 400 }} 400w, {{ img | image_url: width: 700 }} 700w, {{ img | image_url: width: 900 }} 900w, {{ img | image_url: width: 1200 }} 1200w"
+         sizes="{{ sizes_attr }}"
+         width="{{ img.width | default: 1200 }}" height="{{ img.height | default: 1200 }}"
+         alt="{{ alt_text | strip_html | escape }}"
+         {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+  {%- endif -%}
+{%- endif -%}

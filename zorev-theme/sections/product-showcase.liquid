@@ -1,0 +1,172 @@
+{%- comment -%}
+  Product showcase — the homepage's "here is what we sell".
+
+  Two editorial panels rather than two stock product cards. Each product
+  is its clean cutout (product.metafields.zorev.cutouts) standing on the
+  same lit stage as the hero, with a contact shadow, so the line-up reads
+  as one photo shoot rather than two supplier listings in white boxes. A
+  product without cutouts falls back to its featured image on a white
+  plate — never an empty stage.
+
+  Then: the type, the maker's name, one plain sentence, three or four
+  physical facts, the price, the multi-buy line read from the product's
+  own offer data, and the actions.
+
+  Desktop hover lifts the product off its shadow by a few pixels. Touch
+  devices get no hover state at all — a tap goes straight to the product.
+
+  The action respects variants: a product with options links to its page
+  to choose one; a single-variant product adds directly, through a plain
+  form that zorev.js turns into an Ajax add.
+{%- endcomment -%}
+{%- assign s = section.settings -%}
+<section class="zsc{% if s.raised %} band--raised{% endif %}" id="line" aria-labelledby="zsc-h-{{ section.id }}">
+  <div class="zv-wrap">
+    <header class="zsc__head" data-zv-reveal>
+      {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
+      <h2 class="zv-h2" id="zsc-h-{{ section.id }}">{{ s.heading }}</h2>
+      {%- if s.body != blank -%}<div class="zv-lead zsc__lead">{{ s.body }}</div>{%- endif -%}
+    </header>
+
+    <div class="zsc__grid">
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign p = block.settings.product
+          assign offer = p.metafields.zorev.offer.value
+          assign short = p.vendor | upcase
+          assign dv = p.selected_or_first_available_variant
+          assign fid = 'zsc-add-' | append: section.id | append: '-' | append: forloop.index
+          assign has_cut = false
+          if p.metafields.zorev.cutouts.value.size > 0
+            assign has_cut = true
+          endif
+        -%}
+        {%- if p != blank and p.title != blank -%}
+        <article class="zsc__item" data-zv-reveal {{ block.shopify_attributes }}>
+          <a class="zsc__stage{% if has_cut %} zv-stage{% else %} zsc__stage--plate{% endif %}" href="{{ p.url }}" tabindex="-1" aria-hidden="true">
+            <span class="zsc__obj">
+              {% render 'product-cutout', product: p, sizes: '(min-width: 760px) 34vw, 70vw', alt: '' %}
+            </span>
+            {%- if has_cut -%}<span class="zv-stage__shadow zsc__shadow" aria-hidden="true"></span>{%- endif -%}
+          </a>
+
+          <div class="zsc__body">
+            {%- if p.type != blank -%}<p class="zsc__k">{{ p.type | escape }}</p>{%- endif -%}
+            {%- comment -%}
+              The maker's name as the product's name — GODA, HOYGI — the way
+              the pair and the price ladders already say it. The full listing
+              title stays on the product page, and in the link for a screen
+              reader.
+            {%- endcomment -%}
+            <h3 class="zsc__name"><a href="{{ p.url }}">{{ short | escape }}<span class="visually-hidden"> &mdash; {{ p.title | escape }}</span></a></h3>
+            {%- if block.settings.line != blank -%}<p class="zsc__line">{{ block.settings.line | escape }}</p>{%- endif -%}
+            {%- if block.settings.facts != blank -%}<div class="zsc__facts">{{ block.settings.facts }}</div>{%- endif -%}
+
+            <div class="zsc__buy">
+              <p class="zsc__price">
+                <span class="zsc__from">{{ p.price | money_without_trailing_zeros }}</span>
+                {%- if offer.breaks.size > 0 -%}
+                  <span class="zsc__multi">
+                    {%- for t in offer.breaks -%}
+                      {%- assign tot = p.price | times: t.qty | minus: t.save -%}
+                      {{ t.qty }} for {{ tot | money_without_trailing_zeros }}{% unless forloop.last %} &middot; {% endunless %}
+                    {%- endfor -%}
+                  </span>
+                {%- endif -%}
+              </p>
+
+              <div class="zsc__act">
+                <a class="zv-btn" href="{{ p.url }}">Shop {{ short | escape }}</a>
+                {%- if p.has_only_default_variant and dv.available -%}
+                  {%- form 'product', p, id: fid, class: 'zsc__form' -%}
+                    <input type="hidden" name="id" value="{{ dv.id }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <button class="zv-btn zv-btn--ghost zsc__add" type="submit" data-add>Add to bag</button>
+                  {%- endform -%}
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+        </article>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+
+  <style>
+    .zsc{padding-block:var(--zv-section);background:var(--zv-bg);scroll-margin-top:72px}
+    .zsc.band--raised{background:var(--zv-bg-sunken)}
+    .zsc__head{max-width:40rem;margin-bottom:clamp(28px,4vw,56px)}
+    .zsc__head .zv-h2{margin:0 0 var(--zv-3)}
+    .zsc__lead > :last-child{margin-bottom:0}
+    .zsc__grid{display:grid;gap:clamp(40px,5vw,64px)}
+    @media(min-width:760px){.zsc__grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(24px,3vw,48px)}}
+
+    .zsc__item{display:grid;gap:var(--zv-5);align-content:start}
+    /* Square at every width, and the same stage as the hero: soft top
+       light, a faint floor, a contact shadow. No white box. */
+    .zsc__stage{position:relative;display:block;aspect-ratio:1 / 1;border-radius:var(--zv-r-lg);overflow:hidden;
+      isolation:isolate}
+    .zsc__stage--plate{background:var(--zv-white);box-shadow:var(--zv-plate-edge)}
+    .zsc__obj{position:absolute;inset:0;display:grid;place-items:end center;padding:8% 12% 11%;z-index:1;
+      transition:transform var(--zv-d-reveal) var(--zv-ease)}
+    .zsc__obj .zv-cut{width:auto;max-width:100%;height:100%;max-height:100%;object-fit:contain}
+    .zsc__stage--plate .zsc__obj{padding:clamp(16px,3vw,36px);place-items:center}
+    .zsc__stage--plate .zv-cut{filter:none;width:100%}
+    .zsc__shadow{bottom:7%;width:56%;height:7%;z-index:0;
+      transition:transform var(--zv-d-reveal) var(--zv-ease),opacity var(--zv-d-reveal) var(--zv-ease)}
+    @media (hover:hover) and (pointer:fine){
+      .zsc__item:hover .zsc__obj{transform:translateY(-8px)}
+      .zsc__item:hover .zsc__shadow{transform:translateX(-50%) scale(1.06);opacity:.75}
+    }
+
+    .zsc__body{display:grid;gap:var(--zv-2)}
+    .zsc__k{margin:0;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
+      text-transform:uppercase;color:var(--zv-forest)}
+    .zsc__name{margin:0;font-family:var(--zv-serif);font-weight:400;font-size:clamp(2rem,1.7rem + 1.2vw,2.75rem);
+      line-height:1.05;letter-spacing:var(--zv-tr-tight)}
+    .zsc__name a{color:var(--zv-ink);text-decoration:none}
+    @media (hover:hover) and (pointer:fine){ .zsc__name a:hover{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px} }
+    .zsc__name a:focus-visible{outline:2px solid var(--zv-focus);outline-offset:3px}
+    .zsc__line{margin:0;color:var(--zv-text-2);max-width:40ch}
+    /* Physical facts as a short ruled list, not a badge row. */
+    .zsc__facts ul{list-style:none;margin:var(--zv-2) 0 0;padding:0;display:grid}
+    .zsc__facts li{padding:9px 0;border-top:1px solid var(--zv-line);font-size:var(--zv-t-sm);color:var(--zv-text-2)}
+    .zsc__facts li:last-child{border-bottom:1px solid var(--zv-line)}
+    .zsc__facts strong{color:var(--zv-ink);font-weight:600}
+    .zsc__facts p{margin:0;font-size:var(--zv-t-sm);color:var(--zv-text-2)}
+    .zsc__buy{display:grid;gap:var(--zv-4);margin-top:var(--zv-2)}
+    .zsc__price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0;max-width:none;
+      font-variant-numeric:tabular-nums}
+    .zsc__from{font-size:var(--zv-t-h4);font-weight:600;color:var(--zv-ink);letter-spacing:-0.01em}
+    .zsc__multi{font-size:var(--zv-t-sm);color:var(--zv-forest);font-weight:600}
+    .zsc__act{display:flex;flex-wrap:wrap;gap:var(--zv-3)}
+    .zsc__form{display:flex}
+    .zsc__act > *{flex:0 1 auto}
+    @media(max-width:520px){ .zsc__act > *{flex:1 1 0;min-width:0} .zsc__act .zv-btn{width:100%;justify-content:center;padding-inline:var(--zv-4)} }
+    @media(prefers-reduced-motion:reduce){ .zsc__obj,.zsc__shadow{transition-duration:0ms} .zsc__item:hover .zsc__obj{transform:none} }
+  </style>
+</section>
+{% schema %}
+{
+  "name": "Product showcase",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The line" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Two essentials." },
+    { "type": "richtext", "id": "body", "label": "Intro" },
+    { "type": "checkbox", "id": "raised", "label": "Raised background", "default": false }
+  ],
+  "blocks": [
+    { "type": "product", "name": "Product", "limit": 4,
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "text", "id": "line", "label": "One-line description",
+          "info": "What it physically is. No claims the product page can't back up." },
+        { "type": "richtext", "id": "facts", "label": "Physical facts",
+          "info": "A short bulleted list: size, form, options, how it is used. Leave the maker's own claims on the product page, labelled as theirs." }
+      ] }
+  ],
+  "presets": [{ "name": "Product showcase", "blocks": [{ "type": "product" }, { "type": "product" }] }]
+}
+{% endschema %}

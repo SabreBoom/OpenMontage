@@ -1,0 +1,99 @@
+/* ==========================================================================
+   ZOREV — page chrome
+   Merchant-authored rich text, empty states, pagination, search, the
+   collection index and the 404. Separate from zorev-cards.css because these
+   only appear on non-home templates.
+   ========================================================================== */
+
+/* ---- merchant-authored copy ---------------------------------------------
+   page.content and collection.description come out of the rich-text editor,
+   so the elements are whatever the editor produced. These rules give that
+   arbitrary HTML the same measure and rhythm as the rest of the site.     */
+.zv-rte { font-size: var(--zv-t-body); line-height: var(--zv-lh-body);
+  color: var(--zv-text-2); max-width: var(--zv-measure); }
+.zv-rte > :first-child { margin-top: 0; }
+.zv-rte > :last-child { margin-bottom: 0; }
+.zv-rte p, .zv-rte ul, .zv-rte ol { margin: 0 0 var(--zv-4); }
+.zv-rte h2, .zv-rte h3, .zv-rte h4 {
+  font-family: var(--zv-serif); font-weight: 400; color: var(--zv-text);
+  line-height: var(--zv-lh-snug); letter-spacing: var(--zv-tr-tight);
+  margin: var(--zv-7) 0 var(--zv-3); }
+.zv-rte h2 { font-size: var(--zv-t-h3); }
+.zv-rte h3 { font-size: var(--zv-t-h4); }
+.zv-rte h4 { font-size: var(--zv-t-body); font-family: var(--zv-sans); font-weight: 600; }
+.zv-rte ul, .zv-rte ol { padding-left: var(--zv-5); }
+.zv-rte li { margin-bottom: var(--zv-2); }
+.zv-rte li::marker { color: var(--zv-moss-text); }
+.zv-rte a { color: var(--zv-text); text-decoration: underline;
+  text-decoration-color: var(--zv-hairline-2); text-underline-offset: 3px; }
+.zv-rte a:hover { text-decoration-color: currentColor; }
+.zv-rte strong { font-weight: 600; color: var(--zv-text); }
+.zv-rte img { max-width: 100%; height: auto; border-radius: var(--zv-r-md); }
+.zv-rte blockquote { margin: var(--zv-5) 0; padding-left: var(--zv-4);
+  border-left: 2px solid var(--zv-hairline-2); font-family: var(--zv-serif);
+  font-size: var(--zv-t-lead); }
+/* A table from the editor is the one thing that will blow out a phone layout,
+   so it gets its own scroll container rather than widening the page. */
+.zv-rte table { width: 100%; border-collapse: collapse; font-size: var(--zv-t-sm);
+  display: block; overflow-x: auto; }
+.zv-rte th, .zv-rte td { padding: var(--zv-2) var(--zv-3); text-align: left;
+  border-bottom: 1px solid var(--zv-line); }
+
+/* ---- empty states, pagination ------------------------------------------- */
+.zempty { display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--zv-4); padding-block: var(--zv-7); }
+.zpag { margin-top: var(--zv-8); font-family: var(--zv-sans);
+  font-size: var(--zv-t-sm); }
+.zpag .pagination, .zpag > span { display: flex; flex-wrap: wrap; gap: var(--zv-2); }
+.zpag a, .zpag span {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; padding: 0 var(--zv-3);
+  border-radius: var(--zv-r-pill); text-decoration: none; color: var(--zv-text-2); }
+.zpag a { box-shadow: inset 0 0 0 1px var(--zv-hairline-2); }
+.zpag a:hover { color: var(--zv-text); box-shadow: inset 0 0 0 1px var(--zv-accent); }
+.zpag .current { color: var(--zv-text); font-weight: 600;
+  background: var(--zv-bg-sunken); }
+
+/* ---- search ------------------------------------------------------------- */
+.zsearch { display: flex; flex-wrap: wrap; align-items: flex-end;
+  gap: var(--zv-3); margin-bottom: var(--zv-7); }
+.zsearch__field { display: flex; flex-direction: column; gap: var(--zv-2);
+  flex: 1 1 260px; min-width: 0; }
+.zsearch__label { font-family: var(--zv-sans); font-size: var(--zv-t-fine);
+  font-weight: 600; color: var(--zv-text-2); }
+.zsearch__input {
+  width: 100%; min-height: 48px; padding: 0 var(--zv-4);
+  font-family: var(--zv-sans); font-size: var(--zv-t-body);
+  color: var(--zv-text); background: var(--zv-bg-raised);
+  /* --zv-line-input, not --zv-line: a form field is a real boundary and has
+     to clear 3:1 for WCAG 1.4.11, which the decorative hairline does not */
+  border: 1px solid var(--zv-line-input); border-radius: var(--zv-r-pill);
+}
+.zsearch__input:focus-visible { outline: 2px solid var(--zv-focus); outline-offset: 2px; }
+.zsearch__go { flex: 0 0 auto; }
+.zsearch__count { margin: 0 0 var(--zv-5); }
+
+.zresult { display: flex; flex-direction: column; gap: var(--zv-2);
+  padding: var(--zv-5); text-decoration: none; color: inherit;
+  border-radius: var(--zv-r-md); background: var(--zv-bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--zv-line-input); }
+.zresult__t { margin: 0; font-family: var(--zv-serif); font-weight: 400;
+  font-size: var(--zv-t-h4); line-height: var(--zv-lh-snug); color: var(--zv-text); }
+
+/* ---- collection list ---------------------------------------------------- */
+.zcoll { display: flex; flex-direction: column; gap: var(--zv-3);
+  text-decoration: none; color: inherit; }
+.zcoll__fig { aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--zv-r-md);
+  background: var(--zv-bg-sunken); box-shadow: inset 0 0 0 1px var(--zv-line-input); }
+.zcoll__fig img { width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform var(--zv-d-reveal) var(--zv-ease); }
+@media (hover: hover) and (pointer: fine) {
+  .zcoll:hover .zcoll__fig img { transform: scale(1.04); }
+}
+.zcoll__t { margin: 0; font-family: var(--zv-serif); font-weight: 400;
+  font-size: var(--zv-t-h4); line-height: var(--zv-lh-snug); color: var(--zv-text); }
+.zcoll p { margin: 0; }
+
+/* ---- 404 ---------------------------------------------------------------- */
+.z404__grid { margin-top: var(--zv-8); }
+.zpage__t { margin-bottom: var(--zv-5); }

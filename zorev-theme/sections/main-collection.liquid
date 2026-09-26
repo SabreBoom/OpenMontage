@@ -1,0 +1,61 @@
+{%- comment -%}
+  Collection.
+
+  The product loop is wrapped in a paginate block. The previous version
+  rendered default_pagination without one, so the paginate object was nil,
+  the markup never appeared, and the page silently capped at Shopify's
+  default 50 products with no way to reach the rest.
+{%- endcomment -%}
+{%- liquid
+  assign count = collection.products_count
+  assign grid = 'zgrid zgrid--3'
+  if count <= 2
+    assign grid = 'zgrid zgrid--pair'
+  elsif count >= 7
+    assign grid = 'zgrid zgrid--4'
+  endif
+-%}
+
+<section class="zv-section">
+  <div class="zv-wrap">
+    <header class="zsec__head" data-zv-reveal>
+      <span class="zv-eyebrow">
+        {{ count }} item{% if count != 1 %}s{% endif %}
+      </span>
+      <h1 class="zv-h1">{{ collection.title | escape }}</h1>
+      {%- if collection.description != blank -%}
+        <div class="zv-lead zsec__lead zv-rte">{{ collection.description }}</div>
+      {%- endif -%}
+    </header>
+
+    {%- paginate collection.products by 24 -%}
+      {%- if collection.products.size > 0 -%}
+        <div class="{{ grid }}">
+          {%- for p in collection.products -%}
+            {%- comment -%} heading_level 2: these sit directly under the page h1 {%- endcomment -%}
+            {% render 'product-card',
+               card_product: p,
+               eager: forloop.first,
+               heading_level: 2,
+               sizes: '(min-width: 1200px) 300px, (min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw' %}
+          {%- endfor -%}
+        </div>
+
+        {%- if paginate.pages > 1 -%}
+          <nav class="zpag" aria-label="Pagination">
+            {{ paginate | default_pagination }}
+          </nav>
+        {%- endif -%}
+      {%- else -%}
+        <div class="zempty">
+          <p class="zv-body">Nothing in this collection yet.</p>
+          <a class="zv-btn" href="{{ routes.all_products_collection_url }}">See everything</a>
+        </div>
+      {%- endif -%}
+    {%- endpaginate -%}
+  </div>
+</section>
+
+{% schema %}
+{ "name": "Collection", "tag": "section", "settings": [] }
+{% endschema %}

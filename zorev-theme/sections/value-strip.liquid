@@ -1,0 +1,99 @@
+{%- comment -%}
+  Value strip — the "why ZOREV" moment.
+
+  Deliberately not a card grid. The homepage already has two of those, and a
+  third identical row of rounded rectangles is what makes a store read as a
+  template. This is a rule-separated row: hairlines between the columns on
+  desktop, between the rows on mobile, no fills, no boxes.
+
+  Every claim is a block the merchant writes, so nothing is hardcoded — but
+  the schema info says plainly what may and may not go in one.
+{%- endcomment -%}
+{%- if section.blocks.size > 0 -%}
+<section class="band zvs" data-zvs>
+  <div class="wrap">
+    {%- if section.settings.eyebrow != blank -%}
+      <span class="eyebrow">{{ section.settings.eyebrow | escape }}</span>
+    {%- endif -%}
+    {%- if section.settings.heading != blank -%}
+      <h2 class="zvs__h">{{ section.settings.heading }}</h2>
+    {%- endif -%}
+
+    <div class="zvs__row">
+      {%- for b in section.blocks -%}
+        <div class="zvs__cell" data-zv-reveal {{ b.shopify_attributes }}>
+          {%- if b.settings.num != blank -%}
+            <span class="zvs__n zv-num">{{ b.settings.num | escape }}</span>
+          {%- endif -%}
+          {%- if b.settings.title != blank -%}
+            <h3 class="zvs__t">{{ b.settings.title | escape }}</h3>
+          {%- endif -%}
+          {%- if b.settings.body != blank -%}
+            <p class="zvs__p">{{ b.settings.body | escape }}</p>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+
+  <style>
+    .zvs__h{ max-width: 24ch; }
+    .zvs__row{
+      display: grid; gap: 0;
+      margin-top: clamp(1.6rem, 4vw, 2.8rem);
+      border-top: 1px solid var(--zv-line-input);
+    }
+    .zvs__cell{
+      padding: clamp(1.4rem, 3vw, 2.2rem) 0;
+      border-bottom: 1px solid var(--zv-line-input);
+    }
+    @media (min-width: 760px){
+      .zvs__row{
+        grid-auto-flow: column; grid-auto-columns: 1fr;
+        border-bottom: 1px solid var(--zv-line-input);
+      }
+      .zvs__cell{
+        border-bottom: 0;
+        padding: clamp(1.6rem, 2.6vw, 2.4rem) clamp(1.2rem, 2.4vw, 2rem);
+      }
+      /* The hairline belongs between the columns, so the first cell has none
+         and it never doubles up against the container edge. */
+      .zvs__cell + .zvs__cell{ border-left: 1px solid var(--zv-line-input); }
+      .zvs__cell:first-child{ padding-left: 0; }
+      .zvs__cell:last-child{ padding-right: 0; }
+    }
+    .zvs__n{
+      display: block; color: var(--zv-accent);
+      font-size: var(--zv-t-fine); font-weight: 600;
+      letter-spacing: var(--zv-tr-caps); text-transform: uppercase;
+      margin-bottom: .55rem;
+    }
+    .zvs__t{
+      margin: 0 0 .5rem;
+      font-family: var(--zv-serif); font-weight: 400;
+      font-size: var(--zv-t-h4); line-height: var(--zv-lh-snug);
+      color: var(--zv-ink);
+    }
+    .zvs__p{ margin: 0; color: var(--zv-text-2); max-width: 34ch; }
+  </style>
+</section>
+{%- endif -%}
+{% schema %}
+{
+  "name": "Value strip",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Why ZOREV" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading" }
+  ],
+  "blocks": [
+    { "type": "point", "name": "Point", "limit": 4, "settings": [
+      { "type": "text", "id": "num", "label": "Label" },
+      { "type": "text", "id": "title", "label": "Title" },
+      { "type": "text", "id": "body", "label": "Body",
+        "info": "State only what is verifiably true. No invented specifications, certifications, delivery windows, customer counts or review claims." }
+    ] }
+  ],
+  "presets": [{ "name": "Value strip", "blocks": [{ "type": "point" }, { "type": "point" }, { "type": "point" }] }]
+}
+{% endschema %}

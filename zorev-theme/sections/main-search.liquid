@@ -1,0 +1,64 @@
+{%- comment -%}
+  Search.
+
+  The field has a real <label>, not a placeholder standing in for one: a
+  placeholder disappears the moment you type, which leaves anyone using a
+  screen reader — or anyone who got distracted — with an unlabelled box.
+{%- endcomment -%}
+<section class="zv-section">
+  <div class="zv-wrap">
+    <header class="zsec__head" data-zv-reveal>
+      <h1 class="zv-h1">Search</h1>
+    </header>
+
+    <form class="zsearch" action="{{ routes.search_url }}" method="get" role="search">
+      <div class="zsearch__field">
+        <label class="zsearch__label" for="zsearch-q">What are you looking for?</label>
+        <input class="zsearch__input" id="zsearch-q" type="search" name="q"
+               value="{{ search.terms | escape }}" autocomplete="off"
+               enterkeyhint="search">
+      </div>
+      <button class="zv-btn zsearch__go" type="submit">Search</button>
+    </form>
+
+    {%- if search.performed -%}
+      {%- paginate search.results by 24 -%}
+        <p class="zv-eyebrow zsearch__count" aria-live="polite">
+          {{ search.results_count }} result{% if search.results_count != 1 %}s{% endif %}
+          {%- if search.terms != blank %} for &ldquo;{{ search.terms | escape }}&rdquo;{% endif -%}
+        </p>
+
+        {%- if search.results_count > 0 -%}
+          <div class="zgrid zgrid--3">
+            {%- for item in search.results -%}
+              {%- if item.object_type == 'product' -%}
+                {% render 'product-card', card_product: item, eager: forloop.first, heading_level: 2 %}
+              {%- else -%}
+                <a class="zresult" href="{{ item.url }}">
+                  <span class="zv-eyebrow">{{ item.object_type | capitalize }}</span>
+                  <h2 class="zresult__t">{{ item.title | escape }}</h2>
+                  {%- if item.content != blank -%}
+                    <p class="zv-fine">{{ item.content | strip_html | truncatewords: 24 }}</p>
+                  {%- endif -%}
+                </a>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+
+          {%- if paginate.pages > 1 -%}
+            <nav class="zpag" aria-label="Pagination">{{ paginate | default_pagination }}</nav>
+          {%- endif -%}
+        {%- else -%}
+          <div class="zempty">
+            <p class="zv-body">Nothing matched that. There are only two products, so it may be quicker to look at both.</p>
+            <a class="zv-btn" href="{{ routes.all_products_collection_url }}">See both</a>
+          </div>
+        {%- endif -%}
+      {%- endpaginate -%}
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{ "name": "Search", "tag": "section", "settings": [] }
+{% endschema %}

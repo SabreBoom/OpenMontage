@@ -1,0 +1,119 @@
+{%- comment -%}
+  Contact form.
+
+  The Contact page carries templateSuffix "contact", inherited from the theme
+  this one replaced. Nothing in this theme answered to that suffix, so the
+  page had no form at all and the only route to a human was a mailto link
+  buried in the body copy.
+
+  Shopify's contact form posts to the shop's own contact endpoint — no app,
+  no endpoint to configure. Errors and the success state both render inline
+  and take focus, because a form that silently succeeds above the fold you
+  already scrolled past reads as a form that did nothing.
+{%- endcomment -%}
+<section class="band {% if section.settings.raised %}band--raised{% endif %}">
+  <div class="wrap cf">
+    {%- if section.settings.heading != blank -%}<h2>{{ section.settings.heading }}</h2>{%- endif -%}
+    {%- if section.settings.body != blank -%}<div class="rte lead">{{ section.settings.body }}</div>{%- endif -%}
+
+    {%- form 'contact', id: 'contact-form' -%}
+      {%- if form.posted_successfully? -%}
+        <p class="cf__ok" role="status" tabindex="-1" data-cf-msg>
+          Thanks — your message is in. We&rsquo;ll reply to the email address you gave us.
+        </p>
+      {%- elsif form.errors -%}
+        <div class="cf__err" role="alert" tabindex="-1" data-cf-msg>
+          {{ form.errors | default_errors }}
+        </div>
+      {%- endif -%}
+
+      <div class="cf__row">
+        <label for="cf-name">Name</label>
+        <input id="cf-name" type="text" name="contact[name]"
+               autocomplete="name" value="{{ form.name }}">
+      </div>
+
+      <div class="cf__row">
+        <label for="cf-email">Email <span class="cf__req">required</span></label>
+        <input id="cf-email" type="email" name="contact[email]"
+               autocomplete="email" required value="{{ form.email }}">
+      </div>
+
+      <div class="cf__row">
+        <label for="cf-order">Order number <span class="cf__opt">optional</span></label>
+        <input id="cf-order" type="text" name="contact[order number]"
+               inputmode="numeric" autocomplete="off">
+      </div>
+
+      <div class="cf__row">
+        <label for="cf-body">Message <span class="cf__req">required</span></label>
+        <textarea id="cf-body" name="contact[body]" rows="6" required>{{ form.body }}</textarea>
+      </div>
+
+      <button class="btn" type="submit">Send message</button>
+    {%- endform -%}
+  </div>
+
+  <style>
+    .cf{max-width:46rem}
+    .cf__row{display:grid;gap:.45rem;margin-bottom:1.15rem}
+    .cf label{
+      display:flex;align-items:baseline;gap:.6rem;
+      font-family:var(--zv-sans);font-size:var(--zv-t-fine);font-weight:600;
+      letter-spacing:var(--zv-tr-wide);text-transform:uppercase;
+      color:var(--zv-text-2);
+    }
+    .cf__req,.cf__opt{letter-spacing:.02em;text-transform:none;
+      font-size:var(--zv-t-fine);font-weight:400}
+    .cf__req{color:var(--zv-accent)}
+    .cf__opt{color:var(--zv-text-3)}
+    .cf input,.cf textarea{
+      width:100%;min-height:48px;padding:.85rem 1rem;
+      /* A form field is a real boundary: --zv-line-input clears 3:1 for WCAG
+         1.4.11. This was --line, the decorative hairline at 1.28:1, on a
+         near-invisible --glass fill — a field you had to guess at. */
+      background:var(--zv-bg-raised);
+      border:1px solid var(--zv-line-input);border-radius:var(--zv-r-md);
+      color:var(--zv-ink);font:inherit;
+    }
+    .cf textarea{min-height:10rem;resize:vertical}
+    .cf input:focus-visible,.cf textarea:focus-visible{
+      outline:2px solid var(--zv-focus);outline-offset:2px}
+    .cf button{margin-top:.4rem}
+
+    .cf__ok,.cf__err{padding:1rem 1.15rem;border-radius:var(--zv-r-md);
+      margin-bottom:1.5rem;outline:none;color:var(--zv-ink)}
+    /* Was champagne gold (212,175,55) left over from a palette that was
+       deliberately dropped. Success is the brand accent now. */
+    .cf__ok{border:1px solid var(--zv-accent);
+      background:color-mix(in srgb, var(--zv-forest) 8%, transparent)}
+    /* Error keeps a red hue, because that is what red is for — but the
+       border and the role="alert" carry the meaning for anyone who cannot
+       separate the hue, and the text stays full-strength ink. */
+    .cf__err{border:1px solid #8C2F2F;
+      background:color-mix(in srgb, #8C2F2F 7%, transparent)}
+    .cf__err ul{margin:0;padding-left:1.15rem}
+    .cf__err li{margin:.2rem 0;color:var(--zv-ink)}
+  </style>
+  <script>
+  (function(){
+    var m = document.querySelector('[data-cf-msg]');
+    if (!m) return;
+    m.focus();
+    m.scrollIntoView({ block: 'center',
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  })();
+  </script>
+</section>
+{% schema %}
+{
+  "name": "Contact form",
+  "tag": "section",
+  "settings": [
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Send us a message" },
+    { "type": "richtext", "id": "body", "label": "Intro" },
+    { "type": "checkbox", "id": "raised", "label": "Raised background", "default": true }
+  ],
+  "presets": [{ "name": "Contact form" }]
+}
+{% endschema %}

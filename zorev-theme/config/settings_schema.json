@@ -1,0 +1,41 @@
+[
+  { "name": "theme_info", "theme_name": "ZOREV",
+    "theme_version": "11.0.0", "theme_author": "ZOREV",
+    "theme_documentation_url": "https://zorev.org",
+    "theme_support_url": "https://zorev.org" },
+  { "name": "Brand",
+    "settings": [
+      { "type": "image_picker", "id": "favicon", "label": "Favicon" },
+      { "type": "image_picker", "id": "social_image", "label": "Default social share image", "info": "Used for link previews when a page has no image of its own." },
+      { "type": "color", "id": "bg", "label": "Browser chrome colour", "default": "#101310",
+        "info": "Only used for the mobile browser's own toolbar tint. Page colours come from zorev-tokens.css." },
+      { "type": "color", "id": "accent", "label": "Accent", "default": "#26372C" }
+    ] },
+  { "name": "Offers",
+    "settings": [
+      { "type": "paragraph", "content": "These describe offers that Shopify actually applies through automatic discounts (Discounts). Change a discount there and change it here too, or the store will promise a price the cart won't charge. Quantity tiers live on each product, in the 'Quantity offer' metafield." },
+      { "type": "header", "content": "The pair" },
+      { "type": "checkbox", "id": "pair_enabled", "label": "Show the pair offer", "default": true },
+      { "type": "product", "id": "pair_product_a", "label": "Product A",
+        "info": "The product that receives the saving (the 'customer gets' side of the Buy X Get Y discount)." },
+      { "type": "product", "id": "pair_product_b", "label": "Product B",
+        "info": "The 'customer buys' side. Shopify only applies the pair saving when the bag holds at least as many of A as of B — the cart offer follows that rule." },
+      { "type": "number", "id": "pair_save_cents", "label": "Pair saving, in cents", "default": 600 },
+      { "type": "text", "id": "pair_discount_title", "label": "Pair discount title", "default": "The ZOREV Pair · Save $6",
+        "info": "Must match the automatic discount's title exactly. The cart uses it to confirm the saving really applied before it says so." },
+      { "type": "text", "id": "pair_name", "label": "Offer name", "default": "The ZOREV Pair" },
+      { "type": "text", "id": "pair_tagline", "label": "Tagline", "default": "Two essentials. One simple order." }
+    ] },
+  { "name": "SEO",
+    "settings": [
+      { "type": "paragraph", "content": "Shopify takes the homepage title and description from Online Store > Preferences. These are used instead while those are empty or just the shop name." },
+      { "type": "text", "id": "seo_home_title", "label": "Homepage title", "default": "ZOREV — Perfume oil and balm stick, free shipping worldwide" },
+      { "type": "textarea", "id": "seo_home_description", "label": "Homepage meta description", "default": "ZOREV sells two essentials: GODA, a 15 ml perfume oil worn from a dropper, and HOYGI, a 9 g balm stick that goes on dry. Multi-buy and pair savings apply in your bag. Free tracked shipping, worldwide." }
+    ] },
+  { "name": "Trust",
+    "settings": [
+      { "type": "text", "id": "support_email", "label": "Support email", "default": "zorevhousing@gmail.com" },
+      { "type": "checkbox", "id": "returns_claim", "label": "Show '30-day returns'", "default": false,
+        "info": "Leave off until Settings > Policies > Refund policy allows unopened personal-care items back. It currently lists personal care goods as non-returnable, which covers every product in the store." }
+    ] }
+]

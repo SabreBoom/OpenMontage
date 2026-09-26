@@ -1,0 +1,202 @@
+{%- comment -%}
+  The ZOREV Pair.
+
+  Reads the pair from Theme settings > Offers — the same setting the
+  product page and the cart read — so the three can never quote different
+  prices. The saving itself is Shopify's automatic Buy X Get Y discount;
+  this section only adds one of each product to the bag and says what that
+  discount does. The bag then shows the saving by Shopify's own title.
+
+  Set as a dark editorial band with the two products staged together in
+  one scene — the bottle in front, the stick behind, a shared floor, one
+  soft light — rather than two white squares with a plus sign between
+  them. The numbers are large because they are the point, but there is no
+  red, no badge, no timer.
+
+  The oil has four options, so there is a chooser — a customer who wants
+  White should not have to fix the bag afterwards. The scene follows it:
+  pick White and the bottle in the picture is the white-box one.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign pa = settings.pair_product_a
+  assign pb = settings.pair_product_b
+-%}
+{%- if settings.pair_enabled and pa != blank and pb != blank and pa.title != blank and pb.title != blank -%}
+  {%- liquid
+    assign va = pa.selected_or_first_available_variant
+    assign vb = pb.selected_or_first_available_variant
+    assign full = pa.price | plus: pb.price
+    assign pair = full | minus: settings.pair_save_cents
+    assign cuts_a = pa.metafields.zorev.cutouts.value
+    assign cuts_b = pb.metafields.zorev.cutouts.value
+    assign has_scene = false
+    if cuts_a.size > 0 and cuts_b.size > 0
+      assign has_scene = true
+    endif
+  -%}
+<section class="zpr zv-dark" id="pair" data-zpr aria-labelledby="zpr-h-{{ section.id }}">
+  <div class="zv-wrap zpr__in">
+    {%- if has_scene -%}
+      <div class="zpr__scene" data-zv-reveal data-zv-scene data-zv-scene-pointer="10" data-zv-scene-scroll="0.08">
+        <div class="zpr__glow" aria-hidden="true"></div>
+        <a class="zpr__obj zpr__obj--b" href="{{ pb.url }}" data-zv-depth="0.4" tabindex="-1" aria-hidden="true">
+          {% render 'product-cutout', product: pb, sizes: '(min-width: 900px) 22vw, 42vw', alt: '' %}
+          <span class="zpr__shadow" aria-hidden="true"></span>
+        </a>
+        <a class="zpr__obj zpr__obj--a" href="{{ pa.url }}" data-zv-depth="1" tabindex="-1" aria-hidden="true">
+          {%- for c in cuts_a -%}
+            {%- assign cv = pa.variants[forloop.index0] -%}
+            <span class="zpr__variant" data-zpr-cut="{{ cv.id | default: va.id }}"{% unless forloop.first %} hidden{% endunless %}>
+              {% render 'product-cutout', product: pa, index: forloop.index0, sizes: '(min-width: 900px) 28vw, 54vw', alt: '' %}
+            </span>
+          {%- endfor -%}
+          <span class="zpr__shadow" aria-hidden="true"></span>
+        </a>
+      </div>
+    {%- else -%}
+      <div class="zpr__figs" data-zv-reveal>
+        <a class="zpr__fig" href="{{ pa.url }}" tabindex="-1" aria-hidden="true">{% render 'product-cutout', product: pa, sizes: '(min-width: 900px) 24vw, 44vw', alt: '' %}</a>
+        <span class="zpr__plus" aria-hidden="true">{% render 'zicon', name: 'plus' %}</span>
+        <a class="zpr__fig" href="{{ pb.url }}" tabindex="-1" aria-hidden="true">{% render 'product-cutout', product: pb, sizes: '(min-width: 900px) 24vw, 44vw', alt: '' %}</a>
+      </div>
+    {%- endif -%}
+
+    <div class="zpr__copy" data-zv-reveal>
+      <span class="zv-eyebrow zpr__k">{{ settings.pair_name | escape }}</span>
+      <h2 class="zpr__h" id="zpr-h-{{ section.id }}">{{ pa.vendor | upcase | escape }} + {{ pb.vendor | upcase | escape }}</h2>
+      <p class="zpr__price">
+        <strong>{{ pair | money_without_trailing_zeros }}</strong>
+        <s><span class="visually-hidden">Regular price </span>{{ full | money_without_trailing_zeros }}</s>
+        <span class="zpr__save">Save {{ settings.pair_save_cents | money_without_trailing_zeros }}</span>
+      </p>
+      <p class="zpr__tag">{{ settings.pair_tagline | escape }}</p>
+      {%- if s.body != blank -%}<div class="zpr__body">{{ s.body }}</div>{%- endif -%}
+
+      <div class="zpr__act">
+        {%- assign avail = pa.variants | where: 'available' -%}
+        {%- if avail.size > 1 -%}
+          <label class="zpr__pick">
+            <span class="zpr__picklabel">{{ pa.vendor | upcase | escape }} option</span>
+            <select data-zpr-a>
+              {%- for pv in avail -%}<option value="{{ pv.id }}">{% render 'zvlabel', t: pv.title %}</option>{%- endfor -%}
+            </select>
+          </label>
+        {%- endif -%}
+        <button class="zv-btn zpr__btn" type="button" data-zpr-add
+                data-a="{{ va.id }}" data-b="{{ vb.id }}">Add the pair &middot; {{ pair | money_without_trailing_zeros }}</button>
+      </div>
+      <p class="zpr__fine">One of each. The {{ settings.pair_save_cents | money_without_trailing_zeros }} comes off automatically in your bag &mdash; no code. Free shipping, worldwide.</p>
+      <p class="visually-hidden" role="status" aria-live="polite" data-zpr-live></p>
+    </div>
+  </div>
+
+  <style>
+    .zpr{position:relative;isolation:isolate;overflow:hidden;padding-block:var(--zv-section);
+      background:
+        radial-gradient(70% 80% at 22% 40%, rgba(83,99,75,.24), transparent 72%),
+        var(--zv-ink);
+      color:var(--zv-warm);scroll-margin-top:72px}
+    .zpr [hidden]{display:none !important}
+    .zpr__in{display:grid;gap:clamp(32px,5vw,72px);align-items:center}
+    @media(min-width:900px){.zpr__in{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
+
+    /* ---- the scene: both products on one floor ---- */
+    .zpr__scene{position:relative;width:100%;max-width:600px;margin-inline:auto;aspect-ratio:1 / 1}
+    @media(max-width:899px){.zpr__scene{max-width:480px;aspect-ratio:5 / 4}}
+    .zpr__glow{position:absolute;inset:-4% -8% 0;z-index:0;pointer-events:none;
+      background:radial-gradient(52% 46% at 50% 48%, rgba(215,208,195,.22), rgba(215,208,195,0) 72%)}
+    .zpr__obj{position:absolute;display:block;will-change:transform}
+    .zpr__obj .zv-cut{position:relative;z-index:1;height:auto}
+    .zpr__obj--a{left:4%;bottom:6%;width:58%;z-index:2}
+    .zpr__obj--b{right:2%;bottom:16%;width:45%;z-index:1}
+    .zpr__variant{display:block}
+    .zpr__shadow{position:absolute;left:50%;bottom:-4%;width:78%;height:9%;transform:translateX(-50%);
+      z-index:0;pointer-events:none;background:var(--zv-stage-shadow);filter:blur(8px)}
+    .zpr__obj--b .zpr__shadow{opacity:.75;width:70%}
+
+    /* ---- fallback: two plates ---- */
+    .zpr__figs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(8px,1.5vw,16px)}
+    .zpr__fig{display:block;aspect-ratio:1 / 1;border-radius:var(--zv-r-lg);overflow:hidden;background:var(--zv-white);
+      box-shadow:0 1px 2px rgba(0,0,0,.25),0 18px 36px -18px rgba(0,0,0,.6)}
+    .zpr__fig .zv-cut{width:100%;height:100%;object-fit:contain;padding:clamp(12px,2vw,24px);filter:none}
+    .zpr__plus{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
+      border:1px solid rgba(244,242,236,.38);color:var(--zv-sand)}
+    .zpr__plus .zicon{width:16px;height:16px}
+
+    /* ---- copy ---- */
+    .zpr__k{color:var(--zv-sand)}
+    .zpr__h{margin:0 0 var(--zv-3);font-family:var(--zv-serif);font-weight:400;font-size:var(--zv-t-h1);
+      line-height:var(--zv-lh-tight);letter-spacing:var(--zv-tr-tight);color:var(--zv-warm)}
+    .zpr__price{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin:0 0 var(--zv-3);
+      font-variant-numeric:tabular-nums;max-width:none}
+    .zpr__price strong{font-family:var(--zv-sans);font-size:clamp(2.25rem,1.8rem + 1.6vw,3.25rem);
+      font-weight:500;letter-spacing:-0.02em;color:var(--zv-warm);line-height:1}
+    .zpr__price s{font-size:var(--zv-t-lead);color:#CFCCC2}
+    .zpr__save{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);text-transform:uppercase;
+      color:var(--zv-ink);background:var(--zv-sand);padding:5px 10px;border-radius:var(--zv-r-pill)}
+    .zpr__tag{font-family:var(--zv-serif);font-size:var(--zv-t-h4);color:var(--zv-sand);margin:0 0 var(--zv-5);max-width:none}
+    .zpr__body p{color:#CFCCC2}
+    .zpr__act{display:flex;flex-wrap:wrap;gap:var(--zv-3);align-items:flex-end;margin-top:var(--zv-2)}
+    .zpr__pick{display:grid;gap:6px;flex:1 1 200px;max-width:280px}
+    .zpr__picklabel{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);text-transform:uppercase;color:#CFCCC2}
+    .zpr__pick select{min-height:52px;padding:0 var(--zv-4);border-radius:var(--zv-r-pill);
+      border:1px solid rgba(244,242,236,.42);background:rgba(244,242,236,.06);color:var(--zv-warm);font:inherit}
+    .zpr__pick select option{color:var(--zv-ink)}
+    .zpr__pick select:focus-visible{outline:2px solid var(--zv-sand);outline-offset:2px}
+    .zpr__btn{min-height:52px;flex:1 1 220px;justify-content:center}
+    .zpr__btn[aria-busy="true"]{cursor:progress;opacity:.8}
+    .zpr__fine{margin:var(--zv-4) 0 0;font-size:var(--zv-t-fine);color:#CFCCC2;max-width:none}
+    @media(max-width:520px){ .zpr__pick{max-width:none} }
+  </style>
+  <script>
+  (function () {
+    var root = document.querySelector('[data-zpr]'); if (!root) return;
+    var btn = root.querySelector('[data-zpr-add]');
+    var pick = root.querySelector('[data-zpr-a]');
+    var live = root.querySelector('[data-zpr-live]');
+    var cuts = [].slice.call(root.querySelectorAll('[data-zpr-cut]'));
+    function showCut(id) {
+      if (!cuts.length) return;
+      var hit = cuts.filter(function (c) { return c.getAttribute('data-zpr-cut') === String(id); })[0];
+      if (!hit) return;
+      cuts.forEach(function (c) { c.hidden = (c !== hit); });
+    }
+    if (pick) pick.addEventListener('change', function () {
+      btn.setAttribute('data-a', pick.value);
+      showCut(pick.value);
+    });
+    btn.addEventListener('click', function () {
+      if (btn.getAttribute('aria-busy') === 'true') return;
+      var label = btn.textContent;
+      btn.setAttribute('aria-busy', 'true'); btn.disabled = true; btn.textContent = 'Adding…';
+      fetch('/cart/add.js', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ items: [
+          { id: Number(btn.getAttribute('data-a')), quantity: 1 },
+          { id: Number(btn.getAttribute('data-b')), quantity: 1 }
+        ] })
+      })
+        .then(function (r) { return r.ok ? r.json() : r.json().then(function (j) { throw new Error(j && j.description); }); })
+        .then(function () {
+          if (window.ZorevCart) { window.ZorevCart.show(); return window.ZorevCart.fetch(); }
+          window.location.href = '/cart';
+        })
+        .catch(function (err) { if (live) live.textContent = (err && err.message) || 'The pair could not be added. Please try again.'; })
+        .then(function () { btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = label; });
+    });
+  })();
+  </script>
+</section>
+{%- endif -%}
+{% schema %}
+{
+  "name": "The pair",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "The products, price and saving come from Theme settings > Offers, so this section, the product page and the cart always agree." },
+    { "type": "richtext", "id": "body", "label": "Extra copy" }
+  ],
+  "presets": [{ "name": "The pair" }]
+}
+{% endschema %}

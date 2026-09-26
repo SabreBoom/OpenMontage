@@ -1,0 +1,39 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "settings": { "sticky_atc": true },
+      "blocks": {
+        "ship": {
+          "type": "accordion",
+          "settings": {
+            "title": "Shipping & returns",
+            "content": "<p><strong>Free shipping on every order, worldwide.</strong> Orders leave our fulfilment network within one business day, and a tracking number follows by email once the carrier scans the parcel. Delivery times and customs are on the <a href=\"/pages/shipping\">Shipping &amp; Delivery</a> page.</p><p><strong>Arrived damaged, defective or wrong?</strong> Email a photo to <a href=\"mailto:zorevhousing@gmail.com\">zorevhousing@gmail.com</a> and we'll make it right.</p><p><strong>Returns.</strong> Our <a href=\"/policies/refund-policy\">refund policy</a> doesn't take back personal care goods for a change of mind, and both ZOREV products are personal care goods. Orders shipped into the EU can still be cancelled or returned within 14 days of delivery, unused and in the original packaging.</p>"
+          }
+        },
+        "faq": {
+          "type": "accordion",
+          "settings": {
+            "title": "FAQ",
+            "content": "<p><strong>Do the multi-buy and pair savings need a code?</strong><br>No. They're applied automatically in your bag, and you'll see each one listed before checkout.</p><p><strong>Can I mix options on a multi-buy?</strong><br>Yes. The saving counts every unit of that product in your bag, whichever options you choose.</p><p><strong>Who makes these?</strong><br>GODA makes the perfume oil and Hoygi makes the balm stick, both in China. We choose them, write the listings and answer for them.</p><p><strong>Is checkout secure?</strong><br>Yes. Checkout runs on Shopify's encrypted checkout, and we never see or store your card details.</p><p>More answers on the <a href=\"/pages/faq\">FAQ page</a>.</p>"
+          }
+        }
+      },
+      "block_order": ["ship", "faq"]
+    },
+    "reviews": {
+      "type": "product-reviews",
+      "settings": { "eyebrow": "Reviews", "heading": "From real orders only" }
+    }
+  },
+  "order": ["main", "reviews"]
+}

@@ -1,0 +1,34 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "current": {
+    "bg": "#101310",
+    "accent": "#26372C",
+    "pair_enabled": true,
+    "pair_product_a": "goda-pheromone-perfume-oil",
+    "pair_product_b": "hoygi-calcium-multi-balm",
+    "pair_save_cents": 600,
+    "pair_discount_title": "The ZOREV Pair · Save $6",
+    "pair_name": "The ZOREV Pair",
+    "pair_tagline": "Two essentials. One simple order.",
+    "support_email": "zorevhousing@gmail.com",
+    "returns_claim": false,
+    "seo_home_title": "ZOREV — Perfume oil and balm stick, free shipping worldwide",
+    "seo_home_description": "ZOREV sells two essentials: GODA, a 15 ml perfume oil worn from a dropper, and HOYGI, a 9 g balm stick that goes on dry. Multi-buy and pair savings apply in your bag. Free tracked shipping, worldwide.",
+    "sections": {
+      "header": {
+        "type": "header",
+        "settings": {
+          "overlay": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+<section class="zv-section">
+  <div class="zv-wrap zv-wrap--narrow" data-zv-reveal>
+    <h1 class="zv-h1 zpage__t">{{ page.title | escape }}</h1>
+    {%- if page.content != blank -%}
+      <div class="zv-rte">{{ page.content }}</div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{ "name": "Page", "tag": "section", "settings": [] }
+{% endschema %}

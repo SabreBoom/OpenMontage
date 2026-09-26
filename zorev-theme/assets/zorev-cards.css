@@ -1,0 +1,166 @@
+/* ==========================================================================
+   ZOREV — product card
+   Lives in a stylesheet, not in the snippet: the snippet renders once per
+   product, and a <style> block inside it would ship the same rules four
+   times on a collection page.
+   ========================================================================== */
+
+.zcard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.zcard__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zv-4);
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--zv-r-md);
+}
+/* one ring around the whole card, not a ring around the text node */
+.zcard__link:focus-visible { outline: 2px solid var(--zv-focus); outline-offset: 4px; }
+
+/* ---- media ---------------------------------------------------------------
+   aspect-ratio reserves the box before the image loads, so the grid does not
+   jump. The catalogue is square (1254x1254), so 1/1 is the true ratio and
+   nothing gets cropped.                                                    */
+.zcard__fig {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--zv-r-md);
+  /* White under a white-ground product shot, with the shared plate edge —
+     a faint rim and a soft shadow — so it reads as a print on the page. */
+  background: var(--zv-white);
+  box-shadow: var(--zv-plate-edge);
+}
+.zcard__img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform var(--zv-d-reveal) var(--zv-ease),
+              opacity var(--zv-d-ui) var(--zv-ease);
+}
+.zcard__img--alt { opacity: 0; }
+.zcard__blank { position: absolute; inset: 0; background: var(--zv-bg-sunken); }
+
+@media (hover: hover) and (pointer: fine) {
+  .zcard:hover .zcard__img { transform: scale(1.035); }
+  /* only meaningful when a second image exists — the snippet omits the
+     element entirely for a one-image product, so there is nothing to fade to */
+  .zcard:hover .zcard__img--alt { opacity: 1; }
+}
+
+.zcard__flag {
+  position: absolute; left: var(--zv-3); top: var(--zv-3);
+  padding: 6px var(--zv-3);
+  font-family: var(--zv-sans); font-size: var(--zv-t-micro); font-weight: 600;
+  letter-spacing: var(--zv-tr-wide); text-transform: uppercase;
+  background: var(--zv-warm); color: var(--zv-ink);
+  border-radius: var(--zv-r-pill);
+  box-shadow: var(--zv-sh-1);
+}
+.zcard--out .zcard__img { opacity: .55; }
+
+/* ---- text ---------------------------------------------------------------- */
+.zcard__body { display: flex; flex-direction: column; gap: var(--zv-2); }
+.zcard__t {
+  margin: 0;
+  font-family: var(--zv-serif); font-weight: 400;
+  font-size: var(--zv-t-h4); line-height: var(--zv-lh-snug);
+  letter-spacing: var(--zv-tr-tight);
+  color: var(--zv-text);
+  text-wrap: balance;
+}
+.zcard__meta {
+  margin: 0;
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--zv-2);
+  font-family: var(--zv-sans); font-size: var(--zv-t-sm);
+  color: var(--zv-text-2);
+}
+.zcard__price { font-weight: 600; color: var(--zv-text); }
+.zcard__was { color: var(--zv-text-3); }
+.zcard__opts {
+  font-size: var(--zv-t-fine); color: var(--zv-text-3);
+  padding-left: var(--zv-2); border-left: 1px solid var(--zv-line);
+}
+
+/* ---- action --------------------------------------------------------------
+   Revealed on hover where there is a real pointer, ALWAYS visible on touch.
+   A control that only exists on hover does not exist on a phone.           */
+/* The action is pinned to the bottom of the card, and the link carries the
+   gap. Without this a card whose title wraps to two lines pushes its button
+   16px lower than its neighbours' and the row stops lining up. */
+.zcard__link { margin-bottom: var(--zv-4); }
+.zcard__form { margin-top: auto; }
+.zcard__add {
+  width: 100%;
+  min-height: 48px;
+  margin-top: auto;
+}
+.zcard__form .zcard__add { margin-top: 0; }
+
+@media (hover: hover) and (pointer: fine) {
+  .zcard__add {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity var(--zv-d-ui) var(--zv-ease),
+                transform var(--zv-d-ui) var(--zv-ease),
+                background var(--zv-d-hover) var(--zv-ease),
+                border-color var(--zv-d-hover) var(--zv-ease);
+  }
+  /* focus-within matters: a keyboard user must be able to reach the button
+     without a mouse ever hovering the card */
+  .zcard:hover .zcard__add,
+  .zcard:focus-within .zcard__add { opacity: 1; transform: none; }
+}
+
+/* zorev.js disables the button and swaps its label while the POST is in
+   flight, so the disabled state is the one that actually occurs. */
+.zcard__add:disabled { cursor: progress; opacity: .7; }
+
+@media (prefers-reduced-motion: reduce) {
+  .zcard__img { transition-property: opacity; }
+  .zcard:hover .zcard__img { transform: none; }
+  .zcard__add { transform: none; }
+}
+
+/* ---- the grid these sit in ---------------------------------------------- */
+.zgrid {
+  display: grid;
+  gap: var(--zv-6) var(--zv-5);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 560px) { .zgrid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .zgrid--3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1200px) { .zgrid--4 { grid-template-columns: repeat(4, 1fr); } }
+/* With a two-product catalogue a 4-up grid leaves two dead columns, so the
+   two-item case is centred and capped rather than stretched. */
+.zgrid--pair { max-width: 860px; margin-inline: auto; }
+
+/* ==========================================================================
+   Section furniture shared by the homepage bands.
+   ========================================================================== */
+.zsec--raised { background: var(--zv-bg-sunken); }
+.zsec--dark { background: var(--zv-bg); color: var(--zv-text); }
+
+.zsec__head { display: flex; flex-direction: column; gap: var(--zv-3);
+  margin-bottom: var(--zv-7); max-width: 46ch; }
+.zsec__center { display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--zv-3); }
+/* Centred text is harder to read line-to-line, so only the short bands get it
+   and only from 700px up, where the measure is wide enough to earn it. */
+@media (min-width: 700px) {
+  .zsec__center { align-items: center; text-align: center; }
+  .zsec__center .zsec__lead { margin-inline: auto; }
+}
+.zsec__lead > :first-child { margin-top: 0; }
+.zsec__lead > :last-child { margin-bottom: 0; }
+.zsec__cta { margin-top: var(--zv-4); }
+
+/* Multi-buy line under the price. Forest, not red: it is information about
+   the offer, not an alarm. */
+.zcard__multi { margin: 4px 0 0; font-size: var(--zv-t-fine); font-weight: 600; color: var(--zv-forest); }
