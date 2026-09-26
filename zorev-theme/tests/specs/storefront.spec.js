@@ -115,7 +115,7 @@ test.describe('storefront', () => {
     await expect(page.locator('[data-cart-total]')).toContainText('$' + (j.total_price / 100).toFixed(2));
     // remove everything
     while (await page.locator('.zline').count()) {
-      await page.locator('.zline').first().locator('[data-qty][data-to="0"]').click();
+      await page.locator('.zline').first().getByRole('button', { name: 'Remove' }).click();
       await page.waitForTimeout(600);
     }
     await expect(page.locator('.zcart__empty')).toBeVisible();
@@ -221,7 +221,10 @@ test.describe('layout at every width', () => {
         const o = await noOverflow(page);
         expect(o.sw, `${p} @ ${w}`).toBeLessThanOrEqual(o.cw);
       }
-      expect(errors, 'uncaught JS errors').toEqual([]);
+      // Only the theme's own errors count: Shopify's shop-js loader imports
+      // its modules from cdn.shopify.com and reports its own failures as
+      // uncaught, which the theme neither loads nor can influence.
+      expect(errors.filter(e => !/cdn\.shopify\.com\/shopifycloud/.test(e)), 'uncaught JS errors').toEqual([]);
       await ctx.close();
     });
   }

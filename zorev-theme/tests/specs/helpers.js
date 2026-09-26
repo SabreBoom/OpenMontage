@@ -12,7 +12,7 @@ const HOYGI = { handle: 'hoygi-calcium-multi-balm', product_id: 9424931160315, i
 // the storefront's own telemetry POSTs (monorail batches, /api/collect,
 // fec/produce). None of it is under test, and on this store its volume
 // alone is enough to trip the cart endpoints' rate limiting.
-const BLOCK = /google-analytics|googletagmanager|monorail|web-pixels|\/wpm@|preloads\.js|shopifycloud\/shop-js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm|challenge-platform|\.well-known\/shopify|\/api\/collect|\/api\/event|\/api\/unstable\/graphql|privacy-banner|consent-tracking/;
+const BLOCK = /google-analytics|googletagmanager|monorail|web-pixels|\/wpm@|preloads\.js|standard-actions|origin_trials|remote_product_tracking|load_feature|portable-wallets|checkouts\/internal|judge\.me|jdgm|challenge-platform|\.well-known\/shopify|\/api\/collect|\/api\/event|\/api\/unstable\/graphql|privacy-banner|consent-tracking/;
 
 function withPreview(path) {
   if (!PREVIEW) return path;

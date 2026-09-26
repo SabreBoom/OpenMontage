@@ -41,9 +41,17 @@ function paced() {
   return new Promise(r => setTimeout(r, at - now));
 }
 
+// A GET that comes back 5xx is retried twice after a short pause: the store
+// answers the odd document request with a quick 503 that clears at once.
+// Writes (cart calls) are never retried, so a test never adds twice.
 async function curlFetch(url, opts) {
   await paced();
-  return curlOnce(url, opts);
+  let r = await curlOnce(url, opts);
+  for (let attempt = 0; r.status >= 500 && (opts.method || 'GET') === 'GET' && attempt < 2; attempt++) {
+    await new Promise(res => setTimeout(res, 1500 * (attempt + 1)));
+    r = await curlOnce(url, opts);
+  }
+  return r;
 }
 
 function curlOnce(url, { method = 'GET', headers = {}, body = null, jar }) {
