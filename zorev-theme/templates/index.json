@@ -215,7 +215,7 @@
             "label": "Trail",
             "title": "Where the signal drops.",
             "line": "No mirror, no sink. Both go on by hand.",
-            "image": "shopify://shop_images/IMG_7283.jpg",
+            "image": "shopify://shop_images/zorev-v12-trail-moss-2x.jpg",
             "image_alt": "Sunlight falling through a dark forest onto mossy rocks",
             "position": "50% 60%",
             "link": ""
@@ -401,7 +401,7 @@
     "closer": {
       "type": "story",
       "settings": {
-        "image": "shopify://shop_images/zorev-hero-forest-basalt.jpg",
+        "image": "shopify://shop_images/zorev-v12-closer-forest-1_5x_58e5d243-dc0f-4343-ac84-55e50e73ccd9.jpg",
         "image_alt": "Misty forest floor with wet basalt rock and morning light",
         "eyebrow": "Zorev",
         "heading": "Two essentials. One simple order.",

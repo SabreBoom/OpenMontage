@@ -203,3 +203,16 @@ These cannot be generated or staged. The `Real media` section shows an honest em
 clip is added **and** its "I have permission" box is ticked. For each clip: 9:16, under 20 s, the
 creator's written permission, the credit exactly as they want it, a poster frame from the clip, and
 a caption that says plainly what happens in it.
+
+## Enhanced store files (2026-09-30)
+
+Two photographs in live sections were below the size they are shown at on
+sharp screens. Each was resampled (Lanczos) with a light pre-smooth, so JPEG
+blocks are not enlarged, and a gentle unsharp mask. This is classical
+resampling, not AI upscaling: it adds no detail that was not in the photo.
+Mean colour is unchanged and the originals are kept in Content > Files.
+
+| Section | Original | Enhanced file | Size |
+| --- | --- | --- | --- |
+| Made to move, Trail | `IMG_7283.jpg` (768×1376) | `zorev-v12-trail-moss-2x.jpg` | 1536×2752 |
+| Closer | `zorev-hero-forest-basalt.jpg` (2048×1152) | `zorev-v12-closer-forest-1_5x_58e5d243-dc0f-4343-ac84-55e50e73ccd9.jpg` (Shopify added the suffix) | 3072×1728 |
