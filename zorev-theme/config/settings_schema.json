@@ -30,7 +30,9 @@
     "settings": [
       { "type": "paragraph", "content": "Shopify takes the homepage title and description from Online Store > Preferences. These are used instead while those are empty or just the shop name." },
       { "type": "text", "id": "seo_home_title", "label": "Homepage title", "default": "ZOREV — Perfume oil and balm stick, free shipping worldwide" },
-      { "type": "textarea", "id": "seo_home_description", "label": "Homepage meta description", "default": "ZOREV sells two essentials: GODA, a 15 ml perfume oil worn from a dropper, and HOYGI, a 9 g balm stick that goes on dry. Multi-buy and pair savings apply in your bag. Free tracked shipping, worldwide." }
+      { "type": "textarea", "id": "seo_home_description", "label": "Homepage meta description", "default": "GODA, a 15 ml perfume oil worn from a dropper, and HOYGI, a 9 g balm stick that goes on dry. Savings apply in your bag; free tracked shipping worldwide.", "info": "About 150 characters: search results cut descriptions off at roughly 155." },
+      { "type": "text", "id": "seo_all_title", "label": "Shop all page title", "default": "Shop all: GODA perfume oil and HOYGI balm stick", "info": "/collections/all has no SEO fields of its own in the admin; Shopify would title it \"Products\" with no description." },
+      { "type": "textarea", "id": "seo_all_description", "label": "Shop all page meta description", "default": "Both ZOREV essentials in one place: GODA, a 15 ml perfume oil worn from a dropper, and HOYGI, a 9 g balm stick. Free tracked shipping worldwide." }
     ] },
   { "name": "Trust",
     "settings": [

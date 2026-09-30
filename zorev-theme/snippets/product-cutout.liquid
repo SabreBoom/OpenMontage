@@ -17,6 +17,10 @@
              the last one, so a product with one cutout and four options
              still shows something.
   eager      true for the LCP candidate only.
+  vt_static  true for the one picture that carries the page-to-page name
+             from the markup (the product page's first picture). Every
+             cutout also says which product it is (data-vt-product), so the
+             script in layout/theme.liquid can name the one that was tapped.
 {%- endcomment -%}
 {%- liquid
   assign cuts = product.metafields.zorev.cutouts.value
@@ -48,6 +52,7 @@
        sizes="{{ sizes_attr }}"
        width="{{ cut.width | default: 900 }}" height="{{ cut.height | default: 1200 }}"
        alt="{{ alt_text | strip_html | escape }}"
+       data-vt-product="{{ product.handle | escape }}"{% if vt_static %} data-vt-static{% endif %}
        {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
 {%- else -%}
   {%- assign img = product.featured_media.preview_image -%}
@@ -58,6 +63,7 @@
          sizes="{{ sizes_attr }}"
          width="{{ img.width | default: 1200 }}" height="{{ img.height | default: 1200 }}"
          alt="{{ alt_text | strip_html | escape }}"
+         data-vt-product="{{ product.handle | escape }}"{% if vt_static %} data-vt-static{% endif %}
          {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
   {%- endif -%}
 {%- endif -%}

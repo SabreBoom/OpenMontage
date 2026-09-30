@@ -15,7 +15,12 @@
 
   The oil has four options, so there is a chooser — a customer who wants
   White should not have to fix the bag afterwards. The scene follows it:
-  pick White and the bottle in the picture is the white-box one.
+  pick White and the bottle in the picture is the White one.
+
+  Asset slot (visual asset brief, P1 / P1-F). The scene is assembled from
+  cutouts because no photograph of the pair together exists. When it does,
+  "Photograph" replaces the assembled scene in the same frame and at the
+  same size; empty, the section is exactly as before.
 {%- endcomment -%}
 {%- liquid
   assign s = section.settings
@@ -34,17 +39,32 @@
     if cuts_a.size > 0 and cuts_b.size > 0
       assign has_scene = true
     endif
+    assign has_photo = false
+    if s.photo != blank or s.video != blank
+      assign has_photo = true
+    endif
   -%}
 <section class="zpr zv-dark" id="pair" data-zpr aria-labelledby="zpr-h-{{ section.id }}">
   <div class="zv-wrap zpr__in">
-    {%- if has_scene -%}
-      <div class="zpr__scene" data-zv-reveal data-zv-scene data-zv-scene-pointer="10" data-zv-scene-scroll="0.08">
+    {%- if has_photo -%}
+      <figure class="zpr__photo" data-zv-reveal>
+        {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 900px) 48vw, 92vw', alt: s.photo_alt %}
+      </figure>
+    {%- elsif has_scene -%}
+      <div class="zpr__scene zv-landed" data-zv-reveal data-zv-scene data-zv-scene-pointer="10" data-zv-scene-scroll="0.08">
         <div class="zpr__glow" aria-hidden="true"></div>
         <a class="zpr__obj zpr__obj--b" href="{{ pb.url }}" data-zv-depth="0.4" tabindex="-1" aria-hidden="true">
           {% render 'product-cutout', product: pb, sizes: '(min-width: 900px) 22vw, 42vw', alt: '' %}
           <span class="zpr__shadow" aria-hidden="true"></span>
         </a>
-        <a class="zpr__obj zpr__obj--a" href="{{ pa.url }}" data-zv-depth="1" tabindex="-1" aria-hidden="true">
+        {%- liquid
+          assign cut_a0 = nil
+          for c in cuts_a limit: 1
+            assign cut_a0 = c
+          endfor
+        -%}
+        <a class="zpr__obj zpr__obj--a" href="{{ pa.url }}" data-zv-depth="1" tabindex="-1" aria-hidden="true"
+           style="aspect-ratio: {{ cut_a0.width | default: 3 }} / {{ cut_a0.height | default: 4 }}">
           {%- for c in cuts_a -%}
             {%- assign cv = pa.variants[forloop.index0] -%}
             <span class="zpr__variant" data-zpr-cut="{{ cv.id | default: va.id }}"{% unless forloop.first %} hidden{% endunless %}>
@@ -92,7 +112,9 @@
   </div>
 
   <style>
-    .zpr{position:relative;isolation:isolate;overflow:hidden;padding-block:var(--zv-section);
+    /* overflow clip, not hidden, so the landscape's scroll-linked drift
+       reads the page's scroll (a hidden box is its own scroll container) */
+    .zpr{position:relative;isolation:isolate;overflow:hidden;overflow:clip;padding-block:var(--zv-section);
       background:
         radial-gradient(70% 80% at 22% 40%, rgba(83,99,75,.24), transparent 72%),
         var(--zv-ink);
@@ -104,6 +126,8 @@
     /* ---- the scene: both products on one floor ---- */
     .zpr__scene{position:relative;width:100%;max-width:600px;margin-inline:auto;aspect-ratio:1 / 1}
     @media(max-width:899px){.zpr__scene{max-width:480px;aspect-ratio:5 / 4}}
+    /* the landscape opens out past the scene and fades into the band */
+    .zpr__scene.zv-landed::before{inset:-2% -22% -8% -22%}
     .zpr__glow{position:absolute;inset:-4% -8% 0;z-index:0;pointer-events:none;
       background:radial-gradient(52% 46% at 50% 48%, rgba(215,208,195,.22), rgba(215,208,195,0) 72%)}
     .zpr__obj{position:absolute;display:block;will-change:transform}
@@ -111,9 +135,21 @@
     .zpr__obj--a{left:4%;bottom:6%;width:58%;z-index:2}
     .zpr__obj--b{right:2%;bottom:16%;width:45%;z-index:1}
     .zpr__variant{display:block}
+    /* Every GODA option shares the box of the first one (its aspect ratio
+       is set inline from that file) and fits inside it, standing on the
+       floor. Sized by width alone, the old White file, a much narrower
+       picture because it was the bottle without its box, came out almost
+       twice as tall as the Black one and stood out of the scene. */
+    .zpr__obj--a .zpr__variant{position:absolute;inset:0}
+    .zpr__obj--a .zv-cut{width:100%;height:100%;object-fit:contain;object-position:50% 100%}
     .zpr__shadow{position:absolute;left:50%;bottom:-4%;width:78%;height:9%;transform:translateX(-50%);
       z-index:0;pointer-events:none;background:var(--zv-stage-shadow);filter:blur(8px)}
     .zpr__obj--b .zpr__shadow{opacity:.75;width:70%}
+
+    /* ---- photograph slot: the same frame as the scene ---- */
+    .zpr__photo{position:relative;margin:0 auto;width:100%;max-width:600px;aspect-ratio:1 / 1;
+      border-radius:var(--zv-r-lg);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.25),0 18px 36px -18px rgba(0,0,0,.6)}
+    @media(max-width:899px){.zpr__photo{max-width:480px;aspect-ratio:5 / 4}}
 
     /* ---- fallback: two plates ---- */
     .zpr__figs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(8px,1.5vw,16px)}
@@ -195,7 +231,13 @@
   "tag": "section",
   "settings": [
     { "type": "paragraph", "content": "The products, price and saving come from Theme settings > Offers, so this section, the product page and the cart always agree." },
-    { "type": "richtext", "id": "body", "label": "Extra copy" }
+    { "type": "richtext", "id": "body", "label": "Extra copy" },
+    { "type": "header", "content": "Photograph or film (optional)" },
+    { "type": "paragraph", "content": "Empty: the two cutouts staged together. Add a real photograph of GODA and HOYGI together (visual asset brief P1) and it replaces the staged scene at the same size." },
+    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "Square 1:1, at least 2400 × 2400 px, both products inside the central 5:4 band. Set the focal point in Content > Files." },
+    { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones (optional)", "info": "5:4, at least 1600 × 1280 px. Left empty, phones get a 5:4 crop of the photograph above." },
+    { "type": "video", "id": "video", "label": "Film (optional)", "info": "Square, 6 to 10 seconds, silent, loops cleanly (brief P1-F). Uses the photograph as its poster." },
+    { "type": "text", "id": "photo_alt", "label": "Photograph description", "info": "What is in the picture, for screen readers." }
   ],
   "presets": [{ "name": "The pair" }]
 }

@@ -1,0 +1,127 @@
+{%- comment -%}
+  One piece of real media, a photograph or a Shopify-hosted film, filling
+  the frame its section gives it. Every slot that is waiting for a new
+  asset (hero, line-up, pair, closer, product gallery) renders through
+  this snippet, so they all behave the same way:
+
+    {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile,
+              sizes: '(min-width: 900px) 46vw, 92vw', alt: s.photo_alt, eager: true %}
+
+  media         a video object: a theme "video" setting, or a Video file from
+                a list.file_reference metafield. Optional.
+  image         an image. With a film it is the poster; alone it is the
+                picture. Without it, a film uses its own preview frame.
+  image_mobile  optional art-directed crop for screens under 700px.
+  fit           'cover' (default) or 'contain'.
+  class         extra classes on the wrapper.
+  position      the crop to use while the image has no focal point of its
+                own (Shopify reports an unset focal point as 50% 50%), e.g.
+                '50% 44%'. A focal point set in Content > Files always wins.
+
+  The srcset never offers a width larger than the file itself, so a browser
+  is never handed an upscale it believes is sharp. The crop follows the
+  focal point set on the image in Content > Files.
+
+  Films never autoplay from the markup. zorev-enhance.js plays one only
+  while it is on screen, never for a visitor who asks for reduced motion or
+  reduced data, and every film carries a visible pause button (WCAG 2.2.2).
+  With JavaScript off, or under reduced motion, the poster is what shows:
+  the same picture, still. Renders nothing when given nothing.
+{%- endcomment -%}
+{%- liquid
+  assign vid = nil
+  if media != blank and media.sources.size > 0
+    assign vid = media
+  endif
+  assign still = image
+  if still == blank and vid
+    assign still = vid.preview_image
+  endif
+  assign fit_class = ''
+  if fit == 'contain'
+    assign fit_class = ' zv-media--contain'
+  endif
+  assign label = alt | default: still.alt | default: vid.alt | strip_html | escape
+  assign sizes_attr = sizes | default: '100vw'
+  assign ladder = '600,900,1200,1600,2200,3000' | split: ','
+  assign crop = still.presentation.focal_point | default: '50% 50%'
+  if position != blank and still.presentation.focal_point.x == 50 and still.presentation.focal_point.y == 50
+    assign crop = position
+  endif
+-%}
+{%- if still != blank or vid -%}
+<div class="zv-media{{ fit_class }}{% if class != blank %} {{ class }}{% endif %}" data-zv-media>
+  {%- if still != blank -%}
+    {%- capture still_set -%}
+      {%- for w in ladder -%}
+        {%- assign wn = w | plus: 0 -%}
+        {%- if wn < still.width -%}{{ still | image_url: width: wn }} {{ wn }}w, {% endif -%}
+      {%- endfor -%}
+      {{- still | image_url: width: still.width }} {{ still.width }}w
+    {%- endcapture -%}
+    <picture>
+      {%- if image_mobile != blank -%}
+        {%- capture mob_set -%}
+          {%- for w in ladder -%}
+            {%- assign wn = w | plus: 0 -%}
+            {%- if wn < image_mobile.width and wn <= 1600 -%}{{ image_mobile | image_url: width: wn }} {{ wn }}w, {% endif -%}
+          {%- endfor -%}
+          {{- image_mobile | image_url: width: image_mobile.width }} {{ image_mobile.width }}w
+        {%- endcapture -%}
+        <source media="(max-width: 699px)" srcset="{{ mob_set | strip }}" sizes="100vw">
+      {%- endif -%}
+      <img src="{{ still | image_url: width: 1600 }}"
+           srcset="{{ still_set | strip }}"
+           sizes="{{ sizes_attr }}"
+           width="{{ still.width }}" height="{{ still.height }}"
+           alt="{{ label }}"
+           style="object-position: {{ crop }}"
+           {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+    </picture>
+  {%- endif -%}
+  {%- if vid -%}
+    {%- liquid
+      assign hd = nil
+      assign sd = nil
+      assign any_mp4 = nil
+      for src in vid.sources
+        if src.format == 'mp4'
+          if any_mp4 == nil
+            assign any_mp4 = src
+          endif
+          if src.height <= 1080
+            if hd == nil
+              assign hd = src
+            elsif src.height > hd.height
+              assign hd = src
+            endif
+          endif
+          if src.height <= 720
+            if sd == nil
+              assign sd = src
+            elsif src.height > sd.height
+              assign sd = src
+            endif
+          endif
+        endif
+      endfor
+      if hd == nil
+        assign hd = any_mp4
+      endif
+    -%}
+    <video class="zv-media__vid" data-zv-video muted playsinline loop preload="none" disableremoteplayback
+           {% if still != blank %}poster="{{ still | image_url: width: 1600 }}"{% endif %}
+           aria-label="{{ label }}">
+      {%- for src in vid.sources -%}
+        {%- if src.format == 'm3u8' -%}<source src="{{ src.url }}" type="{{ src.mime_type }}">{%- endif -%}
+      {%- endfor -%}
+      {%- if sd and hd and sd.url != hd.url -%}<source media="(max-width: 699px)" src="{{ sd.url }}" type="video/mp4">{%- endif -%}
+      {%- if hd -%}<source src="{{ hd.url }}" type="video/mp4">{%- endif -%}
+    </video>
+    <button class="zv-media__toggle" type="button" data-zv-video-toggle data-state="paused" aria-label="Play video" hidden>
+      <svg class="zv-media__i-pause" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg>
+      <svg class="zv-media__i-play" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M4 2.2v11.6c0 .6.7 1 1.2.7l9-5.8c.5-.3.5-1 0-1.3l-9-5.8C4.7 1.1 4 1.5 4 2.2z"/></svg>
+    </button>
+  {%- endif -%}
+</div>
+{%- endif -%}

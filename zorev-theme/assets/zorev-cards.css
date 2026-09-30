@@ -47,6 +47,21 @@
 .zcard__img--alt { opacity: 0; }
 .zcard__blank { position: absolute; inset: 0; background: var(--zv-bg-sunken); }
 
+/* A product with clean cutouts stands in the shared landscape instead of on
+   a white plate: the same drawn ridge, floor and contact shadow as the
+   homepage and product page, fading into the page with no frame. The hover
+   photograph, when there is one, covers it. */
+.zcard__fig--stage { background: none; box-shadow: none; }
+.zcard__obj { position: absolute; inset: 0; z-index: 1; display: grid; place-items: end center;
+  padding: 9% 14% 12%; transition: transform var(--zv-d-reveal) var(--zv-ease); }
+.zcard__obj .zv-cut { width: auto; max-width: 100%; height: 100%; max-height: 100%; }
+.zcard__shadow { bottom: 8%; width: 54%; height: 7%; z-index: 0; }
+.zcard__img--cover { z-index: 2; }
+.zcard--out .zcard__obj { opacity: .55; }
+@media (hover: hover) and (pointer: fine) {
+  .zcard:hover .zcard__obj { transform: translateY(-5px); }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .zcard:hover .zcard__img { transform: scale(1.035); }
   /* only meaningful when a second image exists — the snippet omits the
@@ -124,7 +139,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .zcard__img { transition-property: opacity; }
-  .zcard:hover .zcard__img { transform: none; }
+  .zcard:hover .zcard__img, .zcard:hover .zcard__obj { transform: none; }
   .zcard__add { transform: none; }
 }
 

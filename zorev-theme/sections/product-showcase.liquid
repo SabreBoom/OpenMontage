@@ -18,6 +18,11 @@
   The action respects variants: a product with options links to its page
   to choose one; a single-variant product adds directly, through a plain
   form that zorev.js turns into an Ajax add.
+
+  Asset slot (visual asset brief, S1 / S2). Each product block takes an
+  optional scene photograph and film of the real product in use. Set, it
+  fills the same square as the stage; empty, the block shows the cutout
+  stage as before. Nothing is ever shown that is not the real product.
 {%- endcomment -%}
 {%- assign s = section.settings -%}
 <section class="zsc{% if s.raised %} band--raised{% endif %}" id="line" aria-labelledby="zsc-h-{{ section.id }}">
@@ -40,15 +45,31 @@
           if p.metafields.zorev.cutouts.value.size > 0
             assign has_cut = true
           endif
+          assign has_scene = false
+          if block.settings.scene != blank or block.settings.scene_video != blank
+            assign has_scene = true
+          endif
         -%}
         {%- if p != blank and p.title != blank -%}
         <article class="zsc__item" data-zv-reveal {{ block.shopify_attributes }}>
+          {%- if has_scene -%}
+            {%- comment -%}
+              The picture is a link like the stage, but the film's pause
+              button must stay reachable, so the link is a sibling layer
+              under the media rather than a wrapper around it.
+            {%- endcomment -%}
+            <div class="zsc__stage zsc__stage--scene">
+              {% render 'zv-media', media: block.settings.scene_video, image: block.settings.scene, sizes: '(min-width: 760px) 44vw, 92vw', alt: block.settings.scene_alt %}
+              <a class="zsc__cover" href="{{ p.url }}" tabindex="-1" aria-hidden="true"></a>
+            </div>
+          {%- else -%}
           <a class="zsc__stage{% if has_cut %} zv-stage{% else %} zsc__stage--plate{% endif %}" href="{{ p.url }}" tabindex="-1" aria-hidden="true">
             <span class="zsc__obj">
               {% render 'product-cutout', product: p, sizes: '(min-width: 760px) 34vw, 70vw', alt: '' %}
             </span>
             {%- if has_cut -%}<span class="zv-stage__shadow zsc__shadow" aria-hidden="true"></span>{%- endif -%}
           </a>
+          {%- endif -%}
 
           <div class="zsc__body">
             {%- if p.type != blank -%}<p class="zsc__k">{{ p.type | escape }}</p>{%- endif -%}
@@ -108,6 +129,12 @@
     .zsc__stage{position:relative;display:block;aspect-ratio:1 / 1;border-radius:var(--zv-r-lg);overflow:hidden;
       isolation:isolate}
     .zsc__stage--plate{background:var(--zv-white);box-shadow:var(--zv-plate-edge)}
+    .zsc__stage--scene{box-shadow:var(--zv-plate-edge)}
+    .zsc__stage--scene .zv-media{position:absolute;inset:0}
+    /* the click layer sits under the film's pause button (z-index 3) */
+    .zsc__cover{position:absolute;inset:0;z-index:2}
+    .zsc__stage--scene img{transition:transform 900ms var(--zv-ease)}
+    @media (hover:hover) and (pointer:fine){ .zsc__item:hover .zsc__stage--scene img{transform:scale(1.02)} }
     .zsc__obj{position:absolute;inset:0;display:grid;place-items:end center;padding:8% 12% 11%;z-index:1;
       transition:transform var(--zv-d-reveal) var(--zv-ease)}
     .zsc__obj .zv-cut{width:auto;max-width:100%;height:100%;max-height:100%;object-fit:contain}
@@ -144,7 +171,7 @@
     .zsc__form{display:flex}
     .zsc__act > *{flex:0 1 auto}
     @media(max-width:520px){ .zsc__act > *{flex:1 1 0;min-width:0} .zsc__act .zv-btn{width:100%;justify-content:center;padding-inline:var(--zv-4)} }
-    @media(prefers-reduced-motion:reduce){ .zsc__obj,.zsc__shadow{transition-duration:0ms} .zsc__item:hover .zsc__obj{transform:none} }
+    @media(prefers-reduced-motion:reduce){ .zsc__obj,.zsc__shadow,.zsc__stage--scene img{transition-duration:0ms} .zsc__item:hover .zsc__obj,.zsc__item:hover .zsc__stage--scene img{transform:none} }
   </style>
 </section>
 {% schema %}
@@ -164,7 +191,12 @@
         { "type": "text", "id": "line", "label": "One-line description",
           "info": "What it physically is. No claims the product page can't back up." },
         { "type": "richtext", "id": "facts", "label": "Physical facts",
-          "info": "A short bulleted list: size, form, options, how it is used. Leave the maker's own claims on the product page, labelled as theirs." }
+          "info": "A short bulleted list: size, form, options, how it is used. Leave the maker's own claims on the product page, labelled as theirs." },
+        { "type": "header", "content": "Scene (optional)" },
+        { "type": "paragraph", "content": "Empty: the product's cutout on the lit stage. Add a real photograph of this product in use (visual asset brief S1 for GODA, S2 for HOYGI) and it fills the same square." },
+        { "type": "image_picker", "id": "scene", "label": "Scene photograph", "info": "Square 1:1, at least 2000 × 2000 px. Set the focal point in Content > Files." },
+        { "type": "video", "id": "scene_video", "label": "Scene film (optional)", "info": "Square, 5 to 8 seconds, silent, loops cleanly. Uses the photograph above as its poster." },
+        { "type": "text", "id": "scene_alt", "label": "Scene description", "info": "What is in the picture, for screen readers." }
       ] }
   ],
   "presets": [{ "name": "Product showcase", "blocks": [{ "type": "product" }, { "type": "product" }] }]

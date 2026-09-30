@@ -8,23 +8,23 @@
   The image is a real responsive <img> rather than a CSS background, so it
   participates in srcset and can be described for a screen reader. It is
   lazy — unlike the hero plate, this one is always below the fold.
+
+  Asset slot (visual asset brief, C1 / C1-F / C1-M). "Photograph for phones"
+  is a separate portrait crop, because the wide frame cropped to a 390px
+  screen keeps only its middle; "Film" plays over the photograph while the
+  band is on screen, with a pause button, never under reduced motion.
 {%- endcomment -%}
 {%- liquid
   assign s = section.settings
   assign img = s.image
+  assign has_media = false
+  if img != blank or s.video != blank
+    assign has_media = true
+  endif
 -%}
-<section class="zstory zv-dark{% if img == blank %} zstory--flat{% endif %}{% if s.framing == 'detail' %} zstory--detail{% endif %}" data-zstory>
-  {%- if img != blank -%}
-    <img class="zstory__img"
-         src="{{ img | image_url: width: 1600 }}"
-         srcset="{{ img | image_url: width: 800 }} 800w,
-                 {{ img | image_url: width: 1200 }} 1200w,
-                 {{ img | image_url: width: 1600 }} 1600w,
-                 {{ img | image_url: width: 2048 }} 2048w"
-         sizes="100vw"
-         width="{{ img.width | default: 2048 }}" height="{{ img.height | default: 1152 }}"
-         alt="{{ img.alt | default: s.image_alt | strip_html | escape }}"
-         loading="lazy" decoding="async">
+<section class="zstory zv-dark{% if has_media == false %} zstory--flat{% endif %}{% if s.framing == 'detail' %} zstory--detail{% endif %}" data-zstory>
+  {%- if has_media -%}
+    {% render 'zv-media', media: s.video, image: img, image_mobile: s.image_mobile, sizes: '100vw', alt: s.image_alt, class: 'zstory__media', position: '50% 44%' %}
   {%- endif -%}
   <div class="zstory__veil" aria-hidden="true"></div>
 
@@ -63,15 +63,18 @@
     }
     @media (min-width: 900px){ .zstory{ min-height: 58vh; min-height: 58svh; align-items: center; } }
     .zstory--flat{ min-height: 44vh; min-height: 44svh; }
-    .zstory__img{
-      position: absolute; inset: 0; z-index: 0;
-      width: 100%; height: 100%; object-fit: cover;
-      object-position: 50% 44%;
+    /* No z-index on the media layer: the section is the stacking context
+       (isolation), so the veil (1) and copy (2) sit over the picture while
+       the film's pause button (3) still sits over all of them. */
+    .zstory__media{
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; background: transparent;
     }
     /* "Detail" framing: the same photograph as the hero, closed in on its
        lower third, so the closing band reads as a second look at the place
        rather than the opening frame repeated. */
-    .zstory--detail .zstory__img{object-position:50% 84%;transform:scale(1.24);transform-origin:50% 88%}
+    .zstory--detail .zstory__media img,
+    .zstory--detail .zstory__media video{object-position:50% 84% !important;transform:scale(1.24);transform-origin:50% 88%}
     .zstory__veil{
       position: absolute; inset: 0; z-index: 1; pointer-events: none;
       background:
@@ -126,6 +129,10 @@
     { "type": "text", "id": "cta2_label", "label": "Second button" },
     { "type": "url", "id": "cta2_link", "label": "Second button link" },
     { "type": "url", "id": "cta_link", "label": "Button link" },
+    { "type": "image_picker", "id": "image_mobile", "label": "Photograph for phones (optional)",
+      "info": "Portrait 4:5, at least 1600 × 2000 px, with the quiet area in the lower half where the copy sits on a phone (brief C1-M). Left empty, phones get a crop of the photograph above." },
+    { "type": "video", "id": "video", "label": "Film (optional)",
+      "info": "8 to 12 seconds, silent, loops cleanly, same framing as the photograph (brief C1-F). Plays only while on screen and never for visitors who ask for reduced motion." },
     { "type": "select", "id": "framing", "label": "Photo framing", "default": "full",
       "options": [ { "value": "full", "label": "Full frame" }, { "value": "detail", "label": "Detail (closer crop)" } ],
       "info": "Use Detail when this band repeats a photo used higher up the page." }

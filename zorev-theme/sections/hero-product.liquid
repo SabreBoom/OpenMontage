@@ -20,6 +20,12 @@
 
   The copy stays readable, and the products stay visible, with every one
   of those switched off.
+
+  Asset slot (visual asset brief, H1 / H1-F). The stage above is built from
+  the cutouts because no photograph of the two real products together
+  exists yet. When one does, "Photograph" (and optionally "Film") take the
+  stage's place in the same column at the same size, so nothing else on
+  the page moves. Empty, the section is exactly the cutout stage.
 {%- endcomment -%}
 {%- liquid
   assign s = section.settings
@@ -32,6 +38,10 @@
   endif
   if pb != blank and pb.title != blank
     assign has_b = true
+  endif
+  assign has_photo = false
+  if s.photo != blank or s.video != blank
+    assign has_photo = true
   endif
 -%}
 <section class="zhp" id="zhp-{{ section.id }}" aria-labelledby="zhp-h-{{ section.id }}">
@@ -59,8 +69,12 @@
       {%- endif -%}
     </div>
 
-    {%- if has_a or has_b -%}
-      <div class="zhp__stage" data-zv-scene data-zv-scene-pointer="14" data-zv-scene-scroll="0.12">
+    {%- if has_photo -%}
+      <figure class="zhp__photo">
+        {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 900px) 46vw, 92vw', alt: s.photo_alt, eager: true %}
+      </figure>
+    {%- elsif has_a or has_b -%}
+      <div class="zhp__stage zv-landed" data-zv-scene data-zv-scene-pointer="14" data-zv-scene-scroll="0.12">
         <div class="zhp__light" aria-hidden="true"></div>
         {%- if has_b -%}
           <a class="zhp__obj zhp__obj--b" href="{{ pb.url }}" data-zv-depth="0.45" aria-label="{{ pb.title | escape }}">
@@ -81,7 +95,10 @@
 
 <style>
   #zhp-{{ section.id }}{
-    position: relative; isolation: isolate; overflow: hidden;
+    /* clip, not hidden: a hidden box is a scroll container, and the
+       landscape's scroll-linked drift (zorev-tokens.css) would measure this
+       section's own scroll, which never moves, instead of the page's. */
+    position: relative; isolation: isolate; overflow: hidden; overflow: clip;
     background:
       radial-gradient(70% 55% at 78% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 70%),
       radial-gradient(60% 40% at 20% 100%, rgba(215,208,195,.35), rgba(215,208,195,0) 70%),
@@ -137,8 +154,11 @@
   }
   #zhp-{{ section.id }} .zhp__light{
     position: absolute; inset: -6% -10% 4%; z-index: 0; pointer-events: none;
-    background: radial-gradient(55% 48% at 50% 44%, rgba(255,255,255,.9), rgba(255,255,255,0) 72%);
+    background: radial-gradient(55% 48% at 50% 44%, rgba(255,255,255,.55), rgba(255,255,255,0) 72%);
   }
+  /* The landscape runs wider than the stage, so it opens out around the two
+     products instead of hiding behind them, and fades into the hero. */
+  #zhp-{{ section.id }} .zhp__stage.zv-landed::before{ inset: -2% -24% -8% -24%; }
   #zhp-{{ section.id }} .zhp__obj{
     position: absolute; display: block; text-decoration: none;
     will-change: transform;
@@ -160,9 +180,23 @@
     #zhp-{{ section.id }} .zhp__obj:hover .zv-cut{ transform: translateY(-4px); }
   }
 
+  /* ---- photograph slot ----
+     Portrait 4:5 beside the copy on desktop; square under it on a phone,
+     where a 4:5 frame would push the whole hero past one screen. The
+     brief keeps both products inside the central square of the 4:5 master
+     so one file survives both crops. */
+  #zhp-{{ section.id }} .zhp__photo{
+    position: relative; z-index: 1; margin: 0; width: 100%; max-width: 560px; margin-inline: auto;
+    aspect-ratio: 4 / 5; border-radius: var(--zv-r-xl); overflow: hidden; box-shadow: var(--zv-plate-edge);
+  }
+  @media (max-width: 899px){
+    #zhp-{{ section.id }} .zhp__photo{ max-width: 520px; aspect-ratio: 1 / 1; }
+  }
+
   /* ---- entrance ---- */
   @media (prefers-reduced-motion: no-preference){
-    .zv-js #zhp-{{ section.id }} .zhp__obj{ animation: zhp-settle-{{ section.id }} 760ms var(--zv-ease) both; }
+    .zv-js #zhp-{{ section.id }} .zhp__obj,
+    .zv-js #zhp-{{ section.id }} .zhp__photo{ animation: zhp-settle-{{ section.id }} 760ms var(--zv-ease) both; }
     .zv-js #zhp-{{ section.id }} .zhp__obj--b{ animation-delay: 90ms; }
     .zv-js #zhp-{{ section.id }} .zhp__copy > *{ animation: zhp-rise-{{ section.id }} 640ms var(--zv-ease) both; }
     .zv-js #zhp-{{ section.id }} .zhp__copy > :nth-child(2){ animation-delay: 60ms; }
@@ -185,6 +219,12 @@
     { "type": "text", "id": "note", "label": "Fine print", "info": "One short true line, or nothing." },
     { "type": "product", "id": "product_a", "label": "Front product" },
     { "type": "product", "id": "product_b", "label": "Back product" },
+    { "type": "header", "content": "Photograph or film (optional)" },
+    { "type": "paragraph", "content": "Empty: the two products on the lit stage, built from their cutouts. Add a real photograph of both products (visual asset brief H1) and it takes the stage's place at the same size. A film (brief H1-F) plays over the photograph while on screen, never under reduced motion, always with a pause button." },
+    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "Portrait 4:5, at least 2400 × 3000 px, both products inside the central square. Set the focal point in Content > Files." },
+    { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones (optional)", "info": "Square 1:1, at least 1600 × 1600 px. Left empty, phones get a square crop of the photograph above." },
+    { "type": "video", "id": "video", "label": "Film (optional)", "info": "6 to 10 seconds, silent, loops cleanly, same framing as the photograph. Uses the photograph as its poster." },
+    { "type": "text", "id": "photo_alt", "label": "Photograph description", "info": "What is in the picture, for screen readers. Example: GODA and HOYGI on a limestone ledge in morning light." },
     { "type": "header", "content": "Buttons" },
     { "type": "text", "id": "cta_label", "label": "Primary button", "default": "Shop Zorev" },
     { "type": "url", "id": "cta_link", "label": "Primary link" },

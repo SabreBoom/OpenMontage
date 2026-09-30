@@ -20,6 +20,7 @@
   margin: var(--zv-7) 0 var(--zv-3); }
 .zv-rte h2 { font-size: var(--zv-t-h3); }
 .zv-rte h3 { font-size: var(--zv-t-h4); }
+.zv-rte h2[data-lv="3"] { font-size: var(--zv-t-h4); }
 .zv-rte h4 { font-size: var(--zv-t-body); font-family: var(--zv-sans); font-weight: 600; }
 .zv-rte ul, .zv-rte ol { padding-left: var(--zv-5); }
 .zv-rte li { margin-bottom: var(--zv-2); }

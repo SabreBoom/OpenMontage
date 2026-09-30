@@ -132,6 +132,16 @@
   --zv-d-drawer: 420ms;
   --zv-d-reveal: 620ms;   /* editorial reveals may run longer */
   --zv-lift: -3px;        /* the one hover translate used site-wide */
+  /* Springs, for things that settle rather than stop: a released button,
+     the quantity selector's ring, a product flying between pages. The
+     cubic-bezier values are the fallback; the linear() curves below replace
+     them where supported and are sampled from real damped springs
+     (--zv-spring: damping 0.74, 3% overshoot; --zv-spring-soft: critically
+     damped, no overshoot). CSS springs keep a fixed duration, so they are
+     used only for motion that runs to the end, never for a drag. */
+  --zv-spring:      cubic-bezier(.34, 1.26, .64, 1);
+  --zv-spring-soft: cubic-bezier(.16, 1, .3, 1);
+  --zv-d-spring: 520ms;
 
   /* ---- z-index scale: named, so nothing guesses a number ----------- */
   --zv-z-base: 0;
@@ -144,6 +154,12 @@
   /* Breakpoints, for reference. CSS cannot read a custom property in a
      media query, so these are documented here and hand-written in the
      sections: 480 / 640 / 768 / 900 / 1100 / 1400. */
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --zv-spring: linear(0, 0.0256, 0.0906, 0.1802, 0.2825, 0.389, 0.4931, 0.5905, 0.6786, 0.7559, 0.8219, 0.8767, 0.9211, 0.956, 0.9826, 1.0021, 1.0156, 1.0244, 1.0293, 1.0314, 1.0313, 1.0297, 1.0272, 1.0241, 1.0208, 1.0174, 1.0142, 1.0113, 1.0087, 1.0065, 1.0046, 1.0031, 1.0018, 1.0009, 1.0002, 0.9997, 1);
+    --zv-spring-soft: linear(0, 0.0369, 0.1219, 0.2275, 0.3374, 0.4422, 0.5372, 0.6204, 0.6916, 0.7513, 0.8009, 0.8414, 0.8743, 0.9008, 0.922, 0.9389, 0.9523, 0.9628, 0.9711, 0.9776, 0.9826, 0.9866, 0.9897, 0.992, 0.9939, 0.9953, 0.9964, 0.9972, 0.9979, 0.9984, 1);
+  }
 }
 
 /* Dark bands (hero, spotlight, final CTA) flip the semantic layer. Scoped
@@ -240,7 +256,9 @@ p, li, dd, figcaption { text-wrap: pretty; }
   letter-spacing: var(--zv-tr-wide); text-transform: uppercase; text-decoration: none;
   border: 1px solid var(--zv-accent); border-radius: var(--zv-r-pill);
   background: var(--zv-accent); color: var(--zv-on-accent); cursor: pointer;
-  transition: transform var(--zv-d-press) var(--zv-ease),
+  /* Pressed in fast and flat (the :active rule), let go on a spring: the
+     button settles back with a hair of overshoot, the way a real key does. */
+  transition: transform var(--zv-d-spring) var(--zv-spring),
               background var(--zv-d-hover) var(--zv-ease),
               border-color var(--zv-d-hover) var(--zv-ease),
               box-shadow var(--zv-d-hover) var(--zv-ease);
@@ -254,22 +272,118 @@ p, li, dd, figcaption { text-wrap: pretty; }
   .zv-btn--ghost:hover, .btn--ghost:hover { background: var(--zv-bg-raised); border-color: var(--zv-accent);
     box-shadow: none; }
 }
-.zv-btn:active, .btn:active { transform: scale(.97); }
+.zv-btn:active, .btn:active { transform: scale(.97);
+  transition-duration: 90ms, var(--zv-d-hover), var(--zv-d-hover), var(--zv-d-hover);
+  transition-timing-function: var(--zv-ease); }
 .zv-btn[aria-busy="true"], .btn[aria-busy="true"] { opacity: .7; cursor: progress; }
 .zv-btn[disabled], .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* ---- product cutouts on the stage ----------------------------------
-   .zv-cut is a transparent product photograph; .zv-stage is the ground it
-   sits on. The shadow is a real element under the object, not a filter on
+   .zv-cut is a transparent product photograph; .zv-stage is the place it
+   stands. The shadow is a real element under the object, not a filter on
    it, so it can flatten as the product lifts on hover and it never costs a
-   repaint of the image itself. */
-.zv-stage { position: relative; isolation: isolate;
-  background: var(--zv-stage-light), var(--zv-stage-floor), var(--zv-bg-sunken); }
+   repaint of the image itself.
+
+   The place is a landscape: a far ridge, a nearer ridge and a stone floor,
+   drawn as three flat shapes in the page's own sage, paper and stone, with
+   low light from the upper left. It has no edge of its own; it fades into
+   whatever the page is behind it, so a product stands somewhere rather
+   than in a box. Drawn, not photographed, on purpose: a real product cut
+   out and laid over a landscape photograph is the stack that read as fake
+   on this store before. The Pair band gets a dark version. */
+:root {
+  --zv-land: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient%20id='f'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23D8DCCF'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23E8E8E0'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='t'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23C8CFBE'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23DEE0D4'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23E7E1D4'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23DAD1C0'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill='url%28%23f%29'%20d='M0%2055%20C10%2050.5%2018%2049%2027%2050.8%20C36%2052.6%2043%2047.6%2053%2046.4%20C63%2045.2%2069%2049.8%2078%2049.2%20C87%2048.6%2093%2046.8%20100%2049.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23t%29'%20d='M0%2063%20C9%2060.5%2017%2059.6%2027%2061.2%20C37%2062.8%2045%2058.4%2056%2058%20C67%2057.6%2074%2061.6%2084%2061%20C92%2060.5%2096%2059.4%20100%2060.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23g%29'%20d='M0%2072%20C20%2070.4%2042%2071.2%2060%2070.6%20C78%2070%2090%2071%20100%2072%20V100%20H0Z'/%3E%3C/svg%3E");
+  --zv-land-sun: radial-gradient(42% 30% at 32% 32%, rgba(255,253,248,.85), rgba(255,253,248,0) 72%);
+  --zv-land-mist: linear-gradient(to bottom, rgba(250,249,245,0) 56%, rgba(250,249,245,.4) 65%, rgba(250,249,245,0) 73%);
+  --zv-land-fade: radial-gradient(ellipse 50% 44% at 50% 56%, #000 55%, rgba(0,0,0,0) 100%);
+}
+.zv-dark {
+  --zv-land: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient%20id='f'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%239AA58F'%20stop-opacity='0.15'/%3E%3Cstop%20offset='1'%20stop-color='%239AA58F'%20stop-opacity='0.05'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='t'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2378846D'%20stop-opacity='0.28'/%3E%3Cstop%20offset='1'%20stop-color='%2378846D'%20stop-opacity='0.1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23D7D0C3'%20stop-opacity='0.1'/%3E%3Cstop%20offset='1'%20stop-color='%23D7D0C3'%20stop-opacity='0.03'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill='url%28%23f%29'%20d='M0%2055%20C10%2050.5%2018%2049%2027%2050.8%20C36%2052.6%2043%2047.6%2053%2046.4%20C63%2045.2%2069%2049.8%2078%2049.2%20C87%2048.6%2093%2046.8%20100%2049.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23t%29'%20d='M0%2063%20C9%2060.5%2017%2059.6%2027%2061.2%20C37%2062.8%2045%2058.4%2056%2058%20C67%2057.6%2074%2061.6%2084%2061%20C92%2060.5%2096%2059.4%20100%2060.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23g%29'%20d='M0%2072%20C20%2070.4%2042%2071.2%2060%2070.6%20C78%2070%2090%2071%20100%2072%20V100%20H0Z'/%3E%3C/svg%3E");
+  --zv-land-sun: radial-gradient(42% 30% at 32% 32%, rgba(215,208,195,.10), rgba(215,208,195,0) 72%);
+  --zv-land-mist: linear-gradient(to bottom, rgba(215,208,195,0) 56%, rgba(215,208,195,.05) 65%, rgba(215,208,195,0) 73%);
+}
+.zv-stage, .zv-landed { position: relative; isolation: isolate; }
+.zv-stage::before, .zv-landed::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background: var(--zv-land-sun), var(--zv-land-mist), var(--zv-land) center / 100% 100% no-repeat;
+  -webkit-mask-image: var(--zv-land-fade); mask-image: var(--zv-land-fade);
+}
 .zv-cut { display: block; width: 100%; height: 100%; object-fit: contain;
   filter: var(--zv-cut-drop); }
 .zv-stage__shadow { position: absolute; left: 50%; bottom: 6%; width: 62%; height: 9%;
   transform: translateX(-50%); background: var(--zv-stage-shadow); filter: blur(6px);
   pointer-events: none; z-index: -1; }
+
+/* ---- the two big stages are outdoors -------------------------------------
+   The hero and the Pair scene (.zv-landed) get two slow signs of a real
+   place. Both sit behind the products and neither touches them: the
+   product pixels are never lit, tinted or moved by this.
+   1  Light. Soft patches of sun drift over the ground, the way light moves
+      under leaves: one 19 s cycle, eased and alternating, so there is no
+      loop point to notice. It is the "light moving over a still set" the
+      hero film brief asks for, drawn instead of filmed.
+   2  Depth. As the stage scrolls through the window the landscape moves a
+      little slower than the page, so the products (which the depth script
+      already moves a little faster) stand in front of it. This is a CSS
+      scroll-driven animation: it runs on the compositor, costs no script,
+      and browsers without it simply keep the landscape still.
+   Under reduced motion both stop (the rule at the end of this file ends
+   every animation at once, and the scroll link is only set up for
+   no-preference). */
+:root { --zv-dapple: 255,251,240; --zv-dapple-a: .5; }
+.zv-dark { --zv-dapple: 215,208,195; --zv-dapple-a: .075; }
+.zv-landed::after {
+  content: ""; position: absolute; inset: -6% -16% -6% -16%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(12% 8% at 24% 66%, rgba(var(--zv-dapple), var(--zv-dapple-a)), rgba(var(--zv-dapple), 0) 72%),
+    radial-gradient(17% 10% at 71% 71%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .85)), rgba(var(--zv-dapple), 0) 72%),
+    radial-gradient(9% 6% at 47% 60%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .7)), rgba(var(--zv-dapple), 0) 70%),
+    radial-gradient(22% 9% at 40% 78%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .55)), rgba(var(--zv-dapple), 0) 74%);
+  -webkit-mask-image: var(--zv-land-fade); mask-image: var(--zv-land-fade);
+  animation: zv-dapple 19s cubic-bezier(.45, 0, .55, 1) infinite alternate;
+}
+@keyframes zv-dapple {
+  0%   { transform: translate3d(-1.6%, .3%, 0);  opacity: .72; }
+  45%  { transform: translate3d(.4%, -.5%, 0);   opacity: 1; }
+  100% { transform: translate3d(1.8%, .2%, 0);   opacity: .8; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .zv-landed { view-timeline-name: --zv-land; }
+    .zv-landed::before {
+      animation: zv-land-depth linear both;
+      animation-timeline: --zv-land;
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+@keyframes zv-land-depth {
+  from { transform: translate3d(0, -2.6%, 0); }
+  to   { transform: translate3d(0, 2.6%, 0); }
+}
+
+/* ---- real photography and film in a frame (snippets/zv-media) ----------
+   The section owns the frame (its size and aspect ratio); the media fills
+   it. A film sits on top of its own poster, so the picture never changes
+   when playback starts or is refused. The pause control is a solid dark
+   disc rather than frosted glass: it has to stay legible over any frame. */
+.zv-media { position: relative; display: block; width: 100%; height: 100%; overflow: hidden;
+  background: var(--zv-bg-sunken); }
+.zv-media picture { display: block; width: 100%; height: 100%; }
+.zv-media img, .zv-media__vid { display: block; width: 100%; height: 100%; object-fit: cover; }
+.zv-media--contain img, .zv-media--contain .zv-media__vid { object-fit: contain; }
+.zv-media__vid { position: absolute; inset: 0; }
+.zv-media__toggle { position: absolute; right: 12px; bottom: 12px; z-index: 3;
+  width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; color: #FFFFFF; background: rgba(16,19,16,.66);
+  transition: background var(--zv-d-hover) var(--zv-ease); }
+.zv-media__toggle[hidden] { display: none; }
+.zv-media__toggle svg { width: 16px; height: 16px; fill: currentColor; }
+.zv-media__toggle[data-state="playing"] .zv-media__i-play,
+.zv-media__toggle[data-state="paused"] .zv-media__i-pause { display: none; }
+@media (hover: hover) and (pointer: fine) { .zv-media__toggle:hover { background: rgba(16,19,16,.84); } }
+.zv-media__toggle:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16,19,16,.66); }
 
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--zv-focus);
@@ -297,6 +411,34 @@ p, li, dd, figcaption { text-wrap: pretty; }
   animation: zv-reveal-failsafe 1ms linear 2s both;
 }
 @keyframes zv-reveal-failsafe { to { opacity: 1; transform: none; } }
+
+/* ---- page to page ---------------------------------------------------------
+   Cross-document view transitions (Chrome and Edge 126+, Safari 18.2+;
+   everywhere else a normal page load). Pages crossfade quickly instead of
+   flashing white, and the product picture travels: the image a visitor
+   taps flies to where the product page shows it, and back on Back. The
+   script in layout/theme.liquid chooses which picture carries the name;
+   the product page's first picture carries it from the markup
+   ([data-vt-static]), so it is in place before the page first paints.
+   Only for visitors who haven't asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+[data-vt-static] { view-transition-name: zv-product; }
+::view-transition-group(root) { animation-duration: 240ms; animation-timing-function: var(--zv-ease); }
+::view-transition-group(zv-product) {
+  animation-duration: 460ms; animation-timing-function: var(--zv-spring-soft);
+}
+::view-transition-old(zv-product),
+::view-transition-new(zv-product) {
+  height: 100%; object-fit: contain; object-position: 50% 100%;
+}
+/* One picture flies, not two crossfading: the two pages frame the same
+   product at different proportions, so a crossfade shows a ghost of the
+   outgoing picture beside the incoming one mid-flight. The incoming picture
+   carries the whole flight instead. */
+::view-transition-old(zv-product) { animation: none; opacity: 0; }
+::view-transition-new(zv-product) { animation: none; opacity: 1; }
 
 /* Reduced motion means FEWER and GENTLER, not none. Zeroing every transition
    with a blanket !important is the usual shortcut and it costs real usability:

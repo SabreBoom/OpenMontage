@@ -2,7 +2,21 @@
   <div class="zv-wrap zv-wrap--narrow" data-zv-reveal>
     <h1 class="zv-h1 zpage__t">{{ page.title | escape }}</h1>
     {%- if page.content != blank -%}
-      <div class="zv-rte">{{ page.content }}</div>
+      {%- comment -%}
+        The page bodies (About, FAQ, Shipping) are written with H3 subheads
+        straight under the page's H1, which skips a level for search engines
+        and screen readers. When a body has no H2 at all, its H3s become H2s
+        here, marked so they keep exactly the size they had.
+      {%- endcomment -%}
+      {%- liquid
+        assign body = page.content
+        unless body contains '<h2'
+          if body contains '<h3'
+            assign body = body | replace: '<h3', '<h2 data-lv="3"' | replace: '</h3>', '</h2>'
+          endif
+        endunless
+      -%}
+      <div class="zv-rte">{{ body }}</div>
     {%- endif -%}
   </div>
 </section>

@@ -23,6 +23,11 @@
   if cuts.size > 0
     assign has_cuts = true
   endif
+  assign gallery = product.metafields.zorev.gallery.value
+  assign has_gallery = false
+  if gallery.size > 0
+    assign has_gallery = true
+  endif
   assign v = product.selected_or_first_available_variant
   assign offer = product.metafields.zorev.offer.value
   assign unit_one = offer.unit | default: 'item'
@@ -62,11 +67,19 @@
            toward the cursor (data-zv-tilt, zorev-enhance.js) — the one
            place the site lets you "pick the product up". Off on touch and
            under reduced motion; the photograph is the same either way.
-        2  the maker's own listing images, only if the section setting
+        2  the curated gallery (product.metafields.zorev.gallery): real
+           photographs and short silent films of this product, in the
+           order they are listed on the product (visual asset brief, G-
+           series: detail, scale, texture, in use). Photographs fill the
+           square; films play only while their slide is on screen, with a
+           pause button, and never under reduced motion. Empty, nothing is
+           added: no placeholder frames.
+        3  the maker's own listing images, only if the section setting
            asks for them. They carry the maker's marketing claims, which
            the store labels as theirs rather than repeats, so they are off
            by default.
-      A product with no cutouts shows its images exactly as before.
+      A product with no cutouts and no gallery shows its images exactly as
+      before.
     {%- endcomment -%}
     <div class="pdp__media gal" data-gal>
       <div class="gal__track" data-gal-track tabindex="0" role="group"
@@ -86,13 +99,46 @@
             -%}
             <div class="gal__slide gal__slide--stage zv-stage" data-thumb="{{ c | image_url: width: 160 }}" data-thumb-stage>
               <div class="gal__obj" data-zv-tilt="4">
-                {% render 'product-cutout', product: product, index: forloop.index0, sizes: '(min-width: 900px) 44vw, 86vw', alt: cut_alt, eager: forloop.first %}
+                {% render 'product-cutout', product: product, index: forloop.index0, sizes: '(min-width: 900px) 44vw, 86vw', alt: cut_alt, eager: forloop.first, vt_static: forloop.first %}
               </div>
               <span class="zv-stage__shadow gal__shadow" aria-hidden="true"></span>
             </div>
           {%- endfor -%}
         {%- endif -%}
-        {%- if has_cuts == false or section.settings.show_maker_images -%}
+        {%- if has_gallery -%}
+          {%- for f in gallery -%}
+            {%- liquid
+              assign g_alt = f.alt | default: product.title
+              assign g_eager = false
+              if has_cuts == false and forloop.first
+                assign g_eager = true
+              endif
+            -%}
+            {%- if f.media_type == 'video' -%}
+              <div class="gal__slide gal__slide--photo" data-thumb="{{ f.preview_image | image_url: width: 160 }}" data-thumb-film>
+                {% render 'zv-media', media: f, sizes: '(min-width: 900px) 44vw, 92vw', alt: g_alt %}
+              </div>
+            {%- elsif f.media_type == 'image' -%}
+              <div class="gal__slide gal__slide--photo" data-thumb="{{ f | image_url: width: 160 }}">
+                {% render 'zv-media', image: f, sizes: '(min-width: 900px) 44vw, 92vw', alt: g_alt, eager: g_eager %}
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+        {%- liquid
+          comment
+            Liquid reads and/or right to left with no brackets, so the
+            condition is built in two steps rather than written in one line.
+          endcomment
+          assign show_shots = false
+          if has_cuts == false and has_gallery == false
+            assign show_shots = true
+          endif
+          if section.settings.show_maker_images
+            assign show_shots = true
+          endif
+        -%}
+        {%- if show_shots -%}
           {%- for m in shots limit: 10 -%}
             <div class="gal__slide" data-thumb="{{ m | image_url: width: 160 }}">
               <img src="{{ m | image_url: width: 1400 }}"
@@ -100,7 +146,7 @@
                    sizes="(min-width: 900px) 52vw, 100vw"
                    alt="{{ m.alt | default: product.title | strip_html | escape }}"
                    width="1400" height="1400"
-                   {% if forloop.first and has_cuts == false %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
+                   {% if forloop.first and has_cuts == false and has_gallery == false %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
                    decoding="async">
             </div>
           {%- endfor -%}
@@ -159,6 +205,7 @@
                       data-save='{"1":0{% for t in offer.breaks %},"{{ t.qty }}":{{ t.save }}{% endfor %}}'
                       data-unit="{{ unit_one | escape }}" data-units="{{ unit_many | escape }}">
               <legend class="pdp__label">Quantity</legend>
+              <span class="qo__ring" aria-hidden="true"></span>
 
               <label class="qo__opt">
                 <input class="qo__in" type="radio" name="quantity" value="1" checked>
@@ -337,7 +384,10 @@
     }
 
     /* ---- swipe gallery ---- */
-    .gal{display:grid;gap:.75rem}
+    /* min-width:0 on the column's items: without it, a long row of dots
+       (a product with six or more slides) set the column's minimum width
+       and pushed the whole page sideways on a 320px phone. */
+    .gal{display:grid;gap:.75rem;grid-template-columns:minmax(0,1fr)}
     .gal__track{
       display:grid;grid-auto-flow:column;grid-auto-columns:100%;
       gap:.6rem;overflow-x:auto;scroll-snap-type:x mandatory;
@@ -352,21 +402,36 @@
       box-shadow:inset 0 0 0 1px rgba(16,19,16,.22);
     }
     .gal__slide img{width:100%;height:100%;object-fit:contain}
-    /* A cutout slide is the stage from the homepage, not a white plate:
-       the same soft top light, the same floor, the same contact shadow. */
-    .gal__slide--stage{box-shadow:inset 0 0 0 1px rgba(16,19,16,.06);place-items:end center;
-      background:var(--zv-stage-light),var(--zv-stage-floor),var(--zv-bg-sunken)}
-    .gal__obj{position:relative;z-index:1;width:100%;height:100%;display:grid;place-items:end center;
+    /* A cutout slide is the stage from the homepage, not a white plate: the
+       same drawn landscape fading into the page, the same contact shadow. It
+       has no frame of its own, so the product stands on the page itself. */
+    .gal__slide--stage{box-shadow:none;place-items:end center;background:transparent}
+    /* The object box is pinned to the square (absolute, inset 0), so its
+       height is the slide's and never the picture's. While it was an
+       in-flow grid item, a cutout narrower than the box (the old White file
+       was the bottle alone) grew the row to its own natural height and was
+       cut off at the bottom of the square; on a phone even the Black one
+       was. The picture now fits the box whole and stands on its floor. */
+    .gal__obj{position:absolute;inset:0;z-index:1;display:grid;place-items:end center;
+      grid-template:minmax(0,1fr) / minmax(0,1fr);
       padding:7% 12% 12%;transform-style:preserve-3d;
       transition:transform 420ms var(--zv-ease)}
     .gal__obj.is-tilting{transition:transform 90ms linear}
-    .gal__obj .zv-cut{width:auto;max-width:100%;height:100%;max-height:100%}
+    .gal__obj .zv-cut{width:100%;height:100%;max-width:none;max-height:none;
+      object-fit:contain;object-position:50% 100%}
     .gal__shadow{bottom:8%;width:52%;height:7%;z-index:0}
+    /* A curated photograph or film fills its square edge to edge: it is a
+       composed frame, not a product floating on a plate. */
+    .gal__slide--photo{place-items:stretch;background:var(--zv-bg-sunken);position:relative}
+    .gal__slide--photo .zv-media{position:absolute;inset:0}
+    .gal__slide--photo img{object-fit:cover}
     .gal__thumb--stage{background:var(--zv-bg-sunken)}
     .gal__thumb--stage img{padding:4px}
-    .gal__dots{display:flex;gap:.45rem;justify-content:center}
+    .gal__dots{display:flex;gap:.45rem;justify-content:center;min-width:0}
     @media(min-width:600px){.gal__dots{display:none}}
-    .gal__dot{width:var(--tap);height:var(--tap);padding:0;border:0;background:none;
+    /* 44px each while they fit; with many slides they share the row down
+       to 24px each, still above WCAG 2.5.8's minimum target size. */
+    .gal__dot{flex:0 1 var(--tap);min-width:24px;height:var(--tap);padding:0;border:0;background:none;
       display:grid;place-items:center;cursor:pointer}
     .gal__dot::after{content:"";width:7px;height:7px;border-radius:50%;
       background:var(--zv-line-input);transition:background var(--zv-d-hover) var(--zv-ease),transform var(--zv-d-hover) var(--zv-ease)}
@@ -443,6 +508,21 @@
       background:color-mix(in srgb, var(--zv-forest) 5%, var(--zv-white));
     }
     .qo__opt:has(.qo__in:focus-visible){outline:2px solid var(--zv-focus);outline-offset:3px}
+    /* The chosen row's 2px forest edge is one ring that moves: pick 3 and it
+       glides down from 1 on a spring, the way a segmented control's thumb
+       does, so the eye follows the change instead of hunting for it. The
+       tint and the filled dot still change on the row itself, so the choice
+       is never carried by motion (or colour) alone. Script-drawn: until the
+       script has placed it, and without JavaScript, each row draws its own
+       edge exactly as before. */
+    .qo{position:relative}
+    .qo__ring{position:absolute;left:0;right:0;top:0;height:var(--qo-h,0px);z-index:2;pointer-events:none;
+      border-radius:var(--zv-r-md);box-shadow:inset 0 0 0 2px var(--zv-forest);opacity:0;
+      transform:translate3d(0,var(--qo-y,0px),0);
+      transition:transform var(--zv-d-spring) var(--zv-spring),height var(--zv-d-spring) var(--zv-spring),opacity var(--zv-d-hover) var(--zv-ease)}
+    .qo.has-ring .qo__ring{opacity:1}
+    .qo.has-ring .qo__opt.is-on,
+    .qo.has-ring .qo__opt:has(.qo__in:checked){box-shadow:inset 0 0 0 1px var(--zv-hairline-2)}
     .qo__dot{width:20px;height:20px;border-radius:50%;
       box-shadow:inset 0 0 0 1.5px var(--zv-line-input);background:var(--zv-white);
       display:grid;place-items:center;transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
@@ -469,6 +549,8 @@
       font-variant-numeric:tabular-nums}
     .qo__note{margin:var(--zv-1) 0 0;font-size:var(--zv-t-fine);color:var(--zv-text-2);max-width:none}
     .pdp__atc{min-height:54px;font-size:var(--zv-t-sm)}
+    /* the label is re-set when the total changes; it rises into place */
+    .atc__lbl,.satc__p [data-satc-sum]{display:inline-block}
     .atc__err{margin:var(--zv-2) 0 0;padding:var(--zv-2) var(--zv-3);border-radius:var(--zv-r-sm);
       border:1px solid #8C2F2F;background:color-mix(in srgb,#8C2F2F 6%,transparent);
       color:var(--zv-ink);font-size:var(--zv-t-sm);max-width:none}
@@ -555,6 +637,15 @@
     .acc__body{padding:0 0 var(--zv-5)}
     .acc[open] .acc__body{animation:acc-in var(--zv-d-ui) var(--zv-ease) both}
     @keyframes acc-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+    /* Where the browser can animate to height:auto (Chrome and Edge today),
+       the panel also opens and closes smoothly instead of jumping; the
+       page below it moves with it. Elsewhere it opens as before. */
+    @supports (interpolate-size: allow-keywords){
+      .accs{interpolate-size:allow-keywords}
+      .acc::details-content{block-size:0;overflow-y:clip;
+        transition:block-size var(--zv-d-ui) var(--zv-ease),content-visibility var(--zv-d-ui) allow-discrete}
+      .acc[open]::details-content{block-size:auto}
+    }
     .acc__body > :first-child{margin-top:0}
     .acc__body > :last-child{margin-bottom:0}
     .acc__body ol{padding-left:1.2rem;color:var(--zv-text-2)}
@@ -600,7 +691,8 @@
     @media(prefers-reduced-motion:reduce){
       .satc{transition-duration:120ms}
       .acc[open] .acc__body{animation:none}
-      .qo__opt,.qo__dot::after,.acc__ic::before,.acc__ic::after{transition-duration:0ms}
+      .qo__opt,.qo__dot::after,.acc__ic::before,.acc__ic::after,.qo__ring{transition-duration:0ms}
+      .acc::details-content{transition:none}
     }
   </style>
 
@@ -637,21 +729,43 @@
     }
     function totalFor(q) { return price * q - (Number(save[String(q)]) || 0); }
 
+    /* A changed total rises into place (brief, precise feedback on the one
+       number that matters). Only a change from one priced label to another
+       moves; the first paint, "Adding…" and "Sold out" just appear. */
+    var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function roll(el) {
+      if (still.matches || !el.animate) return;
+      el.animate([{ opacity: 0, transform: 'translateY(.55em)' }, { opacity: 1, transform: 'none' }],
+                 { duration: 300, easing: 'cubic-bezier(.23, 1, .32, 1)' });
+    }
+    function label(b, text) {
+      var prev = b.textContent;
+      if (prev === text) return;
+      var lbl = document.createElement('span');
+      lbl.className = 'atc__lbl';
+      lbl.textContent = text;
+      b.replaceChildren(lbl);
+      if (prev.indexOf('·') > -1 && text.indexOf('·') > -1) roll(lbl);
+    }
     function paint() {
       var q = currentQty(), tot = totalFor(q);
       document.querySelectorAll('[data-add]').forEach(function (b) {
         if (b.getAttribute('aria-busy') === 'true') return;
-        b.textContent = available ? (q > 1 ? 'Add ' + q + ' to bag · ' : 'Add to bag · ') + short(tot) : 'Sold out';
+        label(b, available ? (q > 1 ? 'Add ' + q + ' to bag · ' : 'Add to bag · ') + short(tot) : 'Sold out');
       });
       document.querySelectorAll('[data-price]').forEach(function (el) { el.textContent = short(price); });
       document.querySelectorAll('[data-qo-mirror]').forEach(function (i) { i.value = q; });
       var s = document.querySelector('[data-satc-sum]');
-      if (s) s.textContent = (q > 1 ? q + ' ' + (qo ? qo.getAttribute('data-units') : '') + ' · ' : '') + short(tot);
+      if (s) {
+        var sum = (q > 1 ? q + ' ' + (qo ? qo.getAttribute('data-units') : '') + ' · ' : '') + short(tot);
+        if (s.textContent !== sum) { var had = s.textContent; s.textContent = sum; if (had) roll(s); }
+      }
       if (!qo) return;
       qo.querySelectorAll('.qo__opt').forEach(function (l) {
         var i = l.querySelector('.qo__in');
         l.classList.toggle('is-on', !!(i && i.checked));
       });
+      ring(true);
       Object.keys(save).forEach(function (k) {
         var n = Number(k), t = totalFor(n);
         var tEl = qo.querySelector('[data-qo-total="' + n + '"]');
@@ -663,6 +777,34 @@
       });
     }
 
+    /* The moving ring: measured from the chosen row, so it follows rows of
+       any height (the "Best value" row wraps on small phones). Placed without
+       motion on load and on resize; with motion only on a real change. */
+    var ringEl = qo ? qo.querySelector('.qo__ring') : null, ringAt = null;
+    function ring(animate) {
+      if (!ringEl) return;
+      var on = qo.querySelector('.qo__in:checked');
+      var row = on ? on.closest('.qo__opt') : null;
+      if (!row || !row.offsetHeight) return;
+      /* Measured on screen, not with offsetTop: a fieldset lays its legend
+         out in its own way, so its rows and the ring count offsets from
+         different edges. The ring's untransformed top is its box minus the
+         translation it currently shows (mid-glide included). */
+      var cur = window.getComputedStyle(ringEl).transform;
+      var shown = cur && cur !== 'none' ? new DOMMatrixReadOnly(cur).m42 : 0;
+      var base = ringEl.getBoundingClientRect().top - shown;
+      var y = Math.round(row.getBoundingClientRect().top - base), h = row.offsetHeight;
+      var jump = !animate || ringAt === null;
+      if (jump) ringEl.style.transition = 'none';
+      qo.style.setProperty('--qo-y', y + 'px');
+      qo.style.setProperty('--qo-h', h + 'px');
+      if (jump) { void ringEl.offsetWidth; ringEl.style.transition = ''; }
+      ringAt = y;
+      qo.classList.add('has-ring');
+    }
+    if (qo && ringEl && 'ResizeObserver' in window) {
+      new ResizeObserver(function () { ring(false); }).observe(qo);
+    }
     if (qo) qo.addEventListener('change', paint);
     document.addEventListener('variant:change', function (e) {
       if (e.detail) {

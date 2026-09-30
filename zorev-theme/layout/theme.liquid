@@ -34,11 +34,108 @@
         endif
       endif
     endif
+    comment
+      /collections/all is Shopify's automatic collection: it has no admin
+      record, so no SEO fields, and Shopify titles it "Products" with no
+      description at all. Theme settings > SEO supplies both.
+    endcomment
+    if request.page_type == 'collection' and collection.handle == 'all'
+      if settings.seo_all_title != blank
+        assign seo_title = settings.seo_all_title
+      endif
+      if seo_desc == blank and settings.seo_all_description != blank
+        assign seo_desc = settings.seo_all_description
+      endif
+    endif
+    comment
+      Search results and a blog with no posts are thin pages: kept out of
+      the index, still followed so their links count.
+    endcomment
+    assign noindex = false
+    if request.page_type == 'search'
+      assign noindex = true
+    endif
+    if request.page_type == 'blog' and blog.articles_count == 0
+      assign noindex = true
+    endif
     assign seo_title_lc = seo_title | downcase
     assign shop_name_lc = shop.name | downcase
   -%}
   <title>{{ seo_title }}{% if current_page != 1 %} &ndash; {{ current_page }}{% endif %}{% unless seo_title_lc contains shop_name_lc %} &ndash; {{ shop.name }}{% endunless %}</title>
   {%- if seo_desc != blank -%}<meta name="description" content="{{ seo_desc | strip_html | escape }}">{%- endif -%}
+  {%- if noindex -%}<meta name="robots" content="noindex, follow">{%- endif -%}
+
+  {%- comment -%}
+    Faster page to page. Shopify already prefetches a link when it is
+    pressed; this starts a little earlier for product and collection links
+    (on hover, or as the finger lands), fetching the HTML only. Prefetch,
+    not prerender, on purpose: a prerendered page runs its scripts, which
+    would count page views for pages nobody opened.
+  {%- endcomment -%}
+  <script type="speculationrules">
+    {"prefetch":[{"source":"document","where":{"or":[{"href_matches":"/products/*"},{"href_matches":"/collections/*"}]},"eagerness":"moderate"}]}
+  </script>
+
+  {%- comment -%}
+    Page-to-page motion, with zorev-tokens.css (see "page to page"). In the
+    head and not deferred, because pagereveal fires before the first paint.
+    The product picture a visitor taps (or the one on screen for that
+    product) is named zv-product just before the old page is captured; on
+    the product page the first picture carries the name from the markup.
+    Coming Back to a list, the picture of the product just left takes the
+    name, so it flies home. Browsers without these events do nothing here.
+  {%- endcomment -%}
+  <script>
+    (function () {
+      if (!('onpagereveal' in window)) return;
+      var NAME = 'zv-product', named = [], lastHref = null, lastEl = null;
+      function handleOf(u) {
+        try { var m = new URL(u, location.href).pathname.match(/\/products\/([^\/?#]+)/); return m ? decodeURIComponent(m[1]) : null; }
+        catch (e) { return null; }
+      }
+      function seen(el) {
+        var r = el.getBoundingClientRect();
+        return r.width > 24 && r.height > 24 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth;
+      }
+      function pick(h) {
+        if (!h) return null;
+        var sel = '[data-vt-product="' + (window.CSS && CSS.escape ? CSS.escape(h) : h) + '"]';
+        var scope = lastEl && lastEl.isConnected && lastEl.closest ? lastEl.closest('a, [data-vt-scope]') : null;
+        var mine = scope ? (scope.matches(sel) ? scope : scope.querySelector(sel)) : null;
+        if (mine && seen(mine)) return mine;
+        var all = document.querySelectorAll(sel);
+        for (var i = 0; i < all.length; i++) { if (seen(all[i])) return all[i]; }
+        return null;
+      }
+      function set(el, v) { el.style.viewTransitionName = v; named.push(el); }
+      function clear() { named.forEach(function (el) { el.style.viewTransitionName = ''; }); named = []; }
+      document.addEventListener('click', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (a) { lastHref = a.href; lastEl = e.target; }
+      }, true);
+      window.addEventListener('pageswap', function (e) {
+        clear();
+        if (!e.viewTransition) return;
+        var to = (e.activation && e.activation.entry && e.activation.entry.url) || lastHref;
+        var fixed = document.querySelector('[data-vt-static]');
+        var el = pick(handleOf(to));
+        if (fixed && fixed !== el && (el || !seen(fixed))) set(fixed, 'none');
+        if (el && el !== fixed) set(el, NAME);
+      });
+      window.addEventListener('pagereveal', function (e) {
+        if (!e.viewTransition || document.querySelector('[data-vt-static]')) return;
+        /* Only a page restored whole (Back from the cache) can be trusted to
+           be laid out where the visitor left it. */
+        if (document.readyState !== 'complete') return;
+        var from = (window.navigation && navigation.activation && navigation.activation.from && navigation.activation.from.url) || document.referrer;
+        var el = pick(handleOf(from));
+        if (!el) return;
+        set(el, NAME);
+        e.viewTransition.finished.then(clear, clear);
+      });
+      window.addEventListener('pageshow', function (e) { if (e.persisted) clear(); });
+    })();
+  </script>
 
   {% render 'meta-tags', seo_desc: seo_desc, seo_title: seo_title %}
 

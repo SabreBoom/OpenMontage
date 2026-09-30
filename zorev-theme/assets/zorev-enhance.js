@@ -161,6 +161,68 @@
     });
   })();
 
+  /* ---- 5. film -----------------------------------------------------------
+     video[data-zv-video] (snippets/zv-media) never autoplays from markup.
+     One observer plays a clip while at least a third of it is on screen and
+     pauses it off screen, so a page with several clips decodes one or two
+     at a time. Nothing starts under reduced motion, Save-Data or a 2G
+     connection: the poster is the picture. The button beside each clip is
+     WCAG 2.2.2's "mechanism to pause", and once a visitor pauses a clip the
+     observer never starts it again. It stays hidden until this script runs,
+     so a visitor without JavaScript never meets a dead control. */
+  (function film() {
+    var vids = [].slice.call(document.querySelectorAll('video[data-zv-video]'));
+    if (!vids.length) { return; }
+    var conn = navigator.connection || {};
+    var quiet = reduce.matches || conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || '');
+
+    function mark(v, playing) {
+      var b = v.__zvBtn;
+      if (!b) { return; }
+      b.setAttribute('data-state', playing ? 'playing' : 'paused');
+      b.setAttribute('aria-label', playing ? 'Pause video' : 'Play video');
+    }
+    function start(v) {
+      var p = v.play();
+      if (p && p.catch) { p.catch(function () { mark(v, false); }); }
+    }
+
+    vids.forEach(function (v) {
+      v.muted = true;   /* belt and braces: autoplay policies require it */
+      var frame = v.closest('[data-zv-media]');
+      var b = frame ? frame.querySelector('[data-zv-video-toggle]') : null;
+      v.__zvBtn = b;
+      v.addEventListener('play', function () { mark(v, true); });
+      v.addEventListener('pause', function () { mark(v, false); });
+      if (b) {
+        b.hidden = false;
+        mark(v, false);
+        b.addEventListener('click', function () {
+          if (v.paused) { v.__zvHeld = false; start(v); }
+          else { v.__zvHeld = true; v.pause(); }
+        });
+      }
+    });
+
+    if (quiet || !('IntersectionObserver' in window)) { return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var v = e.target;
+        v.__zvSeen = e.isIntersecting;
+        if (v.__zvHeld) { return; }
+        if (e.isIntersecting && !document.hidden) { start(v); }
+        else if (!v.paused) { v.pause(); }
+      });
+    }, { threshold: 0.35 });
+    vids.forEach(function (v) { io.observe(v); });
+    document.addEventListener('visibilitychange', function () {
+      vids.forEach(function (v) {
+        if (document.hidden) { if (!v.paused) { v.pause(); } }
+        else if (v.__zvSeen && !v.__zvHeld) { start(v); }
+      });
+    });
+  })();
+
   /* ---- 2. bag count ----------------------------------------------------- */
   (function countVisibility() {
     var nodes = document.querySelectorAll('[data-cart-count]');
