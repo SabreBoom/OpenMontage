@@ -4,7 +4,7 @@
   "description": "Playwright tests for the ZOREV Shopify theme. Run against the live store or a draft theme via PREVIEW_THEME_ID.",
   "scripts": {
     "test": "playwright test",
-    "test:preview": "PREVIEW_THEME_ID=187717452027 playwright test",
+    "test:preview": "PREVIEW_THEME_ID=187716436219 playwright test",
     "shots": "node shots.js",
     "perf": "node perf.js",
     "record": "node record.js"

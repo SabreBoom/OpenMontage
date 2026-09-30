@@ -1,6 +1,6 @@
 # ZOREV — visual assets: what exists, what was generated, what is still needed
 
-Theme draft: **ZOREV v12 film (Claude, DRAFT)**, theme id `187717452027` (unpublished).
+Theme: **Zorev V12**, theme id `187716436219` (unpublished). Built and tested on the identical copy `ZOREV v12 film (Claude, DRAFT)`, `187717452027`.
 All images below live in Shopify **Content → Files** and are wired into the draft theme only.
 
 ---
