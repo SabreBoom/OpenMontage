@@ -301,6 +301,9 @@
 .zmm { padding-block: var(--zv-section); background: var(--zv-bg-sunken); color: var(--zv-text);
   overflow: hidden; overflow: clip; scroll-margin-top: 72px; }
 .zmm__head { display: grid; gap: var(--zv-3); max-width: 44rem; margin-bottom: clamp(28px, 4vw, 56px); }
+/* the muted eyebrow grey is 4.5:1 on the page paper but not on this band's
+   darker paper (axe: 4.3:1), so the band's eyebrow uses the deeper moss */
+.zmm__head .zv-eyebrow { color: var(--zv-moss-strong); }
 .zmm__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-display);
   line-height: 1; letter-spacing: -0.024em; }
 .zmm__lead > :first-child { margin-top: 0; }
