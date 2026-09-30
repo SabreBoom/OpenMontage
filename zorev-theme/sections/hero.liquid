@@ -303,10 +303,10 @@
      missing and no video is set. Only transform and opacity. */
   @media (prefers-reduced-motion: no-preference){
     #zhero-{{ section.id }}.zhero--motion .zhero__posterimg{
-      animation: zhero-push-{{ section.id }} 38s var(--zv-ease) infinite alternate;
+      animation: zhero-push-{{ section.id }} 38s var(--zv-ease-loop) infinite alternate;
     }
     #zhero-{{ section.id }}.zhero--motion .zhero__near{
-      animation: zhero-near-{{ section.id }} 26s var(--zv-ease) infinite alternate;
+      animation: zhero-near-{{ section.id }} 26s var(--zv-ease-loop) infinite alternate;
     }
   }
   @keyframes zhero-push-{{ section.id }}{

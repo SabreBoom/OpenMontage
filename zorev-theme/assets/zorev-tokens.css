@@ -126,6 +126,7 @@
   --zv-ease:        cubic-bezier(.23, 1, .32, 1);      /* strong ease-out */
   --zv-ease-inout:  cubic-bezier(.77, 0, .175, 1);
   --zv-ease-drawer: cubic-bezier(.32, .72, 0, 1);
+  --zv-ease-loop:   cubic-bezier(.45, 0, .55, 1);    /* ambient back-and-forth loops: slow at both turns, no jolt */
   --zv-d-press:  140ms;
   --zv-d-hover:  200ms;
   --zv-d-ui:     260ms;   /* dropdowns, toggles — under the 300ms budget */
@@ -340,7 +341,7 @@ p, li, dd, figcaption { text-wrap: pretty; }
     radial-gradient(9% 6% at 47% 60%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .7)), rgba(var(--zv-dapple), 0) 70%),
     radial-gradient(22% 9% at 40% 78%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .55)), rgba(var(--zv-dapple), 0) 74%);
   -webkit-mask-image: var(--zv-land-fade); mask-image: var(--zv-land-fade);
-  animation: zv-dapple 19s cubic-bezier(.45, 0, .55, 1) infinite alternate;
+  animation: zv-dapple 19s var(--zv-ease-loop) infinite alternate;
 }
 @keyframes zv-dapple {
   0%   { transform: translate3d(-1.6%, .3%, 0);  opacity: .72; }
