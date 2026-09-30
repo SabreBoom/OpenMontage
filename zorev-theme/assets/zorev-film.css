@@ -336,7 +336,9 @@
   .zmm__fig .zv-media img { transition: transform 1400ms var(--zv-ease); }
 }
 @media (min-width: 900px) and (hover: hover) and (pointer: fine) {
-  .zmm__fig:hover .zv-media img { transform: scale(1.035); }
+  /* specific enough to win over the settled media reveal (transform: none) */
+  .zmm__fig:hover .zv-media img,
+  .zv-js .zmm__fig:hover [data-zv-reveal="media"].is-in .zv-media img { transform: scale(1.035); transition: transform 1400ms var(--zv-ease); }
 }
 
 /* ---- real media -------------------------------------------------------- */

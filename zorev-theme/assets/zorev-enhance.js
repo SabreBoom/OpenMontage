@@ -245,6 +245,8 @@
       function paint() {
         raf = null;
         var max = track.scrollWidth - track.clientWidth;
+        /* a region is a tab stop only while there is something to scroll */
+        if (max > 1) { track.setAttribute('tabindex', '0'); } else { track.removeAttribute('tabindex'); }
         var seen = track.clientWidth / Math.max(track.scrollWidth, 1);
         var p = max > 0 ? track.scrollLeft / max : 1;
         bar.style.transform = 'scaleX(' + Math.min(1, seen + (1 - seen) * p).toFixed(3) + ')';

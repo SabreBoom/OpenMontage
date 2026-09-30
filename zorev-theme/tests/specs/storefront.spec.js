@@ -297,8 +297,9 @@ test.describe('film homepage', () => {
     const mm = page.locator('#made-to-move');
     await expect(mm.locator('.zmm__item')).toHaveCount(4);
     const track = mm.locator('[data-zv-strip-track]');
-    await expect(track).toHaveAttribute('tabindex', '0');
     if (testInfo.project.name === 'mobile') {
+      // scrollable, so it is a labelled, focusable region
+      await expect(track).toHaveAttribute('tabindex', '0');
       await track.scrollIntoViewIfNeeded();
       const before = await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform);
       await track.evaluate(t => t.scrollTo({ left: t.scrollWidth, behavior: 'instant' }));
@@ -307,7 +308,9 @@ test.describe('film homepage', () => {
       expect(before).not.toBe(after);
       expect(after).toBe('scaleX(1.000)');
     } else {
+      // nothing to scroll on a wide screen, so no dead tab stop either
       expect(await track.evaluate(t => t.scrollWidth <= t.clientWidth + 1)).toBe(true);
+      await expect(track).not.toHaveAttribute('tabindex', /.*/);
     }
   });
 
