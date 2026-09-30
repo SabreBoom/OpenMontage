@@ -1,6 +1,6 @@
 // Usage: node shots.js <baseUrl> <outDir> [preview_theme_id]
 //   PREVIEW_THEME_ID=1234 npm run shots   (defaults: https://www.zorev.org, shots/)
-//   env WIDTHS=360,1440  PAGES=home,goda,hoygi,cart,cartfull,drawer,menu,pair,faq
+//   env WIDTHS=360,1440  PAGES=home,goda,hoygi,cart,cartfull,drawer,menu,pair,all,faq,about,contact,search,notfound
 // Full-page screenshots of the theme with Shopify's cookie banner dismissed and
 // the preview bar hidden, plus interactive states: a bag with items, the open
 // cart drawer after Add to bag, and the mobile menu.
@@ -22,6 +22,10 @@ const allPages = {
   pair: { path: '/collections/the-pair' },
   all: { path: '/collections/all' },
   faq: { path: '/pages/faq' },
+  about: { path: '/pages/about-us' },
+  contact: { path: '/pages/contact' },
+  search: { path: '/search?q=goda' },
+  notfound: { path: '/pages/does-not-exist' },
 };
 const pages = (process.env.PAGES || 'home,goda,hoygi,cart,cartfull,drawer,menu').split(',').map(k => [k, allPages[k]]);
 const widths = (process.env.WIDTHS || '360,375,390,412,768,1024,1280,1440,1920').split(',').map(Number);
