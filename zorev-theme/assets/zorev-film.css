@@ -387,6 +387,15 @@
     linear-gradient(to top, rgba(10,13,10,.55) 0%, rgba(10,13,10,0) 45%); }
 }
 .zpsc__in { position: relative; z-index: 2; padding-block: clamp(40px, 7vw, 88px); }
+/* Phones: the photograph gets a frame of its own and the copy sits under
+   it, because a portrait crop puts the product exactly where overlaid copy
+   would land. */
+@media (max-width: 699px) {
+  .zpsc { display: block; min-height: 0; }
+  .zpsc__scene { position: relative; inset: auto; aspect-ratio: 4 / 5; overflow: hidden; }
+  .zpsc__veil { background: linear-gradient(to top, rgba(16,19,16,.55) 0%, rgba(16,19,16,0) 30%); }
+  .zpsc__in { padding-block: 28px 48px; }
+}
 .zpsc__copy { display: grid; gap: var(--zv-3); max-width: 30rem; }
 .zpsc__k { color: var(--zv-sand); }
 .zpsc__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h1);

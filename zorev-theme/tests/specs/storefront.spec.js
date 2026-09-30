@@ -235,15 +235,99 @@ test.describe('layout at every width', () => {
 });
 
 test.describe('reduced motion', () => {
-  test('hero and stage objects do not animate', async ({ browser }) => {
+  test('the film hero and every depth layer are still', async ({ browser }) => {
     const ctx = await browser.newContext({ reducedMotion: 'reduce', ignoreHTTPSErrors: true, viewport: { width: 1440, height: 900 } });
     const page = await ctx.newPage();
     await prep(page);
     await go(page, '/');
-    const anim = await page.locator('.zhp__obj').first().evaluate(el => getComputedStyle(el).animationName);
-    expect(anim).toBe('none');
-    const transformed = await page.evaluate(() => [...document.querySelectorAll('[data-zv-depth]')].filter(e => e.style.transform).length);
-    expect(transformed).toBe(0);
+    await page.mouse.move(900, 300);
+    await page.evaluate(() => window.scrollTo(0, 1600));
+    await page.waitForTimeout(600);
+    const s = await page.evaluate(() => ({
+      breathe: getComputedStyle(document.querySelector('.zhf__breathe')).animationName,
+      mist: getComputedStyle(document.querySelector('.zhf__mist--far')).animationName,
+      moved: [...document.querySelectorAll('[data-zv-depth]')].filter(e => e.style.transform).length,
+      videos: [...document.querySelectorAll('video[data-zv-video]')].filter(v => !v.paused).length,
+    }));
+    expect(s.breathe).toBe('none');
+    expect(s.mist).toBe('none');
+    expect(s.moved).toBe(0);
+    expect(s.videos).toBe(0);
     await ctx.close();
+  });
+});
+
+test.describe('film homepage', () => {
+  test.beforeEach(async ({ page }) => { await prep(page); });
+
+  test('hero is a real photograph with the copy on it, and it moves only when motion is welcome', async ({ page }) => {
+    await go(page, '/');
+    const hero = page.locator('.zhf');
+    await expect(hero).toBeVisible();
+    await expect(hero.locator('h1')).toContainText('wherever');
+    const img = hero.locator('.zhf__breathe img');
+    await expect(img).toHaveAttribute('fetchpriority', 'high');
+    expect(await img.evaluate(i => i.complete && i.naturalWidth > 0)).toBe(true);
+    expect(await page.locator('.zhf__breathe').evaluate(el => getComputedStyle(el).animationName)).toBe('zhf-breathe');
+    // the first screen is the hero: it fills the viewport under the header
+    const box = await hero.boundingBox();
+    const vh = page.viewportSize().height;
+    expect(box.y + box.height).toBeGreaterThan(vh * 0.9);
+  });
+
+  test('each product has its own chapter with the real ladder', async ({ page }) => {
+    await go(page, '/');
+    const goda = page.locator('#goda');
+    const hoygi = page.locator('#hoygi');
+    await expect(goda).toContainText('$40');
+    await expect(goda.locator('.zps__ladder')).toContainText('$70');
+    await expect(goda.locator('.zps__ladder')).toContainText('$104');
+    await expect(goda.locator('.zps__ladder')).toContainText('Save $10');
+    await expect(goda.locator('.zps__ladder')).toContainText('Save $16');
+    await expect(hoygi.locator('.zps__ladder')).toContainText('$44');
+    await expect(hoygi.locator('.zps__ladder')).toContainText('$63');
+    await expect(hoygi.locator('.zps__ladder')).toContainText('Save $6');
+    await expect(hoygi.locator('.zps__ladder')).toContainText('Save $12');
+    await expect(goda.locator('a.zv-btn')).toHaveAttribute('href', /goda-pheromone-perfume-oil/);
+    await expect(hoygi.locator('a.zv-btn')).toHaveAttribute('href', /hoygi-calcium-multi-balm/);
+  });
+
+  test('Made to move: four scenes; on a phone a strip that scrolls sideways and reports progress', async ({ page }, testInfo) => {
+    await go(page, '/');
+    const mm = page.locator('#made-to-move');
+    await expect(mm.locator('.zmm__item')).toHaveCount(4);
+    const track = mm.locator('[data-zv-strip-track]');
+    await expect(track).toHaveAttribute('tabindex', '0');
+    if (testInfo.project.name === 'mobile') {
+      await track.scrollIntoViewIfNeeded();
+      const before = await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform);
+      await track.evaluate(t => t.scrollTo({ left: t.scrollWidth, behavior: 'instant' }));
+      await page.waitForTimeout(300);
+      const after = await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform);
+      expect(before).not.toBe(after);
+      expect(after).toBe('scaleX(1.000)');
+    } else {
+      expect(await track.evaluate(t => t.scrollWidth <= t.clientWidth + 1)).toBe(true);
+    }
+  });
+
+  test('real media never shows staged footage: honest empty state until a permitted clip exists', async ({ page }) => {
+    await go(page, '/');
+    const rm = page.locator('#real');
+    await expect(rm).toBeVisible();
+    await expect(rm).toHaveClass(/zrm--empty/);
+    expect(await rm.locator('video, .zrm__item').count()).toBe(0);
+    await expect(rm).toContainText('we will not stage it');
+  });
+
+  test('product page shows its own in-use scene and never the other product\'s', async ({ page }) => {
+    await go(page, '/products/' + GODA.handle);
+    await expect(page.locator('.zpsc')).toHaveCount(1);
+    expect(await page.locator('.zpsc img').getAttribute('alt')).toMatch(/GODA/);
+    expect(await page.locator('.gal__slide--photo img').evaluateAll(a => a.map(i => i.alt).join('|'))).not.toMatch(/Hoygi/i);
+    await go(page, '/products/' + HOYGI.handle);
+    await expect(page.locator('.zpsc')).toHaveCount(1);
+    expect(await page.locator('.zpsc img').getAttribute('alt')).toMatch(/Hoygi/);
+    expect(await page.locator('.gal__slide--photo img').evaluateAll(a => a.map(i => i.alt).join('|'))).not.toMatch(/GODA/);
   });
 });
