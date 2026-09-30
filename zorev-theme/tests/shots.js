@@ -50,7 +50,11 @@ async function settle(page) {
 async function shoot(browser, w, name, spec) {
   const mobile = w < 700;
   if (spec.mobileOnly && !mobile) return { name, w, skipped: true };
-  const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: w, height: mobile ? 844 : 900 }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile, userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36 ZorevQA' });
+  // Stitched full pages are shot with reduced motion: scroll-linked depth
+  // moves layers between frames, which would show up as seams. SHOT_MOTION=1
+  // keeps motion on (viewport-only shots always have it).
+  const still = !spec.viewportOnly && process.env.SHOT_MOTION !== '1';
+  const ctx = await browser.newContext({ reducedMotion: still ? 'reduce' : 'no-preference', ignoreHTTPSErrors: true, viewport: { width: w, height: mobile ? 844 : 900 }, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile, userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36 ZorevQA' });
   const page = await ctx.newPage();
   // Store documents and cart calls go through curl (see specs/transport.js).
   await transport.install(page, new URL(base).host, BLOCK);
@@ -86,18 +90,43 @@ async function shoot(browser, w, name, spec) {
     }
     const m = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, h: document.documentElement.scrollHeight, theme: (window.Shopify && window.Shopify.theme && window.Shopify.theme.id), hidden: [...document.querySelectorAll('[data-zv-reveal]')].filter(e => getComputedStyle(e).opacity === '0').length, imgsBroken: [...document.images].filter(i => i.complete && i.naturalWidth === 0 && i.src).length, plates: document.querySelectorAll('.zv-cut--plate').length, cuts: document.querySelectorAll('.zv-cut').length, liquidErrors: (document.body.innerText.match(/Liquid error/g) || []).length }));
     if (process.env.ZV_SHOT_DEBUG) console.error('[shot-debug]', name, w, JSON.stringify(await page.evaluate(() => { const b = document.querySelector('.zhp__obj--b'); if (!b) return null; const i = b.querySelector('img'); const r = b.getBoundingClientRect(); return { t: b.getAttribute('style'), x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), complete: i.complete, nat: i.naturalWidth, src: (i.currentSrc || '').slice(-30), op: getComputedStyle(b).opacity, anim: getComputedStyle(b).animationName.slice(0, 12), sy: window.scrollY }; })));
-    // A full-page capture resizes the viewport to the whole document in one
-    // step and paints during the resize, which can catch a transformed
-    // layer mid-update (the hero's back object went missing this way). So
-    // the viewport is sized to the page first, given a moment to settle,
-    // and then captured as a plain viewport shot.
+    // Full pages are shot as the visitor sees them: viewport by viewport,
+    // scrolled, then stitched. Growing the viewport to the whole document
+    // (the old way) also grows every vh/svh unit, so a 64svh band came out
+    // thousands of pixels tall and its copy fell off the bottom of the shot.
+    // Sticky and fixed chrome is kept in the first frame only, so it is not
+    // repeated down the stitched page.
     if (spec.viewportOnly) {
       await page.screenshot({ path: `${out}/${name}-${w}.png` });
     } else {
+      const vh = page.viewportSize().height;
       const fullH = Math.min(await page.evaluate(() => document.documentElement.scrollHeight), 16000);
-      await page.setViewportSize({ width: w, height: fullH });
-      await page.waitForTimeout(700);
-      await page.screenshot({ path: `${out}/${name}-${w}.png` });
+      const tiles = [];
+      for (let y = 0, i = 0; ; i++) {
+        const at = await page.evaluate(yy => { window.scrollTo(0, yy); return window.scrollY; }, y);
+        await page.waitForTimeout(i === 0 ? 400 : 1000);
+        const file = `${out}/.tile-${name}-${w}-${i}.png`;
+        await page.screenshot({ path: file });
+        tiles.push({ file, y: at });
+        if (i === 0) {
+          await page.evaluate(() => {
+            for (const el of document.querySelectorAll('body *')) {
+              const p = getComputedStyle(el).position;
+              if (p === 'fixed' || p === 'sticky') el.style.setProperty('visibility', 'hidden', 'important');
+            }
+          });
+        }
+        if (at + vh >= fullH || y >= fullH) break;
+        y += vh;
+      }
+      const { execFileSync } = require('child_process');
+      execFileSync('python3', ['-c', [
+        'import json,sys,os', 'from PIL import Image',
+        't=json.loads(sys.argv[1]); H=int(sys.argv[2]); W=int(sys.argv[3])',
+        'c=Image.new("RGB",(W,H),"white")',
+        'for x in t:',
+        '  im=Image.open(x["file"]).convert("RGB"); c.paste(im,(0,int(x["y"]))); os.remove(x["file"])',
+        'c.save(sys.argv[4])'].join('\n'), JSON.stringify(tiles), String(fullH), String(w), `${out}/${name}-${w}.png`]);
     }
     res = { ...res, overflow: m.sw > m.cw ? `${m.sw}>${m.cw}` : 'ok', h: m.h, theme: m.theme, hiddenReveals: m.hidden, brokenImgs: m.imgsBroken, plates: m.plates, cuts: m.cuts, liquidErrors: m.liquidErrors, errors };
   } catch (e) { res.error = String(e).slice(0, 200); }

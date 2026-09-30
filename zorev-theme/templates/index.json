@@ -57,7 +57,7 @@
           "settings": {
             "product": "goda-pheromone-perfume-oil",
             "line": "A 15 ml perfume oil, worn from a dropper. Oil rather than alcohol, so it sits close to the skin.",
-            "facts": "<ul><li><strong>15 ml glass bottle</strong> with a dropper</li><li><strong>Four options</strong> — Black, White, Citrus and Neutral</li><li><strong>One or two drops</strong> at the pulse points is enough</li></ul>"
+            "facts": ""
           }
         },
         "p2": {
@@ -65,7 +65,7 @@
           "settings": {
             "product": "hoygi-calcium-multi-balm",
             "line": "A 9 g twist-up balm stick. Goes on dry to the touch and melts on contact with skin.",
-            "facts": "<ul><li><strong>9 g twist-up stick</strong> — no lid of cream, no liquids bag</li><li><strong>Glide it on</strong> wherever skin runs dry, then warm it in</li><li><strong>Keep below 25°C</strong> — it softens in a hot car</li></ul>"
+            "facts": ""
           }
         }
       },
@@ -84,7 +84,7 @@
         "photo": "shopify://shop_images/zorev-v12-goda-wrist-overlook.jpg",
         "photo_alt": "A drop of GODA perfume oil falling from the dropper onto a wrist, the open bottle on a granite ledge above a forested valley",
         "position": "75% 50%",
-        "position_mobile": "58% 50%",
+        "position_mobile": "63% 50%",
         "show_card": true,
         "card_line": "Perfume oil · 15 ml",
         "eyebrow": "GODA · Perfume oil",
@@ -93,7 +93,8 @@
         "show_ladder": true,
         "cta_label": "",
         "link_label": "",
-        "link_url": ""
+        "link_url": "",
+        "card_corner": "bottom-left"
       },
       "blocks": {
         "f1": {
@@ -143,7 +144,8 @@
         "show_ladder": true,
         "cta_label": "",
         "link_label": "",
-        "link_url": ""
+        "link_url": "",
+        "card_corner": "top-left"
       },
       "blocks": {
         "f1": {

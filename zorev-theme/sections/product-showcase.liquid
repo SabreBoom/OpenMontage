@@ -171,6 +171,22 @@
     .zsc__form{display:flex}
     .zsc__act > *{flex:0 1 auto}
     @media(max-width:520px){ .zsc__act > *{flex:1 1 0;min-width:0} .zsc__act .zv-btn{width:100%;justify-content:center;padding-inline:var(--zv-4)} }
+    /* Phones: the line-up is an overview, two across, because each product
+       gets its own chapter further down the page. Facts and the direct add
+       live there and on the product page. */
+    @media(max-width:759px){
+      .zsc__grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:32px 12px}
+      .zsc__item{gap:14px}
+      .zsc__obj{padding:8% 8% 10%}
+      .zsc__name{font-size:clamp(1.5rem,1.2rem + 1.4vw,2rem)}
+      .zsc__line{font-size:var(--zv-t-sm);line-height:1.5}
+      .zsc__price{gap:2px 10px}
+      .zsc__multi{font-size:var(--zv-t-fine)}
+      .zsc__act{flex-direction:column}
+      .zsc__act > *{flex:0 0 auto}
+      .zsc__act .zv-btn{width:100%;justify-content:center;padding-inline:var(--zv-3)}
+      .zsc__form{display:none}
+    }
     @media(prefers-reduced-motion:reduce){ .zsc__obj,.zsc__shadow,.zsc__stage--scene img{transition-duration:0ms} .zsc__item:hover .zsc__obj,.zsc__item:hover .zsc__stage--scene img{transform:none} }
   </style>
 </section>

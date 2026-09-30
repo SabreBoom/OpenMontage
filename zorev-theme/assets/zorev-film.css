@@ -140,7 +140,7 @@
 .zhf__card-k { font-size: var(--zv-t-micro); font-weight: 600; letter-spacing: var(--zv-tr-caps);
   text-transform: uppercase; color: var(--zv-moss-strong); }
 .zhf__card-n { font-family: var(--zv-serif); font-size: 1.3rem; line-height: 1.15; }
-.zhf__card-p { font-size: var(--zv-t-fine); color: var(--zv-text-2); line-height: 1.35; }
+.zhf__card-p { font-size: var(--zv-t-fine); color: #3D423C; line-height: 1.35; }
 
 /* Scroll cue: a hairline with light travelling down it. */
 .zhf__cue { display: none; position: absolute; z-index: 2; left: 50%; bottom: 18px;
@@ -236,18 +236,27 @@
   text-decoration-color: var(--zv-hairline-2); text-underline-offset: 4px; min-height: 44px; display: inline-flex; align-items: center; }
 @media (hover: hover) and (pointer: fine) { .zps__link:hover { text-decoration-color: currentColor; } }
 
-/* The specimen card: the real product, on paper, over the frame's corner. */
+/* The specimen card: the real product, on paper, over one corner of the
+   frame (section setting), chosen so it never covers the product in the
+   photograph. On a phone a bottom card hangs half off the frame. */
 .zps__card {
-  position: absolute; z-index: 3; bottom: -18px; right: var(--zv-gutter);
+  position: absolute; z-index: 3;
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
   width: 200px; padding: 10px 14px 10px 10px; border-radius: 14px;
   text-decoration: none; color: var(--zv-ink); background: var(--zv-warm);
   box-shadow: 0 1px 1px rgba(10,13,10,.16), 0 20px 36px -18px rgba(10,13,10,.55);
   transition: transform var(--zv-d-spring) var(--zv-spring);
 }
+.zps__card--bottom-left  { bottom: -18px; left: var(--zv-gutter); }
+.zps__card--bottom-right { bottom: -18px; right: var(--zv-gutter); }
+.zps__card--top-left     { top: 16px; left: var(--zv-gutter); }
+.zps__card--top-right    { top: 16px; right: var(--zv-gutter); }
 @media (min-width: 900px) {
-  .zps__card { width: 236px; bottom: 28px; right: 28px; }
-  .zps--media-right .zps__card { right: auto; left: 28px; }
+  .zps__card { width: 236px; }
+  .zps__card--bottom-left  { bottom: 28px; left: 28px; }
+  .zps__card--bottom-right { bottom: 28px; right: 28px; }
+  .zps__card--top-left     { top: 28px; left: 28px; }
+  .zps__card--top-right    { top: 28px; right: 28px; }
 }
 .zps__card:focus-visible { outline: 2px solid var(--zv-forest); outline-offset: 4px; }
 .zps--dark .zps__card:focus-visible { outline-color: var(--zv-sand); }
@@ -257,9 +266,8 @@
   filter: drop-shadow(0 5px 5px rgba(16,19,16,.18)); }
 .zps__card-t { display: grid; gap: 1px; }
 .zps__card-n { font-family: var(--zv-serif); font-size: 1.25rem; line-height: 1.1; }
-.zps__card-d { font-size: var(--zv-t-micro); color: var(--zv-text-2); line-height: 1.35; }
-.zps__card-p { font-size: var(--zv-t-sm); font-weight: 600; margin-top: 2px; }
-.zv-dark .zps__card-d { color: #3D423C; }
+.zps__card-d { font-size: var(--zv-t-micro); color: #3D423C; line-height: 1.35; }
+.zps__card-p { font-size: var(--zv-t-sm); font-weight: 600; margin-top: 2px; color: var(--zv-ink); }
 
 /* ---- media reveal -------------------------------------------------------
    A photograph opens from a slightly inset frame and settles from a small
@@ -334,7 +342,12 @@
 /* ---- real media -------------------------------------------------------- */
 .zrm { padding-block: var(--zv-section); background: var(--zv-bg); color: var(--zv-text); }
 .zrm__head { display: grid; gap: var(--zv-3); max-width: 42rem; margin-bottom: clamp(28px, 4vw, 48px); justify-items: start; }
-.zrm--empty .zrm__head { margin-bottom: 0; }
+.zrm--empty .zrm__head { margin: 0 auto; }
+@media (min-width: 700px) {
+  .zrm--empty .zrm__head { justify-items: center; text-align: center; padding-block: var(--zv-5);
+    border-block: 1px solid var(--zv-hairline); max-width: 46rem; }
+  .zrm--empty .zrm__lead { margin-inline: auto; }
+}
 .zrm__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h2);
   line-height: var(--zv-lh-tight); letter-spacing: var(--zv-tr-tight); }
 .zrm__lead > :first-child { margin-top: 0; }

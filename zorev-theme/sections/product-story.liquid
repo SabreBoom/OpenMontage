@@ -47,7 +47,7 @@
           </div>
         </div>
         {%- if s.show_card and has_p -%}
-          <a class="zps__card" href="{{ p.url }}" data-zv-tilt="5" data-zv-reveal>
+          <a class="zps__card zps__card--{{ s.card_corner | default: 'bottom-right' }}" href="{{ p.url }}" data-zv-tilt="5" data-zv-reveal>
             <span class="zps__card-obj" aria-hidden="true">{% render 'product-cutout', product: p, sizes: '140px', alt: '' %}</span>
             <span class="zps__card-t">
               <span class="zps__card-n">{{ short | escape }}</span>
@@ -125,6 +125,9 @@
     { "type": "text", "id": "position", "label": "Crop on wide screens", "default": "50% 50%", "info": "Where the frame centres on the photograph, as x% y%." },
     { "type": "text", "id": "position_mobile", "label": "Crop on phones", "info": "Same, for the taller phone frame. Empty: the wide-screen crop." },
     { "type": "checkbox", "id": "show_card", "label": "Show the specimen card", "default": true },
+    { "type": "select", "id": "card_corner", "label": "Specimen card corner", "default": "bottom-right",
+      "info": "Put it where it covers nothing that matters, never over the product in the photograph.",
+      "options": [ { "value": "bottom-left", "label": "Bottom left" }, { "value": "bottom-right", "label": "Bottom right" }, { "value": "top-left", "label": "Top left" }, { "value": "top-right", "label": "Top right" } ] },
     { "type": "text", "id": "card_line", "label": "Specimen card line", "info": "Empty: the product type." },
     { "type": "header", "content": "Copy" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow", "info": "Empty: the product type." },

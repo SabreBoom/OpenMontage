@@ -121,7 +121,7 @@
       color:var(--zv-warm);scroll-margin-top:72px}
     .zpr [hidden]{display:none !important}
     .zpr__in{display:grid;gap:clamp(32px,5vw,72px);align-items:center}
-    @media(min-width:900px){.zpr__in{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
+    @media(min-width:900px){.zpr__in{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}.zpr__in:has(.zpr__photo){grid-template-columns:minmax(0,1.25fr) minmax(0,.85fr)}}
 
     /* ---- the scene: both products on one floor ---- */
     .zpr__scene{position:relative;width:100%;max-width:600px;margin-inline:auto;aspect-ratio:1 / 1}
@@ -147,7 +147,7 @@
     .zpr__obj--b .zpr__shadow{opacity:.75;width:70%}
 
     /* ---- photograph slot: the same frame as the scene ---- */
-    .zpr__photo{position:relative;margin:0 auto;width:100%;max-width:600px;aspect-ratio:1 / 1;
+    .zpr__photo{position:relative;margin:0 auto;width:100%;max-width:720px;aspect-ratio:1 / 1;
       border-radius:var(--zv-r-lg);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.25),0 18px 36px -18px rgba(0,0,0,.6)}
     @media(max-width:899px){.zpr__photo{max-width:480px;aspect-ratio:5 / 4}}
 
