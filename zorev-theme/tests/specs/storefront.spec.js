@@ -306,7 +306,10 @@ test.describe('film homepage', () => {
       await page.waitForTimeout(300);
       const after = await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform);
       expect(before).not.toBe(after);
-      expect(after).toBe('scaleX(1.000)');
+      // the browser normalises the inline value (1.000 -> 1), so compare numbers
+      const scale = v => parseFloat((/scaleX\(([\d.]+)\)/.exec(v) || [])[1]);
+      expect(scale(before)).toBeLessThan(1);
+      expect(scale(after)).toBeCloseTo(1, 2);
     } else {
       // nothing to scroll on a wide screen, so no dead tab stop either
       expect(await track.evaluate(t => t.scrollWidth <= t.clientWidth + 1)).toBe(true);
