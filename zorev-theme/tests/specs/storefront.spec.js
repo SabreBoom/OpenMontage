@@ -292,6 +292,32 @@ test.describe('film homepage', () => {
     await expect(hoygi.locator('a.zv-btn')).toHaveAttribute('href', /hoygi-calcium-multi-balm/);
   });
 
+  test('chapter copy keeps a readable column on every screen width', async ({ page }, testInfo) => {
+    // The copy column once shrank as the screen grew (a max-width that also
+    // had to hold the page margin): ~220 px at 1920, a letter wide beyond.
+    await go(page, '/');
+    const widths = testInfo.project.name === 'mobile' ? [page.viewportSize().width] : [1024, 1440, 1920, 2560, 3440];
+    for (const w of widths) {
+      if (testInfo.project.name !== 'mobile') await page.setViewportSize({ width: w, height: 900 });
+      const m = await page.evaluate(() => [...document.querySelectorAll('.zps')].map(s => {
+        const c = s.querySelector('.zps__copy'); const cs = getComputedStyle(c);
+        const lines = el => { const r = document.createRange(); r.selectNodeContents(el); return new Set([...r.getClientRects()].map(x => Math.round(x.top))).size; };
+        return {
+          id: s.id,
+          text: c.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+          wrappedFacts: [...s.querySelectorAll('.zps__fact dt')].filter(dt => lines(dt) > 1).map(dt => dt.textContent.trim()),
+          wrappedRows: [...s.querySelectorAll('.zps__q')].filter(q => lines(q) > 1).length,
+        };
+      }));
+      for (const s of m) {
+        expect(s.text, `${s.id} copy width at ${w}px`).toBeGreaterThanOrEqual(Math.min(320, w - 60));
+        expect(s.wrappedFacts, `${s.id} facts on one line at ${w}px`).toEqual([]);
+        expect(s.wrappedRows, `${s.id} ladder rows on one line at ${w}px`).toBe(0);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+  });
+
   test('Made to move: four scenes; on a phone a strip that scrolls sideways and reports progress', async ({ page }, testInfo) => {
     await go(page, '/');
     const mm = page.locator('#made-to-move');

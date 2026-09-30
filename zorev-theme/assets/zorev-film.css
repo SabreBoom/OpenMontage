@@ -174,16 +174,18 @@
 @keyframes zhf-cue { from { transform: translateY(-100%); } to { transform: translateY(260%); } }
 @keyframes zhf-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 
-/* As the hero leaves, its copy lifts and dims a little, so the frame reads
-   as the opening shot handing over rather than a block scrolling away.
-   Scroll-driven, so it costs no script; browsers without it keep it still. */
+/* As the hero leaves, its copy lifts a little faster than the page, so the
+   frame reads as the opening shot handing over rather than a block
+   scrolling away. Lift only, no fade: dimmed copy that is still on screen
+   reads as washed-out text, not as motion. Scroll-driven, so it costs no
+   script; browsers without it keep it still. */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .zhf { view-timeline-name: --zhf; }
     .zhf__in { animation: zhf-leave linear both; animation-timeline: --zhf; animation-range: exit 0% exit 70%; }
   }
 }
-@keyframes zhf-leave { to { transform: translate3d(0, -48px, 0); opacity: .25; } }
+@keyframes zhf-leave { to { transform: translate3d(0, -48px, 0); } }
 
 /* ---- product story ----------------------------------------------------- */
 .zps { position: relative; padding-block: var(--zv-section); background: var(--zv-bg); color: var(--zv-text);
@@ -203,16 +205,23 @@
 }
 .zps__copy { padding-inline: var(--zv-gutter); display: flex; flex-direction: column; align-items: flex-start;
   gap: var(--zv-4); max-width: 40rem; }
+/* Wide screens: the photograph bleeds to the screen edge and the copy keeps
+   to the page's content edge. The two outer tracks are the page margins, so
+   the copy column is a share of the content width at every screen size (a
+   max-width that also had to hold the margin left the copy ~220 px wide on
+   a 1920 screen). */
 @media (min-width: 900px) {
-  .zps__grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: center; gap: clamp(40px, 5vw, 88px); }
-  .zps--media-right .zps__media { order: 2; }
-  .zps__media { margin: 0; }
+  .zps__grid { --zps-side: max(var(--zv-gutter), calc((100% - var(--zv-container)) / 2 + var(--zv-gutter)));
+    grid-template-columns: var(--zps-side) minmax(0, 1.15fr) minmax(0, 1fr) var(--zps-side);
+    align-items: center; gap: 0; }
+  .zps--media-right .zps__grid { grid-template-columns: var(--zps-side) minmax(0, 1fr) minmax(0, 1.15fr) var(--zps-side); }
+  .zps__media { grid-column: 1 / 3; grid-row: 1; margin: 0; }
+  .zps--media-right .zps__media { grid-column: 3 / 5; }
   .zps__frame { aspect-ratio: auto; height: clamp(520px, 78svh, 780px); border-radius: 0 20px 20px 0; }
   .zps--media-right .zps__frame { border-radius: 20px 0 0 20px; }
   .zps__plate img, .zps__plate .zv-media__vid { object-position: var(--zps-pos) !important; }
-  /* the copy lines up with the page's content edge, not the viewport's */
-  .zps__copy { padding-inline: 0 max(var(--zv-gutter), calc((100vw - var(--zv-container)) / 2 + var(--zv-gutter))); }
-  .zps--media-right .zps__copy { padding-inline: max(var(--zv-gutter), calc((100vw - var(--zv-container)) / 2 + var(--zv-gutter))) 0; }
+  .zps__copy { grid-column: 3; grid-row: 1; max-width: none; padding-inline: clamp(40px, 5vw, 88px) 0; }
+  .zps--media-right .zps__copy { grid-column: 2; padding-inline: 0 clamp(40px, 5vw, 88px); }
 }
 .zps__eyebrow { color: var(--zv-moss-strong); }
 .zps--dark .zps__eyebrow { color: var(--zv-sand); }
@@ -222,10 +231,15 @@
 .zps__body > :first-child { margin-top: 0; }
 .zps__body > :last-child { margin-bottom: 0; }
 
+/* The figures are sized to the row they sit in (container units), so a
+   value like "1–2 drops" or "Below 25°C" stays on one line in a third of
+   the column at any width; a longer one wraps rather than running into
+   its neighbour. */
 .zps__facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--zv-4);
-  width: 100%; margin: var(--zv-3) 0 0; padding-top: var(--zv-4); border-top: 1px solid var(--zv-hairline); }
-.zps__fact { display: grid; gap: 4px; align-content: start; }
-.zps__fact dt { font-family: var(--zv-serif); font-size: clamp(1.5rem, 1.25rem + 1vw, 2.125rem); line-height: 1.05;
+  width: 100%; max-width: 30rem; margin: var(--zv-3) 0 0; padding-top: var(--zv-4); border-top: 1px solid var(--zv-hairline);
+  container-type: inline-size; }
+.zps__fact { display: grid; gap: 4px; align-content: start; min-width: 0; }
+.zps__fact dt { font-family: var(--zv-serif); font-size: 1.375rem; font-size: clamp(1.125rem, 5.5cqi, 2rem); line-height: 1.05;
   letter-spacing: -0.01em; color: var(--zv-text); }
 .zps__fact dd { margin: 0; font-size: var(--zv-t-fine); line-height: 1.45; color: var(--zv-text-2); }
 
