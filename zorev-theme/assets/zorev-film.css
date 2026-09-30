@@ -32,9 +32,12 @@
 .zhf .zv-media__toggle { bottom: 20px; right: max(16px, var(--zv-gutter)); }
 
 /* Light in the canopy: two soft shafts and a glow at the source, masked to
-   the top of the frame and set with screen so they only ever brighten. */
+   the top of the frame. Plain alpha, not a blend mode: a blended layer is
+   recomposited against everything under it on every frame, which halved
+   the frame rate on a throttled desktop; warm light at low alpha over a
+   dark frame reads the same. */
 .zhf__rays {
-  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+  position: absolute; inset: 0; pointer-events: none; will-change: opacity;
   background:
     radial-gradient(18% 26% at var(--zhf-rays-x) 6%, rgba(255,241,210,.30), rgba(255,241,210,0) 70%),
     linear-gradient(106deg, transparent 40%, rgba(255,241,210,.13) 46%, transparent 52%),
@@ -53,7 +56,7 @@
   }
 }
 /* Haze: two wide bands low in the frame, crossing at different speeds. */
-.zhf__mist { position: absolute; left: -30%; right: -30%; pointer-events: none; mix-blend-mode: screen; }
+.zhf__mist { position: absolute; left: -30%; right: -30%; pointer-events: none; will-change: transform; }
 .zhf__mist--far {
   top: 30%; height: 42%;
   background:

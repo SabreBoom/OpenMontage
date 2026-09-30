@@ -53,5 +53,9 @@ const BLOCK = /google-analytics|googletagmanager|monorail|web-pixels|\/wpm@|prel
   for (const b of Object.values(bytes)) { if (!b.size) continue; total += b.size; const k = b.type || 'Other'; byType[k] = (byType[k] || 0) + b.size; }
   const kb = n => Math.round(n / 1024) + ' KB';
   console.log(JSON.stringify({ path, mobile, theme: r.theme, loadMs: Date.now() - t0, lcpMs: r.lcp && Math.round(r.lcp.t), lcpEl: r.lcp && r.lcp.el, cls: Number(r.cls.toFixed(4)), fps, domNodes: r.dom, total: kb(total), byType: Object.fromEntries(Object.entries(byType).map(([k, v]) => [k, kb(v)])) }));
+  if (process.env.TOP) {
+    Object.values(bytes).filter(b => b.size).sort((a, b) => b.size - a.size).slice(0, Number(process.env.TOP))
+      .forEach(b => console.log(String(Math.round(b.size / 1024)).padStart(6) + ' KB  ' + (b.type || '') + '  ' + (b.url || '').split('?')[0].slice(-90)));
+  }
   await browser.close();
 })();
