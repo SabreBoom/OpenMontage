@@ -24,7 +24,7 @@
 -%}
 {%- if pick -%}
   {%- assign b = pick.settings -%}
-  <section class="zpsc zv-dark" aria-labelledby="zpsc-h-{{ section.id }}" {{ pick.shopify_attributes }}
+  <section class="zpsc zv-dark" data-zv-rest aria-labelledby="zpsc-h-{{ section.id }}" {{ pick.shopify_attributes }}
            style="--zpsc-pos: {{ b.position | default: '50% 50%' }}; --zpsc-pos-m: {{ b.position_mobile | default: b.position | default: '50% 50%' }};">
     <div class="zpsc__scene" data-zv-scene data-zv-scene-scroll="-0.1">
       <div class="zpsc__plate" data-zv-depth="1">

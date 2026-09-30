@@ -423,6 +423,9 @@
 }
 @media (prefers-reduced-motion: reduce) { .zpsc__plate { transform: none !important; } }
 
+/* Off screen, ambient loops rest (zorev-enhance.js, "rest"). */
+.zv-resting, .zv-resting * { animation-play-state: paused !important; }
+
 /* ---- reduced motion: the layout is the same, nothing travels ------------ */
 @media (prefers-reduced-motion: reduce) {
   .zhf__breathe, .zhf__plate, .zps__plate { transform: none !important; }

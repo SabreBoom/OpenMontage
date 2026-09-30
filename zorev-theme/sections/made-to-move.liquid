@@ -42,7 +42,7 @@
           <li class="zmm__item zmm__item--{{ forloop.index }}" {{ block.shopify_attributes }}>
             <figure class="zmm__fig" data-zv-depth="{{ depth }}" style="--zmm-pos: {{ b.position | default: '50% 50%' }};">
               <div class="zmm__frame" data-zv-reveal="media">
-                {% render 'zv-media', media: b.video, image: b.image, sizes: '(min-width: 900px) 50vw, 84vw', alt: b.image_alt %}
+                {% render 'zv-media', media: b.video, image: b.image, sizes: '(min-width: 1500px) 340px, (min-width: 900px) 23vw, 78vw', alt: b.image_alt %}
               </div>
               <figcaption class="zmm__cap">
                 {%- if b.label != blank -%}<span class="zmm__k">{{ b.label | escape }}</span>{%- endif -%}

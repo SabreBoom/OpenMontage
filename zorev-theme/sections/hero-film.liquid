@@ -42,7 +42,7 @@
     assign from = pb.price
   endif
 -%}
-<section class="zhf zv-dark{% unless has_media %} zhf--flat{% endunless %}" id="zhf-{{ section.id }}" aria-labelledby="zhf-h-{{ section.id }}"
+<section class="zhf zv-dark{% unless has_media %} zhf--flat{% endunless %}" id="zhf-{{ section.id }}" data-zv-rest aria-labelledby="zhf-h-{{ section.id }}"
          style="--zhf-rays-x: {{ s.rays_x | default: 62 }}%; --zhf-rays-x-m: {{ s.rays_x_mobile | default: 34 }}%;">
   {%- if has_media -%}
     <div class="zhf__scene" data-zv-scene data-zv-scene-pointer="7" data-zv-scene-scroll="-0.16">

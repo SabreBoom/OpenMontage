@@ -258,6 +258,20 @@
     });
   })();
 
+  /* ---- 7. rest -------------------------------------------------------------
+     [data-zv-rest] holds slow ambient loops (the hero's breathing plate,
+     mist and light). Once it is off screen there is nothing to see, so its
+     loops are paused until it comes back: the page scrolls without paying
+     for a hero nobody is looking at. */
+  (function rest() {
+    var els = [].slice.call(document.querySelectorAll('[data-zv-rest]'));
+    if (!els.length || !('IntersectionObserver' in window)) { return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { e.target.classList.toggle('zv-resting', !e.isIntersecting); });
+    }, { rootMargin: '80px 0px' });
+    els.forEach(function (el) { io.observe(el); });
+  })();
+
   /* ---- 2. bag count ----------------------------------------------------- */
   (function countVisibility() {
     var nodes = document.querySelectorAll('[data-cart-count]');
