@@ -9,6 +9,26 @@
  */
 {
   "sections": {
+    "film": {
+      "type": "hero-film",
+      "settings": {
+        "photo": "shopify://shop_images/zorev-v12-hero-trail-dawn.jpg",
+        "photo_mobile": "shopify://shop_images/zorev-v12-hero-trail-dawn-mobile.jpg",
+        "photo_alt": "A narrow forest trail curving through tall firs and ferns into morning fog, with soft light coming through the trees",
+        "rays_x": 62,
+        "rays_x_mobile": 34,
+        "eyebrow": "Perfume oil · Balm stick",
+        "heading": "Made for wherever you're headed.",
+        "body": "<p>A 15 ml perfume oil and a 9 g balm stick. Small enough for a pocket, free to ship anywhere.</p>",
+        "note": "",
+        "cta_label": "Shop Zorev",
+        "cta_link": "#line",
+        "cta2_label": "The Pair · $59",
+        "cta2_link": "#pair",
+        "show_card": true,
+        "card_link": "#line"
+      }
+    },
     "hero": {
       "type": "hero-product",
       "settings": {
@@ -20,21 +40,204 @@
         "cta_link": "#line",
         "cta2_label": "The Pair · $59",
         "cta2_link": "#pair"
-      }
+      },
+      "disabled": true
     },
     "products": {
       "type": "product-showcase",
       "settings": {
         "eyebrow": "The line",
         "heading": "Two essentials.",
-        "body": "<p>One goes on your skin, one goes on your pulse points. Both travel without a liquids bag.</p>",
+        "body": "<p>One goes on your pulse points, one goes on your skin. Both fit a jacket pocket, and the oil is well inside carry-on liquid limits.</p>",
         "raised": false
       },
       "blocks": {
-        "p1": { "type": "product", "settings": { "product": "goda-pheromone-perfume-oil", "line": "A 15 ml perfume oil, worn from a dropper. Oil rather than alcohol, so it sits close to the skin.", "facts": "<ul><li><strong>15 ml glass bottle</strong> with a dropper</li><li><strong>Four options</strong> — Black, White, Citrus and Neutral</li><li><strong>One or two drops</strong> at the pulse points is enough</li></ul>" } },
-        "p2": { "type": "product", "settings": { "product": "hoygi-calcium-multi-balm", "line": "A 9 g twist-up balm stick. Goes on dry to the touch and melts on contact with skin.", "facts": "<ul><li><strong>9 g twist-up stick</strong> — no lid of cream, no liquids bag</li><li><strong>Glide it on</strong> wherever skin runs dry, then warm it in</li><li><strong>Keep below 25°C</strong> — it softens in a hot car</li></ul>" } }
+        "p1": {
+          "type": "product",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil",
+            "line": "A 15 ml perfume oil, worn from a dropper. Oil rather than alcohol, so it sits close to the skin.",
+            "facts": "<ul><li><strong>15 ml glass bottle</strong> with a dropper</li><li><strong>Four options</strong> — Black, White, Citrus and Neutral</li><li><strong>One or two drops</strong> at the pulse points is enough</li></ul>"
+          }
+        },
+        "p2": {
+          "type": "product",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm",
+            "line": "A 9 g twist-up balm stick. Goes on dry to the touch and melts on contact with skin.",
+            "facts": "<ul><li><strong>9 g twist-up stick</strong> — no lid of cream, no liquids bag</li><li><strong>Glide it on</strong> wherever skin runs dry, then warm it in</li><li><strong>Keep below 25°C</strong> — it softens in a hot car</li></ul>"
+          }
+        }
       },
-      "block_order": ["p1", "p2"]
+      "block_order": [
+        "p1",
+        "p2"
+      ]
+    },
+    "goda": {
+      "type": "product-story",
+      "settings": {
+        "product": "goda-pheromone-perfume-oil",
+        "tone": "dark",
+        "media_side": "left",
+        "anchor": "goda",
+        "photo": "shopify://shop_images/zorev-v12-goda-wrist-overlook.jpg",
+        "photo_alt": "A drop of GODA perfume oil falling from the dropper onto a wrist, the open bottle on a granite ledge above a forested valley",
+        "position": "75% 50%",
+        "position_mobile": "58% 50%",
+        "show_card": true,
+        "card_line": "Perfume oil · 15 ml",
+        "eyebrow": "GODA · Perfume oil",
+        "heading": "One drop, wherever the day goes.",
+        "body": "<p>A 15 ml perfume oil, worn from a glass dropper. Oil sits close to the skin instead of flashing off the way a spray does, so one or two drops at the wrist and the base of the throat is the whole routine.</p>",
+        "show_ladder": true,
+        "cta_label": "",
+        "link_label": "",
+        "link_url": ""
+      },
+      "blocks": {
+        "f1": {
+          "type": "fact",
+          "settings": {
+            "value": "15 ml",
+            "label": "Glass bottle with a dropper"
+          }
+        },
+        "f2": {
+          "type": "fact",
+          "settings": {
+            "value": "1–2 drops",
+            "label": "At the pulse points is enough"
+          }
+        },
+        "f3": {
+          "type": "fact",
+          "settings": {
+            "value": "4 options",
+            "label": "Black, White, Citrus and Neutral"
+          }
+        }
+      },
+      "block_order": [
+        "f1",
+        "f2",
+        "f3"
+      ]
+    },
+    "hoygi": {
+      "type": "product-story",
+      "settings": {
+        "product": "hoygi-calcium-multi-balm",
+        "tone": "light",
+        "media_side": "right",
+        "anchor": "hoygi",
+        "photo": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
+        "photo_alt": "A Hoygi balm stick standing on a cafe table by a window, next to an espresso cup, sunglasses and a folded map",
+        "position": "90% 55%",
+        "position_mobile": "81% 55%",
+        "show_card": true,
+        "card_line": "Balm stick · 9 g",
+        "eyebrow": "HOYGI · Balm stick",
+        "heading": "Skincare that fits a pocket.",
+        "body": "<p>A 9 g balm stick that goes on dry and melts on contact with skin. No jar, no lid of cream, nothing to spill: twist it up, glide it on wherever skin runs dry, and put it back in your pocket.</p>",
+        "show_ladder": true,
+        "cta_label": "",
+        "link_label": "",
+        "link_url": ""
+      },
+      "blocks": {
+        "f1": {
+          "type": "fact",
+          "settings": {
+            "value": "9 g",
+            "label": "Twist-up stick"
+          }
+        },
+        "f2": {
+          "type": "fact",
+          "settings": {
+            "value": "Solid",
+            "label": "Goes on dry, no jar to carry"
+          }
+        },
+        "f3": {
+          "type": "fact",
+          "settings": {
+            "value": "Below 25°C",
+            "label": "Keep it out of a hot car"
+          }
+        }
+      },
+      "block_order": [
+        "f1",
+        "f2",
+        "f3"
+      ]
+    },
+    "move": {
+      "type": "made-to-move",
+      "settings": {
+        "eyebrow": "Where it goes",
+        "heading": "Made to move.",
+        "body": "<p>Fifteen millilitres and nine grams. Small enough to come along on whatever the day turns into.</p>",
+        "anchor": "made-to-move"
+      },
+      "blocks": {
+        "m1": {
+          "type": "scene",
+          "settings": {
+            "label": "Road",
+            "title": "The long way round.",
+            "line": "Small enough for a jacket pocket, so it rides with you rather than in a hot car.",
+            "image": "shopify://shop_images/zorev-v12-road-golden-hills.jpg",
+            "image_alt": "An empty two-lane road curving through golden hills toward blue mountains in late afternoon light",
+            "position": "50% 50%",
+            "link": ""
+          }
+        },
+        "m2": {
+          "type": "scene",
+          "settings": {
+            "label": "Travel",
+            "title": "Carry-on, sorted.",
+            "line": "15 ml of oil is well inside carry-on liquid limits, and the balm is a solid stick.",
+            "image": "shopify://shop_images/8C64E5DB-41A4-4F4E-B7C5-D3CAEC464CFF.jpg",
+            "image_alt": "A river valley between granite cliffs at dawn, pink light behind the peaks",
+            "position": "50% 50%",
+            "link": ""
+          }
+        },
+        "m3": {
+          "type": "scene",
+          "settings": {
+            "label": "Trail",
+            "title": "Where the signal drops.",
+            "line": "No mirror, no sink. Both go on by hand.",
+            "image": "shopify://shop_images/IMG_7283.jpg",
+            "image_alt": "Sunlight falling through a dark forest onto mossy rocks",
+            "position": "50% 60%",
+            "link": ""
+          }
+        },
+        "m4": {
+          "type": "scene",
+          "settings": {
+            "label": "Everyday",
+            "title": "And the ordinary days.",
+            "line": "Desk drawer, coat pocket, the bag you always take.",
+            "image": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
+            "image_alt": "Sunglasses, an espresso cup and a folded map on a cafe table by a window",
+            "position": "41% 55%",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "m1",
+        "m2",
+        "m3",
+        "m4"
+      ]
     },
     "savings": {
       "type": "quantity-savings",
@@ -44,14 +247,44 @@
         "body": "<p>Savings are applied automatically in your bag — no code to hunt for. On GODA, mix any of the four options and the saving still counts.</p>"
       },
       "blocks": {
-        "q1": { "type": "product", "settings": { "product": "goda-pheromone-perfume-oil" } },
-        "q2": { "type": "product", "settings": { "product": "hoygi-calcium-multi-balm" } }
+        "q1": {
+          "type": "product",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil"
+          }
+        },
+        "q2": {
+          "type": "product",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm"
+          }
+        }
       },
-      "block_order": ["q1", "q2"]
+      "block_order": [
+        "q1",
+        "q2"
+      ],
+      "disabled": true
     },
     "pair": {
       "type": "bundle-builder",
-      "settings": { "body": "" }
+      "settings": {
+        "body": "",
+        "photo": "shopify://shop_images/zorev-v12-pair-basalt-dawn.jpg",
+        "photo_alt": "The GODA perfume oil bottle and the Hoygi balm stick side by side on a wet rock at the edge of a misty forest trail"
+      }
+    },
+    "media": {
+      "type": "real-media",
+      "settings": {
+        "eyebrow": "In the wild",
+        "heading": "Out there with real people.",
+        "body": "",
+        "anchor": "real",
+        "empty_heading": "Real footage, when there is some.",
+        "empty_body": "<p>ZOREV is new, so there is nothing from customers to show here yet, and we will not stage it. If you film yours on the road, on a trail or on an ordinary Tuesday, send it over. With your permission and your name on it, it goes here.</p>",
+        "empty_cta": "Send us yours"
+      }
     },
     "why": {
       "type": "value-strip",
@@ -60,12 +293,45 @@
         "heading": "Four things we can actually promise."
       },
       "blocks": {
-        "v1": { "type": "point", "settings": { "num": "Shipping", "title": "Free, everywhere.", "body": "Every order ships free to every country we deliver to. No minimum, and no paid upgrade at checkout." } },
-        "v2": { "type": "point", "settings": { "num": "Dispatch", "title": "Out within one business day.", "body": "Orders go to our fulfilment network within one business day, and tracking follows by email as soon as the carrier scans the parcel." } },
-        "v3": { "type": "point", "settings": { "num": "Savings", "title": "Applied for you.", "body": "Multi-buy and pair savings appear in your bag before you pay. There are no codes to find." } },
-        "v4": { "type": "point", "settings": { "num": "Listings", "title": "Straight about the makers.", "body": "Each page says who makes the product and where the maker's claims stop and ours begin." } }
+        "v1": {
+          "type": "point",
+          "settings": {
+            "num": "Shipping",
+            "title": "Free, everywhere.",
+            "body": "Every order ships free to every country we deliver to. No minimum, and no paid upgrade at checkout."
+          }
+        },
+        "v2": {
+          "type": "point",
+          "settings": {
+            "num": "Dispatch",
+            "title": "Out within one business day.",
+            "body": "Orders go to our fulfilment network within one business day, and tracking follows by email as soon as the carrier scans the parcel."
+          }
+        },
+        "v3": {
+          "type": "point",
+          "settings": {
+            "num": "Savings",
+            "title": "Applied for you.",
+            "body": "Multi-buy and pair savings appear in your bag before you pay. There are no codes to find."
+          }
+        },
+        "v4": {
+          "type": "point",
+          "settings": {
+            "num": "Listings",
+            "title": "Straight about the makers.",
+            "body": "Each page says who makes the product and where the maker's claims stop and ours begin."
+          }
+        }
       },
-      "block_order": ["v1", "v2", "v3", "v4"]
+      "block_order": [
+        "v1",
+        "v2",
+        "v3",
+        "v4"
+      ]
     },
     "after": {
       "type": "after-order",
@@ -76,14 +342,59 @@
         "raised": true
       },
       "blocks": {
-        "s1": { "type": "step", "settings": { "icon": "check", "title": "Savings are applied in your bag", "body": "You see every discount, by name, before you pay." } },
-        "s2": { "type": "step", "settings": { "icon": "box", "title": "It goes out within one business day", "body": "To our fulfilment network, with no charge for shipping." } },
-        "s3": { "type": "step", "settings": { "icon": "mail", "title": "Tracking arrives by email", "body": "As soon as the carrier scans the parcel." } },
-        "s4": { "type": "step", "settings": { "icon": "shield", "title": "Something wrong? We make it right", "body": "If it arrives damaged, defective or wrong, email a photo and we sort it out." } },
-        "r1": { "type": "rproduct", "settings": { "product": "goda-pheromone-perfume-oil" } },
-        "r2": { "type": "rproduct", "settings": { "product": "hoygi-calcium-multi-balm" } }
+        "s1": {
+          "type": "step",
+          "settings": {
+            "icon": "check",
+            "title": "Savings are applied in your bag",
+            "body": "You see every discount, by name, before you pay."
+          }
+        },
+        "s2": {
+          "type": "step",
+          "settings": {
+            "icon": "box",
+            "title": "It goes out within one business day",
+            "body": "To our fulfilment network, with no charge for shipping."
+          }
+        },
+        "s3": {
+          "type": "step",
+          "settings": {
+            "icon": "mail",
+            "title": "Tracking arrives by email",
+            "body": "As soon as the carrier scans the parcel."
+          }
+        },
+        "s4": {
+          "type": "step",
+          "settings": {
+            "icon": "shield",
+            "title": "Something wrong? We make it right",
+            "body": "If it arrives damaged, defective or wrong, email a photo and we sort it out."
+          }
+        },
+        "r1": {
+          "type": "rproduct",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil"
+          }
+        },
+        "r2": {
+          "type": "rproduct",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm"
+          }
+        }
       },
-      "block_order": ["s1", "s2", "s3", "s4", "r1", "r2"]
+      "block_order": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "r1",
+        "r2"
+      ]
     },
     "closer": {
       "type": "story",
@@ -101,5 +412,18 @@
       }
     }
   },
-  "order": ["hero", "products", "savings", "pair", "why", "after", "closer"]
+  "order": [
+    "film",
+    "hero",
+    "products",
+    "goda",
+    "hoygi",
+    "move",
+    "savings",
+    "pair",
+    "media",
+    "why",
+    "after",
+    "closer"
+  ]
 }

@@ -47,7 +47,7 @@
 <section class="zpr zv-dark" id="pair" data-zpr aria-labelledby="zpr-h-{{ section.id }}">
   <div class="zv-wrap zpr__in">
     {%- if has_photo -%}
-      <figure class="zpr__photo" data-zv-reveal>
+      <figure class="zpr__photo" data-zv-reveal="media">
         {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 900px) 48vw, 92vw', alt: s.photo_alt %}
       </figure>
     {%- elsif has_scene -%}

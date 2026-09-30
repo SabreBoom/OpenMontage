@@ -71,7 +71,10 @@
                 with it, nearer ones more. This one runs on phones too — it
                 costs one rAF while the scene is on screen and nothing else.
      Amounts come from the scene: data-zv-scene-pointer (px at depth 1) and
-     data-zv-scene-scroll (fraction of the scene's travel at depth 1). */
+     data-zv-scene-scroll (fraction of the scene's travel at depth 1; a
+     negative value makes the layer lag the page, the way a background
+     does). data-zv-scene-min (px) switches a scene off below that viewport
+     width, for layouts that turn into a sideways strip on a phone. */
   (function depth() {
     var scenes = [].slice.call(document.querySelectorAll('[data-zv-scene]'));
     if (!scenes.length || reduce.matches || !('IntersectionObserver' in window)) { return; }
@@ -83,11 +86,14 @@
     function paint() {
       raf = null;
       var vh = window.innerHeight || 1;
+      var vw = window.innerWidth || 0;
       active.forEach(function (sc) {
+        var off = sc.min && vw < sc.min;
         var r = sc.el.getBoundingClientRect();
         /* -1 when the scene's centre is a viewport below, +1 a viewport above */
         var t = ((r.top + r.height / 2) - vh / 2) / vh;
         sc.layers.forEach(function (l) {
+          if (off) { if (l.el.style.transform) { l.el.style.transform = ''; } return; }
           var x = fine ? -px * sc.pointer * l.d : 0;
           var y = (fine ? -py * sc.pointer * 0.6 * l.d : 0) + t * sc.scroll * r.height * l.d;
           l.el.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
@@ -113,7 +119,8 @@
       if (!layers.length) { return; }
       var sc = { el: el, layers: layers,
         pointer: parseFloat(el.getAttribute('data-zv-scene-pointer')) || 0,
-        scroll: parseFloat(el.getAttribute('data-zv-scene-scroll')) || 0 };
+        scroll: parseFloat(el.getAttribute('data-zv-scene-scroll')) || 0,
+        min: parseFloat(el.getAttribute('data-zv-scene-min')) || 0 };
       el.__zvScene = sc;
       io.observe(el);
     });
@@ -220,6 +227,32 @@
         if (document.hidden) { if (!v.paused) { v.pause(); } }
         else if (v.__zvSeen && !v.__zvHeld) { start(v); }
       });
+    });
+  })();
+
+  /* ---- 6. strip ----------------------------------------------------------
+     [data-zv-strip] is a sideways, snapping strip on a phone. Its thin bar
+     ([data-zv-strip-bar]) shows how far along the strip you are, so a swipe
+     has somewhere to go. Passive scroll listener, one rAF per frame at most;
+     the bar is decoration (aria-hidden), the strip itself is a labelled,
+     focusable region. */
+  (function strip() {
+    [].slice.call(document.querySelectorAll('[data-zv-strip]')).forEach(function (root) {
+      var track = root.querySelector('[data-zv-strip-track]');
+      var bar = root.querySelector('[data-zv-strip-bar]');
+      if (!track || !bar) { return; }
+      var raf = null;
+      function paint() {
+        raf = null;
+        var max = track.scrollWidth - track.clientWidth;
+        var seen = track.clientWidth / Math.max(track.scrollWidth, 1);
+        var p = max > 0 ? track.scrollLeft / max : 1;
+        bar.style.transform = 'scaleX(' + Math.min(1, seen + (1 - seen) * p).toFixed(3) + ')';
+      }
+      function queue() { if (!raf) { raf = requestAnimationFrame(paint); } }
+      track.addEventListener('scroll', queue, { passive: true });
+      window.addEventListener('resize', queue, { passive: true });
+      paint();
     });
   })();
 

@@ -1,0 +1,132 @@
+{%- comment -%}
+  ZOREV — cinematic hero.
+
+  A full-bleed place, not a product on paper: the first screen should say
+  where these things are carried before it says what they are. The copy sits
+  in the quiet side of the frame; the products are one step below (#line),
+  and on a wide screen a small printed card in the corner names them, so a
+  first-time visitor never has to guess what the shop sells.
+
+  The frame is alive in four cheap layers, all transform and opacity:
+    1  breathe   the photograph drifts in scale over 30 s, eased and
+                 alternating, so there is no loop point to notice
+    2  depth     zorev-enhance.js moves the plate a little slower than the
+                 page as it scrolls away, and a few pixels against a fine
+                 pointer ([data-zv-scene] / [data-zv-depth])
+    3  mist      two soft bands of haze cross the lower frame at different
+                 speeds, the way fog moves through trees
+    4  light     the shafts in the canopy brighten and dim on a slow breath
+  Under prefers-reduced-motion every one of them is off and the frame is a
+  still photograph. The copy never moves after it has arrived, and the veil
+  keeps it at AA contrast over any frame of the film.
+
+  A film (Shopify-hosted, silent, looping) plays over the photograph while
+  on screen, with a pause button, never under reduced motion or Save-Data.
+  Empty photograph and film: the section falls back to the dark band with
+  the copy, so it never renders as a broken frame.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign pa = s.product_a | default: settings.pair_product_a
+  assign pb = s.product_b | default: settings.pair_product_b
+  assign has_media = false
+  if s.photo != blank or s.video != blank
+    assign has_media = true
+  endif
+  assign show_card = false
+  if s.show_card and pa != blank and pa.title != blank and pb != blank and pb.title != blank
+    assign show_card = true
+  endif
+  assign from = pa.price
+  if pb.price < from
+    assign from = pb.price
+  endif
+-%}
+<section class="zhf zv-dark{% unless has_media %} zhf--flat{% endunless %}" id="zhf-{{ section.id }}" aria-labelledby="zhf-h-{{ section.id }}"
+         style="--zhf-rays-x: {{ s.rays_x | default: 62 }}%; --zhf-rays-x-m: {{ s.rays_x_mobile | default: 34 }}%;">
+  {%- if has_media -%}
+    <div class="zhf__scene" data-zv-scene data-zv-scene-pointer="7" data-zv-scene-scroll="-0.16">
+      <div class="zhf__plate" data-zv-depth="1">
+        <div class="zhf__breathe">
+          {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '100vw', alt: s.photo_alt, eager: true, position: '50% 50%' %}
+        </div>
+      </div>
+      <div class="zhf__rays" aria-hidden="true"></div>
+      <div class="zhf__mist zhf__mist--far" aria-hidden="true"></div>
+      <div class="zhf__mist zhf__mist--near" aria-hidden="true"></div>
+      <div class="zhf__veil" aria-hidden="true"></div>
+    </div>
+  {%- endif -%}
+
+  <div class="zv-wrap zhf__in">
+    <div class="zhf__copy">
+      {%- if s.eyebrow != blank -%}<span class="zv-eyebrow zhf__eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
+      <h1 class="zhf__h1" id="zhf-h-{{ section.id }}">{{ s.heading | default: shop.name }}</h1>
+      {%- if s.body != blank -%}<div class="zv-lead zhf__body">{{ s.body }}</div>{%- endif -%}
+      {%- if s.cta_label != blank or s.cta2_label != blank -%}
+        <div class="zhf__cta">
+          {%- if s.cta_label != blank -%}
+            <a class="zv-btn zhf__cta1" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ s.cta_label | escape }}</a>
+          {%- endif -%}
+          {%- if s.cta2_label != blank -%}
+            <a class="zv-btn zv-btn--ghost zhf__cta2" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">{{ s.cta2_label | escape }}</a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+      {%- if s.note != blank -%}<p class="zhf__note">{{ s.note | escape }}</p>{%- endif -%}
+    </div>
+
+    {%- if show_card -%}
+      {%- comment -%}
+        Printed card, not a composite: the two cutouts sit on paper of their
+        own, so they are never pasted into the photograph's light.
+      {%- endcomment -%}
+      <a class="zhf__card" href="{{ s.card_link | default: '#line' }}" data-zv-tilt="3">
+        <span class="zhf__card-objs" aria-hidden="true">
+          <span class="zhf__card-obj">{% render 'product-cutout', product: pa, sizes: '96px', alt: '' %}</span>
+          <span class="zhf__card-obj">{% render 'product-cutout', product: pb, sizes: '96px', alt: '' %}</span>
+        </span>
+        <span class="zhf__card-t">
+          <span class="zhf__card-k">The line</span>
+          <span class="zhf__card-n">{{ pa.vendor | upcase | escape }} <span aria-hidden="true">&middot;</span> {{ pb.vendor | upcase | escape }}</span>
+          <span class="zhf__card-p">{{ pa.type | escape }} and {{ pb.type | downcase | escape }}, from {{ from | money_without_trailing_zeros }}</span>
+        </span>
+      </a>
+    {%- endif -%}
+  </div>
+
+  {%- if has_media -%}
+    <a class="zhf__cue" href="{{ s.card_link | default: '#line' }}" aria-label="Scroll to the products"><span aria-hidden="true"></span></a>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Cinematic hero",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "A full-width place with the copy set into its quiet side. The photograph breathes, mist crosses it and the light shifts, all off for visitors who ask for reduced motion." },
+    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "Wide 16:9, at least 2400 px across, with a dark or quiet left third for the copy (brief H1). This is the page's largest image and loads first." },
+    { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones", "info": "Portrait 9:16, at least 1080 × 1920 px, quiet in the lower half where the copy sits on a phone (brief H1-M)." },
+    { "type": "video", "id": "video", "label": "Film (optional)", "info": "8 to 12 seconds, silent, loops cleanly, same framing as the photograph (brief H1-F). Plays only on screen, never for reduced motion or Save-Data, always with a pause button." },
+    { "type": "text", "id": "photo_alt", "label": "Photograph description", "info": "Used only if the image has no alt text in Content > Files." },
+    { "type": "range", "id": "rays_x", "label": "Light source across the photograph", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 62 },
+    { "type": "range", "id": "rays_x_mobile", "label": "Light source across the phone photograph", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 34 },
+    { "type": "header", "content": "Copy" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Perfume oil · Balm stick" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Made for wherever you're headed." },
+    { "type": "richtext", "id": "body", "label": "Body" },
+    { "type": "text", "id": "note", "label": "Fine print", "info": "One short true line, or nothing." },
+    { "type": "text", "id": "cta_label", "label": "Primary button", "default": "Shop Zorev" },
+    { "type": "url", "id": "cta_link", "label": "Primary link" },
+    { "type": "text", "id": "cta2_label", "label": "Secondary button" },
+    { "type": "url", "id": "cta2_link", "label": "Secondary link" },
+    { "type": "header", "content": "Product card (wide screens)" },
+    { "type": "checkbox", "id": "show_card", "label": "Show the product card", "default": true },
+    { "type": "product", "id": "product_a", "label": "First product", "info": "Empty: the pair from Theme settings > Offers." },
+    { "type": "product", "id": "product_b", "label": "Second product" },
+    { "type": "url", "id": "card_link", "label": "Card link", "info": "Empty: the product line-up below (#line)." }
+  ],
+  "presets": [{ "name": "Cinematic hero" }]
+}
+{% endschema %}

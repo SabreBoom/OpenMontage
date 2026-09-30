@@ -161,6 +161,14 @@
   <link rel="stylesheet" href="{{ 'zorev-cards.css' | asset_url }}">
   <link rel="stylesheet" href="{{ 'zorev-pages.css' | asset_url }}">
   <link rel="stylesheet" href="{{ 'zorev.css' | asset_url }}">
+  {%- comment -%}
+    The film sections (cinematic hero, product stories, Made to move, real
+    media) live on the homepage and can be added to a product page; nowhere
+    else pays for their stylesheet.
+  {%- endcomment -%}
+  {%- if template.name == 'index' or template.name == 'product' -%}
+    <link rel="stylesheet" href="{{ 'zorev-film.css' | asset_url }}">
+  {%- endif -%}
 
   {%- comment -%}
     Marks the document as scripted. Scroll-reveal styles are scoped to

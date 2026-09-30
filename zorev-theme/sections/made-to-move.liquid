@@ -1,0 +1,89 @@
+{%- comment -%}
+  ZOREV — Made to move.
+
+  The page's one big look at the world the products are carried into:
+  road, travel, trail, the ordinary day. Photographs only, captions short.
+
+  Wide screens: an editorial collage. One tall frame and three smaller ones
+  on a 12-column grid, each set at a slightly different depth, so as the
+  band scrolls past the frames slide against each other a few pixels
+  (zorev-enhance.js [data-zv-scene] / [data-zv-depth]; off under reduced
+  motion). Phones: a horizontal strip that snaps frame by frame, with the
+  next frame always peeking in so the swipe is discoverable, and a thin
+  progress line under it. The strip is a labelled, focusable region, so
+  it scrolls from the keyboard too.
+{%- endcomment -%}
+{%- assign s = section.settings -%}
+<section class="zmm" id="{{ s.anchor | default: 'made-to-move' | handleize }}" aria-labelledby="zmm-h-{{ section.id }}">
+  <div class="zv-wrap">
+    <header class="zmm__head" data-zv-reveal>
+      {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
+      <h2 class="zmm__h" id="zmm-h-{{ section.id }}">{{ s.heading }}</h2>
+      {%- if s.body != blank -%}<div class="zv-lead zmm__lead">{{ s.body }}</div>{%- endif -%}
+    </header>
+  </div>
+
+  <div class="zmm__strip" data-zv-strip>
+    <div class="zmm__track" data-zv-strip-track role="region" tabindex="0" aria-label="{{ s.heading | strip_html | escape }}: {{ section.blocks.size }} photographs, scroll sideways">
+      <ul class="zmm__grid" role="list" data-zv-scene data-zv-scene-scroll="0.05" data-zv-scene-min="900">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign b = block.settings
+            assign depth = '0.2'
+            case forloop.index
+              when 2
+                assign depth = '0.75'
+              when 3
+                assign depth = '0.45'
+              when 4
+                assign depth = '1'
+            endcase
+          -%}
+          <li class="zmm__item zmm__item--{{ forloop.index }}" {{ block.shopify_attributes }}>
+            <figure class="zmm__fig" data-zv-depth="{{ depth }}" style="--zmm-pos: {{ b.position | default: '50% 50%' }};">
+              <div class="zmm__frame" data-zv-reveal="media">
+                {% render 'zv-media', media: b.video, image: b.image, sizes: '(min-width: 900px) 50vw, 84vw', alt: b.image_alt %}
+              </div>
+              <figcaption class="zmm__cap">
+                {%- if b.label != blank -%}<span class="zmm__k">{{ b.label | escape }}</span>{%- endif -%}
+                {%- if b.title != blank -%}<span class="zmm__t">{{ b.title | escape }}</span>{%- endif -%}
+                {%- if b.line != blank -%}<span class="zmm__l">{{ b.line | escape }}</span>{%- endif -%}
+              </figcaption>
+              {%- if b.link != blank -%}
+                <a class="zmm__cover" href="{{ b.link }}"><span class="visually-hidden">{{ b.label | escape }}: {{ b.title | escape }}</span></a>
+              {%- endif -%}
+            </figure>
+          </li>
+        {%- endfor -%}
+      </ul>
+    </div>
+    <div class="zmm__progress" aria-hidden="true"><span data-zv-strip-bar></span></div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Made to move",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Where it goes" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Made to move." },
+    { "type": "richtext", "id": "body", "label": "Intro" },
+    { "type": "text", "id": "anchor", "label": "Anchor", "default": "made-to-move" }
+  ],
+  "blocks": [
+    { "type": "scene", "name": "Scene", "limit": 4,
+      "settings": [
+        { "type": "text", "id": "label", "label": "Label", "info": "One word: Road, Travel, Trail, Everyday." },
+        { "type": "text", "id": "title", "label": "Title" },
+        { "type": "text", "id": "line", "label": "One line", "info": "Something true about carrying the products there." },
+        { "type": "image_picker", "id": "image", "label": "Photograph", "info": "The first scene is the tall frame: 4:5 or taller works best. The others take 4:3. At least 1600 px on the long side (briefs M1 to M4)." },
+        { "type": "video", "id": "video", "label": "Film (optional)", "info": "Silent, loops cleanly. Uses the photograph as its poster." },
+        { "type": "text", "id": "image_alt", "label": "Photograph description" },
+        { "type": "text", "id": "position", "label": "Crop", "default": "50% 50%", "info": "Where the frame centres on the photograph, as x% y%." },
+        { "type": "url", "id": "link", "label": "Link (optional)" }
+      ] }
+  ],
+  "presets": [{ "name": "Made to move", "blocks": [{ "type": "scene" }, { "type": "scene" }, { "type": "scene" }, { "type": "scene" }] }]
+}
+{% endschema %}
