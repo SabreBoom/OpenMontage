@@ -105,6 +105,23 @@
             </div>
           {%- endfor -%}
         {%- endif -%}
+        {%- comment -%}
+          In-use photographs from the "Scene" blocks: the real product in a
+          real place, after the cutouts (so a variant still scrolls to its
+          own cutout by index) and before the curated gallery. A block set
+          to a product shows on that product's page only. Kept in the theme,
+          not in product metafields, so a draft theme can carry them without
+          touching what the published theme shows.
+        {%- endcomment -%}
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'scene' and block.settings.image != blank -%}
+            {%- if block.settings.product == blank or block.settings.product.id == product.id -%}
+              <div class="gal__slide gal__slide--photo" data-thumb="{{ block.settings.image | image_url: width: 160 }}" {{ block.shopify_attributes }}>
+                {% render 'zv-media', image: block.settings.image, sizes: '(min-width: 900px) 44vw, 92vw', alt: block.settings.image_alt, position: block.settings.position %}
+              </div>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
         {%- if has_gallery -%}
           {%- for f in gallery -%}
             {%- liquid
@@ -1013,6 +1030,14 @@
     { "type": "paragraph", "content": "The quantity offer reads each product's 'Quantity offer' metafield. The pair card and the trust row read Theme settings > Offers and > Trust. Product-specific accordions come from the description's own headings (Details, How to use, What's included); the store-wide ones are the blocks below." }
   ],
   "blocks": [
+    { "type": "scene", "name": "In-use photograph",
+      "settings": [
+        { "type": "paragraph", "content": "A photograph of the real product in use, added to the gallery after the cutouts. Never a photograph of a different product or a redesigned one." },
+        { "type": "product", "id": "product", "label": "Product", "info": "The page this photograph belongs to. Empty: every product page." },
+        { "type": "image_picker", "id": "image", "label": "Photograph", "info": "Square frame; at least 1600 px on the short side." },
+        { "type": "text", "id": "image_alt", "label": "Description", "info": "What is in the picture, for screen readers." },
+        { "type": "text", "id": "position", "label": "Crop", "default": "50% 50%", "info": "Where the square centres on the photograph, as x% y%." }
+      ] },
     { "type": "accordion", "name": "Accordion",
       "settings": [
         { "type": "text", "id": "title", "label": "Title" },

@@ -370,6 +370,36 @@
   .zrm__item { width: calc((min(100vw, var(--zv-container)) - 2 * var(--zv-gutter) - 3 * 14px) / 4); }
 }
 
+/* ---- product scene (product page) -------------------------------------- */
+.zpsc { position: relative; isolation: isolate; overflow: hidden; overflow: clip; display: grid; align-items: end;
+  min-height: max(460px, 72svh); background: var(--zv-ink); color: var(--zv-warm); }
+@media (min-width: 900px) { .zpsc { min-height: max(520px, min(80svh, 820px)); } }
+.zpsc__scene { position: absolute; inset: 0; z-index: 0; }
+.zpsc__plate { position: absolute; inset: -10% 0; will-change: transform; }
+.zpsc__plate .zv-media { background: transparent; }
+.zpsc__plate img { object-position: var(--zpsc-pos-m) !important; }
+@media (min-width: 700px) { .zpsc__plate img { object-position: var(--zpsc-pos) !important; } }
+.zpsc__veil { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to top, rgba(10,13,10,.86) 0%, rgba(10,13,10,.5) 38%, rgba(10,13,10,0) 70%); }
+@media (min-width: 900px) {
+  .zpsc__veil { background:
+    linear-gradient(90deg, rgba(10,13,10,.66) 0%, rgba(10,13,10,.3) 38%, rgba(10,13,10,0) 62%),
+    linear-gradient(to top, rgba(10,13,10,.55) 0%, rgba(10,13,10,0) 45%); }
+}
+.zpsc__in { position: relative; z-index: 2; padding-block: clamp(40px, 7vw, 88px); }
+.zpsc__copy { display: grid; gap: var(--zv-3); max-width: 30rem; }
+.zpsc__k { color: var(--zv-sand); }
+.zpsc__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h1);
+  line-height: var(--zv-lh-tight); letter-spacing: var(--zv-tr-tight); color: var(--zv-warm); text-wrap: balance;
+  text-shadow: 0 2px 24px rgba(10,13,10,.4); }
+.zpsc__b { color: #E6E2D8; }
+.zpsc__b > :first-child { margin-top: 0; }
+.zpsc__b > :last-child { margin-bottom: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .zpsc .zhf__breathe { animation: zhf-breathe 32s cubic-bezier(.45, 0, .55, 1) infinite alternate; }
+}
+@media (prefers-reduced-motion: reduce) { .zpsc__plate { transform: none !important; } }
+
 /* ---- reduced motion: the layout is the same, nothing travels ------------ */
 @media (prefers-reduced-motion: reduce) {
   .zhf__breathe, .zhf__plate, .zps__plate { transform: none !important; }

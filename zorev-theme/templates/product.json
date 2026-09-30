@@ -11,7 +11,9 @@
   "sections": {
     "main": {
       "type": "main-product",
-      "settings": { "sticky_atc": true },
+      "settings": {
+        "sticky_atc": true
+      },
       "blocks": {
         "ship": {
           "type": "accordion",
@@ -26,14 +28,80 @@
             "title": "FAQ",
             "content": "<p><strong>Do the multi-buy and pair savings need a code?</strong><br>No. They're applied automatically in your bag, and you'll see each one listed before checkout.</p><p><strong>Can I mix options on a multi-buy?</strong><br>Yes. The saving counts every unit of that product in your bag, whichever options you choose.</p><p><strong>Who makes these?</strong><br>GODA makes the perfume oil and Hoygi makes the balm stick, both in China. We choose them, write the listings and answer for them.</p><p><strong>Is checkout secure?</strong><br>Yes. Checkout runs on Shopify's encrypted checkout, and we never see or store your card details.</p><p>More answers on the <a href=\"/pages/faq\">FAQ page</a>.</p>"
           }
+        },
+        "scene_goda": {
+          "type": "scene",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil",
+            "image": "shopify://shop_images/zorev-v12-goda-wrist-overlook.jpg",
+            "image_alt": "A drop of GODA perfume oil falling from the dropper onto a wrist, the open bottle on a granite ledge above a forested valley",
+            "position": "73% 50%"
+          }
+        },
+        "scene_hoygi": {
+          "type": "scene",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm",
+            "image": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
+            "image_alt": "A Hoygi balm stick standing on a cafe table by a window, next to an espresso cup, sunglasses and a folded map",
+            "position": "90% 50%"
+          }
         }
       },
-      "block_order": ["ship", "faq"]
+      "block_order": [
+        "scene_goda",
+        "scene_hoygi",
+        "ship",
+        "faq"
+      ]
     },
     "reviews": {
       "type": "product-reviews",
-      "settings": { "eyebrow": "Reviews", "heading": "From real orders only" }
+      "settings": {
+        "eyebrow": "Reviews",
+        "heading": "From real orders only"
+      }
+    },
+    "scene": {
+      "type": "product-scene",
+      "settings": {},
+      "blocks": {
+        "goda": {
+          "type": "scene",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil",
+            "photo": "shopify://shop_images/zorev-v12-goda-wrist-overlook.jpg",
+            "photo_alt": "A drop of GODA perfume oil falling from the dropper onto a wrist above a forested valley",
+            "position": "62% 50%",
+            "position_mobile": "45% 50%",
+            "eyebrow": "In use",
+            "heading": "One or two drops. That's the routine.",
+            "body": "<p>At the base of the throat and the inside of each wrist. Oil carries further than it seems on first contact, so start with less than you think, and warm it in with a fingertip.</p>"
+          }
+        },
+        "hoygi": {
+          "type": "scene",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm",
+            "photo": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
+            "photo_alt": "A Hoygi balm stick on a cafe table by a window, next to an espresso cup",
+            "position": "80% 55%",
+            "position_mobile": "78% 55%",
+            "eyebrow": "In use",
+            "heading": "Twist, glide, pocket.",
+            "body": "<p>Two or three millimetres, over clean skin wherever it runs dry. Warm it in with a fingertip; it layers over or under whatever else you use.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "goda",
+        "hoygi"
+      ]
     }
   },
-  "order": ["main", "reviews"]
+  "order": [
+    "main",
+    "scene",
+    "reviews"
+  ]
 }

@@ -1,0 +1,70 @@
+{%- comment -%}
+  ZOREV — product scene.
+
+  On a product page, after the buy box: the product in use, full-bleed,
+  with two lines of how it is actually used. It turns the page from a
+  specification sheet into the thing in someone's day.
+
+  One template serves every product, so the photographs are blocks, each
+  set to the product it belongs to; the page shows the first block that
+  matches its product and nothing when none does (no borrowed picture of
+  another product). The frame breathes and drifts like the homepage hero,
+  and is still under prefers-reduced-motion.
+{%- endcomment -%}
+{%- liquid
+  assign pick = nil
+  for block in section.blocks
+    if block.settings.photo != blank
+      if block.settings.product == blank or block.settings.product.id == product.id
+        assign pick = block
+        break
+      endif
+    endif
+  endfor
+-%}
+{%- if pick -%}
+  {%- assign b = pick.settings -%}
+  <section class="zpsc zv-dark" aria-labelledby="zpsc-h-{{ section.id }}" {{ pick.shopify_attributes }}
+           style="--zpsc-pos: {{ b.position | default: '50% 50%' }}; --zpsc-pos-m: {{ b.position_mobile | default: b.position | default: '50% 50%' }};">
+    <div class="zpsc__scene" data-zv-scene data-zv-scene-scroll="-0.1">
+      <div class="zpsc__plate" data-zv-depth="1">
+        <div class="zhf__breathe">
+          {% render 'zv-media', image: b.photo, image_mobile: b.photo_mobile, sizes: '100vw', alt: b.photo_alt %}
+        </div>
+      </div>
+      <div class="zpsc__veil" aria-hidden="true"></div>
+    </div>
+    <div class="zv-wrap zpsc__in">
+      <div class="zpsc__copy" data-zv-reveal>
+        {%- if b.eyebrow != blank -%}<span class="zv-eyebrow zpsc__k">{{ b.eyebrow | escape }}</span>{%- endif -%}
+        {%- if b.heading != blank -%}<h2 class="zpsc__h" id="zpsc-h-{{ section.id }}">{{ b.heading }}</h2>{%- endif -%}
+        {%- if b.body != blank -%}<div class="zv-lead zpsc__b">{{ b.body }}</div>{%- endif -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product scene",
+  "tag": "div",
+  "settings": [
+    { "type": "paragraph", "content": "Add one scene per product. Each product page shows the scene set to it, and nothing if there is none." }
+  ],
+  "blocks": [
+    { "type": "scene", "name": "Scene",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product", "info": "Empty: every product page." },
+        { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "The real product in use (briefs G1, Y1). Wide, at least 2400 px across." },
+        { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones (optional)" },
+        { "type": "text", "id": "photo_alt", "label": "Description" },
+        { "type": "text", "id": "position", "label": "Crop on wide screens", "default": "50% 50%" },
+        { "type": "text", "id": "position_mobile", "label": "Crop on phones" },
+        { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "In use" },
+        { "type": "inline_richtext", "id": "heading", "label": "Heading" },
+        { "type": "richtext", "id": "body", "label": "Body", "info": "How it is used, in plain words. Nothing the product page can't back up." }
+      ] }
+  ],
+  "presets": [{ "name": "Product scene" }]
+}
+{% endschema %}
