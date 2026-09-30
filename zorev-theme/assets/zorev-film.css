@@ -192,6 +192,12 @@
 .zps__plate { position: absolute; inset: -8% 0; will-change: transform; }
 .zps__plate .zv-media { height: 100%; }
 .zps__plate img, .zps__plate .zv-media__vid { object-position: var(--zps-pos-m) !important; }
+/* Tablets in portrait: the phone's 4:5 frame at full width is a screen and
+   a half of photograph, so the frame goes landscape and uses the wide crop. */
+@media (min-width: 700px) and (max-width: 899px) {
+  .zps__frame { aspect-ratio: 3 / 2; }
+  .zps__plate img, .zps__plate .zv-media__vid { object-position: var(--zps-pos) !important; }
+}
 .zps__copy { padding-inline: var(--zv-gutter); display: flex; flex-direction: column; align-items: flex-start;
   gap: var(--zv-4); max-width: 40rem; }
 @media (min-width: 900px) {
