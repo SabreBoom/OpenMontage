@@ -5,7 +5,7 @@ const transport = require('./transport');
 
 const PREVIEW = process.env.PREVIEW_THEME_ID || '';
 
-const GODA = { handle: 'goda-pheromone-perfume-oil', product_id: 9424930930939, black: 49337208045819, white: 49337208078587, citrus: 49337208111355, neutral: 49337208144123, price: 4000 };
+const GODA = { handle: 'goda-pheromone-perfume-oil', product_id: 9424930930939, black: 49337208045819, white: 49337208078587, citrus: 49337208111355, neutral: 49337208144123, price: 3000 };
 const HOYGI = { handle: 'hoygi-calcium-multi-balm', product_id: 9424931160315, id: 49337209258235, price: 2500 };
 
 // Third-party and Shopify analytics traffic: beacons, pixels, consent and

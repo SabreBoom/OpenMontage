@@ -56,15 +56,15 @@ print(" | ".join(sorted(t)))')
   sleep "$GAP"
 }
 
-check "GODA x1 = \$40"                        "[{\"id\":$GODA_BLACK,\"quantity\":1}]" 4000 0
-check "GODA x2 = \$70 (save \$10)"            "[{\"id\":$GODA_BLACK,\"quantity\":2}]" 7000 1000 "GODA · Buy 2 · Save \$10"
-check "GODA x3 = \$104 (save \$16)"           "[{\"id\":$GODA_BLACK,\"quantity\":3}]" 10400 1600 "GODA · Buy 3 · Save \$16"
-check "GODA Black + White = \$70"             "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$GODA_WHITE,\"quantity\":1}]" 7000 1000
+check "GODA x1 = \$30"                        "[{\"id\":$GODA_BLACK,\"quantity\":1}]" 3000 0
+check "GODA x2 = \$54 (save \$6)"             "[{\"id\":$GODA_BLACK,\"quantity\":2}]" 5400 600 "GODA · Buy 2 · Save \$6"
+check "GODA x3 = \$76 (save \$14)"            "[{\"id\":$GODA_BLACK,\"quantity\":3}]" 7600 1400 "GODA · Buy 3 · Save \$14"
+check "GODA Black + White = \$54"             "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$GODA_WHITE,\"quantity\":1}]" 5400 600
 check "HOYGI x1 = \$25"                       "[{\"id\":$HOYGI,\"quantity\":1}]" 2500 0
 check "HOYGI x2 = \$44 (save \$6)"            "[{\"id\":$HOYGI,\"quantity\":2}]" 4400 600 "HOYGI · Buy 2 · Save \$6"
 check "HOYGI x3 = \$63 (save \$12)"           "[{\"id\":$HOYGI,\"quantity\":3}]" 6300 1200 "HOYGI · Buy 3 · Save \$12"
-check "Pair GODA + HOYGI = \$59 (save \$6)"   "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$HOYGI,\"quantity\":1}]" 5900 600 "The ZOREV Pair · Save \$6"
-check "GODA x2 + HOYGI x1 = \$89"             "[{\"id\":$GODA_BLACK,\"quantity\":2},{\"id\":$HOYGI,\"quantity\":1}]" 8900 1600
-check "GODA x1 + HOYGI x2 = \$78"             "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$HOYGI,\"quantity\":2}]" 7800 1200
+check "Pair GODA + HOYGI = \$47 (save \$8)"   "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$HOYGI,\"quantity\":1}]" 4700 800 "The ZOREV Pair · Save \$8"
+check "GODA x2 + HOYGI x1 = \$71"             "[{\"id\":$GODA_BLACK,\"quantity\":2},{\"id\":$HOYGI,\"quantity\":1}]" 7100 1400
+check "GODA x1 + HOYGI x2 = \$66"             "[{\"id\":$GODA_BLACK,\"quantity\":1},{\"id\":$HOYGI,\"quantity\":2}]" 6600 1400
 echo "passed=$pass failed=$fail"
 [ "$fail" = 0 ]

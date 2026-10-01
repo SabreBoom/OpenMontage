@@ -32,20 +32,20 @@ test.describe('storefront', () => {
     await expect(page.locator('h1')).toContainText('GODA');
     const qo = page.locator('[data-qo]');
     await expect(qo).toBeVisible();
-    await expect(qo.locator('[data-qo-total="1"]')).toHaveText('$40');
-    await expect(qo.locator('[data-qo-total="2"]')).toHaveText('$70');
-    await expect(qo.locator('[data-qo-total="3"]')).toHaveText('$104');
-    await expect(qo).toContainText('Save $10');
-    await expect(qo).toContainText('Save $16');
+    await expect(qo.locator('[data-qo-total="1"]')).toHaveText('$30');
+    await expect(qo.locator('[data-qo-total="2"]')).toHaveText('$54');
+    await expect(qo.locator('[data-qo-total="3"]')).toHaveText('$76');
+    await expect(qo).toContainText('Save $6');
+    await expect(qo).toContainText('Save $14');
     await qo.locator('.qo__in[value="2"]').check({ force: true });
-    await expect(page.locator('#zpf-main [data-add]')).toContainText('Add 2 to bag · $70');
+    await expect(page.locator('#zpf-main [data-add]')).toContainText('Add 2 to bag · $54');
     await page.locator('#zpf-main [data-add]').click();
     const drawer = page.locator('[data-cart-drawer]');
     await expect(drawer).toHaveClass(/is-open/);
-    await expect(drawer.locator('[data-cd-savings]')).toContainText('GODA · Buy 2 · Save $10');
-    await expect(drawer.locator('[data-cd-subtotal]')).toContainText('$70.00');
+    await expect(drawer.locator('[data-cd-savings]')).toContainText('GODA · Buy 2 · Save $6');
+    await expect(drawer.locator('[data-cd-subtotal]')).toContainText('$54.00');
     const j = await cart(page);
-    expect(j.item_count).toBe(2); expect(j.total_price).toBe(7000);
+    expect(j.item_count).toBe(2); expect(j.total_price).toBe(5400);
   });
 
   test('GODA product page: two or three bottles can each be a different option, and the saving still applies', async ({ page }) => {
@@ -61,13 +61,13 @@ test.describe('storefront', () => {
     for (let i = 0; i < 3; i++) await expect(sels.nth(i)).toHaveValue(String(GODA.white));
     await sels.nth(0).selectOption(String(GODA.black));
     await sels.nth(2).selectOption(String(GODA.citrus));
-    await expect(page.locator('#zpf-main [data-add]')).toContainText('Add 3 to bag · $104');
+    await expect(page.locator('#zpf-main [data-add]')).toContainText('Add 3 to bag · $76');
     await page.locator('#zpf-main [data-add]').click();
     await expect(page.locator('[data-cart-drawer]')).toHaveClass(/is-open/);
     const j = await cart(page);
     const byVariant = j.items.reduce((m, i) => ({ ...m, [i.variant_id]: (m[i.variant_id] || 0) + i.quantity }), {});
     expect(byVariant).toEqual({ [GODA.black]: 1, [GODA.white]: 1, [GODA.citrus]: 1 });
-    expect(j.total_price).toBe(10400);
+    expect(j.total_price).toBe(7600);
   });
 
   test('HOYGI product page: 3 sticks = $63 and the tier is named in the bag', async ({ page }) => {
@@ -108,10 +108,10 @@ test.describe('storefront', () => {
     await expect(pair).toContainText('Complete your ZOREV Pair');
     await expect(pair).toContainText('Add HOYGI and save $6');
     await pair.locator('[data-cd-pairadd]').click();
-    await expect(pair).toContainText("You’re saving $6");
+    await expect(pair).toContainText("You’re saving $8");
     await expect(pair).not.toContainText('Complete your');
     const j = await cart(page);
-    expect(j.total_price).toBe(5900);
+    expect(j.total_price).toBe(4700);
     // the product page card also knows the pair is in the bag
     await expect(page.locator('[data-pairc]')).toHaveAttribute('data-state', 'in-bag');
 
@@ -129,10 +129,10 @@ test.describe('storefront', () => {
     await addItems(page, [{ id: GODA.black, quantity: 1 }, { id: HOYGI.id, quantity: 1 }]);
     await go(page, '/cart');
     await page.evaluate(() => { window.__zorevNoReload = true; });
-    await expect(page.locator('[data-cart-total]')).toContainText('$59.00');
-    await expect(page.locator('.zpair-ok')).toContainText('saving $6');
+    await expect(page.locator('[data-cart-total]')).toContainText('$47.00');
+    await expect(page.locator('.zpair-ok')).toContainText('saving $8');
     await page.locator('.zline').first().locator('[data-qty][aria-label="Increase quantity"]').click();
-    await expect(page.locator('[data-cart-total]')).not.toContainText('$59.00');
+    await expect(page.locator('[data-cart-total]')).not.toContainText('$47.00');
     expect(await page.evaluate(() => window.__zorevNoReload)).toBe(true);
     const j = await cart(page); expect(j.item_count).toBe(3);
     await expect(page.locator('[data-cart-total]')).toContainText('$' + (j.total_price / 100).toFixed(2));
@@ -302,11 +302,11 @@ test.describe('film homepage', () => {
     await go(page, '/');
     const goda = page.locator('#goda');
     const hoygi = page.locator('#hoygi');
-    await expect(goda).toContainText('$40');
-    await expect(goda.locator('.zps__ladder')).toContainText('$70');
-    await expect(goda.locator('.zps__ladder')).toContainText('$104');
-    await expect(goda.locator('.zps__ladder')).toContainText('Save $10');
-    await expect(goda.locator('.zps__ladder')).toContainText('Save $16');
+    await expect(goda).toContainText('$30');
+    await expect(goda.locator('.zps__ladder')).toContainText('$54');
+    await expect(goda.locator('.zps__ladder')).toContainText('$76');
+    await expect(goda.locator('.zps__ladder')).toContainText('Save $6');
+    await expect(goda.locator('.zps__ladder')).toContainText('Save $14');
     await expect(hoygi.locator('.zps__ladder')).toContainText('$44');
     await expect(hoygi.locator('.zps__ladder')).toContainText('$63');
     await expect(hoygi.locator('.zps__ladder')).toContainText('Save $6');

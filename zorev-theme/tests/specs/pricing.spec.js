@@ -9,16 +9,16 @@ test.describe('Shopify discount engine', () => {
   test.beforeEach(async ({ page }) => { await prep(page); await go(page, '/'); });
 
   const cases = [
-    { name: 'GODA x1 = $40',            items: [{ id: GODA.black, quantity: 1 }], total: 4000, saved: 0 },
-    { name: 'GODA x2 = $70 (save $10)', items: [{ id: GODA.black, quantity: 2 }], total: 7000, saved: 1000, title: 'GODA · Buy 2 · Save $10' },
-    { name: 'GODA x3 = $104 (save $16)', items: [{ id: GODA.black, quantity: 3 }], total: 10400, saved: 1600, title: 'GODA · Buy 3 · Save $16' },
-    { name: 'GODA Black + White = $70 (tiers span options)', items: [{ id: GODA.black, quantity: 1 }, { id: GODA.white, quantity: 1 }], total: 7000, saved: 1000 },
+    { name: 'GODA x1 = $30',            items: [{ id: GODA.black, quantity: 1 }], total: 3000, saved: 0 },
+    { name: 'GODA x2 = $54 (save $6)', items: [{ id: GODA.black, quantity: 2 }], total: 5400, saved: 600, title: 'GODA · Buy 2 · Save $6' },
+    { name: 'GODA x3 = $76 (save $14)', items: [{ id: GODA.black, quantity: 3 }], total: 7600, saved: 1400, title: 'GODA · Buy 3 · Save $14' },
+    { name: 'GODA Black + White = $54 (tiers span options)', items: [{ id: GODA.black, quantity: 1 }, { id: GODA.white, quantity: 1 }], total: 5400, saved: 600 },
     { name: 'HOYGI x1 = $25',           items: [{ id: HOYGI.id, quantity: 1 }], total: 2500, saved: 0 },
     { name: 'HOYGI x2 = $44 (save $6)', items: [{ id: HOYGI.id, quantity: 2 }], total: 4400, saved: 600, title: 'HOYGI · Buy 2 · Save $6' },
     { name: 'HOYGI x3 = $63 (save $12)', items: [{ id: HOYGI.id, quantity: 3 }], total: 6300, saved: 1200, title: 'HOYGI · Buy 3 · Save $12' },
-    { name: 'The Pair: GODA + HOYGI = $59 (save $6)', items: [{ id: GODA.black, quantity: 1 }, { id: HOYGI.id, quantity: 1 }], total: 5900, saved: 600, title: 'The ZOREV Pair · Save $6' },
-    { name: 'GODA x2 + HOYGI x1 = $89 (tier + pair stack)', items: [{ id: GODA.black, quantity: 2 }, { id: HOYGI.id, quantity: 1 }], total: 8900, saved: 1600 },
-    { name: 'GODA x1 + HOYGI x2 = $78 (pair + HOYGI tier)', items: [{ id: GODA.black, quantity: 1 }, { id: HOYGI.id, quantity: 2 }], total: 7800, saved: 1200 },
+    { name: 'The Pair: GODA + HOYGI = $47 (save $8)', items: [{ id: GODA.black, quantity: 1 }, { id: HOYGI.id, quantity: 1 }], total: 4700, saved: 800, title: 'The ZOREV Pair · Save $8' },
+    { name: 'GODA x2 + HOYGI x1 = $71 (tier + pair stack)', items: [{ id: GODA.black, quantity: 2 }, { id: HOYGI.id, quantity: 1 }], total: 7100, saved: 1400 },
+    { name: 'GODA x1 + HOYGI x2 = $66 (pair + HOYGI tier)', items: [{ id: GODA.black, quantity: 1 }, { id: HOYGI.id, quantity: 2 }], total: 6600, saved: 1400 },
   ];
 
   for (const c of cases) {

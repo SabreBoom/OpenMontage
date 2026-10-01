@@ -42,6 +42,7 @@
     assign from = pb.price
   endif
 -%}
+{%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
 <section class="zhf zv-dark{% unless has_media %} zhf--flat{% endunless %}" id="zhf-{{ section.id }}" data-zv-rest aria-labelledby="zhf-h-{{ section.id }}"
          style="--zhf-rays-x: {{ s.rays_x | default: 62 }}%; --zhf-rays-x-m: {{ s.rays_x_mobile | default: 34 }}%;">
   {%- if has_media -%}
@@ -69,7 +70,7 @@
             <a class="zv-btn zhf__cta1" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ s.cta_label | escape }}</a>
           {%- endif -%}
           {%- if s.cta2_label != blank -%}
-            <a class="zv-btn zv-btn--ghost zhf__cta2" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">{{ s.cta2_label | escape }}</a>
+            <a class="zv-btn zv-btn--ghost zhf__cta2" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">{{ s.cta2_label | replace: '{pair_price}', pp | escape }}</a>
           {%- endif -%}
         </div>
       {%- endif -%}
