@@ -106,7 +106,7 @@ test.describe('storefront', () => {
     await expect(drawer).toHaveClass(/is-open/);
     const pair = drawer.locator('[data-cd-pair]');
     await expect(pair).toContainText('Complete your ZOREV Pair');
-    await expect(pair).toContainText('Add HOYGI and save $6');
+    await expect(pair).toContainText('Add HOYGI and save $8');
     await pair.locator('[data-cd-pairadd]').click();
     await expect(pair).toContainText("You’re saving $8");
     await expect(pair).not.toContainText('Complete your');
@@ -180,8 +180,14 @@ test.describe('storefront', () => {
     for (const path of ['/', '/products/' + GODA.handle, '/products/' + HOYGI.handle, '/cart', '/collections/the-pair', '/pages/faq']) {
       await go(page, path);
       const text = await page.locator('body').innerText();
-      expect(text, path).not.toMatch(/\$84|\$14\b|Take both/i);
+      // $84 / "save $14" / "Take both" were the old pair offer; $59 was the
+      // pair before GODA moved to $30. ($14 alone is now GODA's 3-tier saving.)
+      expect(text, path).not.toMatch(/\$84|Take both|\$59/i);
     }
+    // the announcement and the homepage buttons quote the pair's real price
+    await go(page, '/');
+    await expect(page.locator('body')).toContainText('GODA + HOYGI · $47 together');
+    await expect(page.locator('.zhf__cta2')).toContainText('The Pair · $47');
   });
 });
 
