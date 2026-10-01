@@ -3,10 +3,10 @@
   in Theme settings > Offers (which mirrors the pair discount), so copy that
   quotes it stays right when a price changes.
 
-  Write {pair_price} in a theme text setting (announcement claim, button
+  Write [pair_price] in a theme text setting (announcement claim, button
   label) and the section renders it through this snippet:
     {%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
-    {{ s.claim | replace: '{pair_price}', pp | escape }}
+    {{ s.claim | replace: '[pair_price]', pp | escape }}
   Renders nothing when the pair is not set up.
 {%- endcomment -%}
 {%- liquid

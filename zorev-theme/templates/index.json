@@ -23,7 +23,7 @@
         "note": "",
         "cta_label": "Shop Zorev",
         "cta_link": "#line",
-        "cta2_label": "The Pair · {pair_price}",
+        "cta2_label": "The Pair · [pair_price]",
         "cta2_link": "#pair",
         "show_card": true,
         "card_link": "#line"
@@ -38,7 +38,7 @@
         "note": "",
         "cta_label": "Shop Zorev",
         "cta_link": "#line",
-        "cta2_label": "The Pair · {pair_price}",
+        "cta2_label": "The Pair · [pair_price]",
         "cta2_link": "#pair"
       },
       "disabled": true
@@ -408,7 +408,7 @@
         "body": "<p>Free shipping worldwide, savings applied in your bag, and a person on the other end of the email.</p>",
         "cta_label": "Shop Zorev",
         "cta_link": "/collections/all",
-        "cta2_label": "The Pair · {pair_price}",
+        "cta2_label": "The Pair · [pair_price]",
         "cta2_link": "#pair",
         "framing": "full"
       }
