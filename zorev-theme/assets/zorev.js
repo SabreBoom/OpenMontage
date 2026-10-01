@@ -371,10 +371,16 @@
       if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); btn.textContent = 'Adding…'; }
       if (err) { err.hidden = true; err.textContent = ''; }
 
+      /* A product page with mixed options (one Black, one White) writes the
+         lines it wants to data-items; those go up as JSON line items. */
+      var items = null;
+      try { items = JSON.parse(form.getAttribute('data-items') || 'null'); } catch (x) { items = null; }
+      if (!Array.isArray(items) || !items.length) items = null;
+
       fetch('/cart/add.js', {
         method: 'POST',
-        headers: { Accept: 'application/json' },
-        body: new FormData(form)
+        headers: items ? { Accept: 'application/json', 'Content-Type': 'application/json' } : { Accept: 'application/json' },
+        body: items ? JSON.stringify({ items: items }) : new FormData(form)
       })
         .then(function (r) {
           if (r.status === 422) {
@@ -394,6 +400,12 @@
         })
         .catch(function (x) {
           if (x && x.refused && err) { err.textContent = x.message; err.hidden = false; return; }
+          /* A plain post can only carry one option, so for a mix it would
+             add the wrong ones: ask for a retry instead. */
+          if (items) {
+            if (err) { err.textContent = 'That could not be added. Please try again.'; err.hidden = false; }
+            return;
+          }
           form.submit();
         })
         .then(function () {

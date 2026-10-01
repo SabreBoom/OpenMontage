@@ -48,8 +48,31 @@ test.describe('storefront', () => {
     expect(j.item_count).toBe(2); expect(j.total_price).toBe(7000);
   });
 
+  test('GODA product page: two or three bottles can each be a different option, and the saving still applies', async ({ page }) => {
+    await go(page, '/products/' + GODA.handle);
+    const mix = page.locator('[data-qmix]');
+    await expect(mix).toBeHidden(); // one bottle: the option above is the choice
+    await page.locator('.opt[data-variant-id]').nth(1).click(); // White
+    await page.locator('[data-qo] .qo__in[value="3"]').check({ force: true });
+    await expect(mix).toBeVisible();
+    const sels = mix.locator('[data-qmix-sel]');
+    await expect(mix.locator('[data-qmix-row]:visible')).toHaveCount(3);
+    // every bottle starts on the option chosen above
+    for (let i = 0; i < 3; i++) await expect(sels.nth(i)).toHaveValue(String(GODA.white));
+    await sels.nth(0).selectOption(String(GODA.black));
+    await sels.nth(2).selectOption(String(GODA.citrus));
+    await expect(page.locator('#zpf-main [data-add]')).toContainText('Add 3 to bag · $104');
+    await page.locator('#zpf-main [data-add]').click();
+    await expect(page.locator('[data-cart-drawer]')).toHaveClass(/is-open/);
+    const j = await cart(page);
+    const byVariant = j.items.reduce((m, i) => ({ ...m, [i.variant_id]: (m[i.variant_id] || 0) + i.quantity }), {});
+    expect(byVariant).toEqual({ [GODA.black]: 1, [GODA.white]: 1, [GODA.citrus]: 1 });
+    expect(j.total_price).toBe(10400);
+  });
+
   test('HOYGI product page: 3 sticks = $63 and the tier is named in the bag', async ({ page }) => {
     await go(page, '/products/' + HOYGI.handle);
+    await expect(page.locator('[data-qmix]')).toHaveCount(0); // one option only: nothing to choose
     await page.locator('[data-qo] .qo__in[value="3"]').check({ force: true });
     await expect(page.locator('#zpf-main [data-add]')).toContainText('$63');
     await page.locator('#zpf-main [data-add]').click();

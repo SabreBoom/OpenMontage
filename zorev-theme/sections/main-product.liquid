@@ -258,6 +258,36 @@
             </fieldset>
           {%- endif -%}
 
+          {%- if offer.breaks.size > 0 and product.variants.size > 1 -%}
+            {%- comment -%}
+              Mix and match. With two or more chosen, one select per unit,
+              each starting on the option picked above, so the default is
+              what it always was and a customer can make it "one Black, one
+              White". The multi-buy discounts count the product, not the
+              option (tests/pricing-curl.sh: Black + White = $70), so the
+              saving holds for any mix. The selects have no name, so they
+              never reach the cart as fields: the script posts the mix as
+              line items. Hidden until the script runs; without JavaScript
+              the form posts the chosen option times the quantity, as before.
+            {%- endcomment -%}
+            <div class="qmix" data-qmix hidden>
+              <p class="pdp__label qmix__h" id="qmix-h-{{ section.id }}">Choose each {{ unit_one | escape }}</p>
+              <ol class="qmix__list" role="list" aria-labelledby="qmix-h-{{ section.id }}">
+                {%- for n in (1..max_tier) -%}
+                  <li class="qmix__row" data-qmix-row="{{ n }}">
+                    <label class="qmix__k" for="qmix-{{ section.id }}-{{ n }}">{{ unit_one | capitalize | escape }} {{ n }}</label>
+                    <select class="qmix__sel" id="qmix-{{ section.id }}-{{ n }}" data-qmix-sel>
+                      {%- for var in product.variants -%}
+                        <option value="{{ var.id }}"{% if var.id == v.id %} selected{% endif %}{% unless var.available %} disabled{% endunless %}>{% render 'zvlabel', t: var.title %}{% unless var.available %} (sold out){% endunless %}</option>
+                      {%- endfor -%}
+                    </select>
+                  </li>
+                {%- endfor -%}
+              </ol>
+              <p class="qmix__note">Mix any options. The saving still applies.</p>
+            </div>
+          {%- endif -%}
+
           <button class="btn btn--block pdp__atc" type="submit" data-add
             {% unless v.available %}disabled{% endunless %}>
             {% if v.available %}Add to bag{% else %}Sold out{% endif %}
@@ -565,6 +595,26 @@
     .qo__total{font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-ink);
       font-variant-numeric:tabular-nums}
     .qo__note{margin:var(--zv-1) 0 0;font-size:var(--zv-t-fine);color:var(--zv-text-2);max-width:none}
+
+    /* ---- mix and match: one select per unit, under the quantity rows ---- */
+    .qmix{display:grid;gap:var(--zv-3);margin-top:var(--zv-3);padding:var(--zv-4);border-radius:var(--zv-r-md);
+      background:var(--zv-bg-raised);box-shadow:inset 0 0 0 1px var(--zv-hairline-2)}
+    .qmix.is-in{animation:qmix-in var(--zv-d-ui) var(--zv-ease) both}
+    @keyframes qmix-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+    .qmix__h{margin:0}
+    .qmix__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--zv-2)}
+    .qmix__row{display:grid;grid-template-columns:5.25rem minmax(0,1fr);align-items:center;gap:var(--zv-3)}
+    .qmix__k{font-size:var(--zv-t-sm);font-weight:600;color:var(--zv-ink)}
+    /* 17px text: an iOS select under 16px zooms the page when tapped */
+    .qmix__sel{appearance:none;-webkit-appearance:none;width:100%;min-height:48px;margin:0;
+      padding:0 42px 0 var(--zv-4);border:0;border-radius:var(--zv-r-md);
+      box-shadow:inset 0 0 0 1px var(--zv-line-input);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-body);
+      background:var(--zv-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23101310' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center/12px 8px;
+      cursor:pointer;transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
+    @media (hover:hover) and (pointer:fine){ .qmix__sel:hover{box-shadow:inset 0 0 0 1px var(--zv-forest)} }
+    .qmix__sel:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
+    .qmix__note{margin:0;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
+    @media(prefers-reduced-motion:reduce){ .qmix.is-in{animation:none} }
     .pdp__atc{min-height:54px;font-size:var(--zv-t-sm)}
     /* the label is re-set when the total changes; it rises into place */
     .atc__lbl,.satc__p [data-satc-sum]{display:inline-block}
@@ -746,6 +796,57 @@
     }
     function totalFor(q) { return price * q - (Number(save[String(q)]) || 0); }
 
+    /* ---- mix and match ----
+       The selects hold which option each unit is. They show once two or
+       more are chosen; each starts on the option picked above and follows
+       it until the customer changes one of them. The mix is written to both
+       product forms as data-items, which zorev.js posts as line items in
+       place of the form's single id times quantity. */
+    var mix = document.querySelector('[data-qmix]');
+    var mixSels = mix ? [].slice.call(mix.querySelectorAll('[data-qmix-sel]')) : [];
+    var mixTouched = false;
+    var mixForms = ['zpf-main', 'zpf-sticky'].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+    var vPrice = {};
+    try {
+      JSON.parse(document.querySelector('[data-variant-json]').textContent)
+        .forEach(function (x) { vPrice[String(x.id)] = x.price; });
+    } catch (e) { vPrice = {}; }
+
+    function mixOn(q) { return !!mix && q > 1; }
+    function mixSum(q) {
+      return mixSels.slice(0, q).reduce(function (s, el) {
+        var p = vPrice[el.value]; return s + (typeof p === 'number' ? p : price);
+      }, 0);
+    }
+    function mixPaint() {
+      if (!mix) return;
+      var q = currentQty(), on = mixOn(q), was = !mix.hidden;
+      mix.hidden = !on;
+      if (on && !was) { mix.classList.remove('is-in'); void mix.offsetWidth; mix.classList.add('is-in'); }
+      mixSels.forEach(function (el, i) { el.closest('[data-qmix-row]').hidden = i >= q; });
+      var items = null;
+      if (on) {
+        var by = {}, order = [];
+        mixSels.slice(0, q).forEach(function (el) {
+          if (!by[el.value]) { by[el.value] = 0; order.push(el.value); }
+          by[el.value] += 1;
+        });
+        items = order.map(function (id) { return { id: Number(id), quantity: by[id] }; });
+      }
+      mixForms.forEach(function (f) {
+        if (items) f.setAttribute('data-items', JSON.stringify(items)); else f.removeAttribute('data-items');
+      });
+    }
+    mixSels.forEach(function (el) {
+      el.addEventListener('change', function () { mixTouched = true; paint(); });
+    });
+    /* Registered before the price listener below, so the selects have
+       followed the new option by the time the totals repaint. */
+    document.addEventListener('variant:change', function (e) {
+      if (mixTouched || !e.detail || !e.detail.id) return;
+      mixSels.forEach(function (el) { el.value = String(e.detail.id); });
+    });
+
     /* A changed total rises into place (brief, precise feedback on the one
        number that matters). Only a change from one priced label to another
        moves; the first paint, "Adding…" and "Sold out" just appear. */
@@ -765,7 +866,9 @@
       if (prev.indexOf('·') > -1 && text.indexOf('·') > -1) roll(lbl);
     }
     function paint() {
-      var q = currentQty(), tot = totalFor(q);
+      mixPaint();
+      var q = currentQty();
+      var tot = mixOn(q) ? mixSum(q) - (Number(save[String(q)]) || 0) : totalFor(q);
       document.querySelectorAll('[data-add]').forEach(function (b) {
         if (b.getAttribute('aria-busy') === 'true') return;
         label(b, available ? (q > 1 ? 'Add ' + q + ' to bag · ' : 'Add to bag · ') + short(tot) : 'Sold out');
