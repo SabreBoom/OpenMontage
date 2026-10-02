@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+<head>
+  <meta charset="utf-8">
+  {%- comment -%}
+    viewport-fit=cover so the page can run under a notch; the sections pay
+    the safe-area insets themselves.
+  {%- endcomment -%}
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="{{ settings.bg | default: '#101310' }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+  {%- if settings.favicon != blank -%}
+    <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64 }}">
+  {%- else -%}
+    {%- comment -%}
+      Until Theme settings > Brand > Favicon is set: the brand Z, Public Sans
+      on the forest square (asset brief E3), for browser tabs and for the
+      home screen when someone saves the site on a phone.
+    {%- endcomment -%}
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ 'zorev-icon-32.png' | asset_url }}">
+    <link rel="apple-touch-icon" href="{{ 'zorev-icon-180.png' | asset_url }}">
+  {%- endif -%}
+  {%- comment -%}
+    The homepage's title and description come from Online Store >
+    Preferences, which on this store still read "Zorev" / "Zorev". Until
+    those are filled in, Theme settings > SEO supplies real ones here, so
+    the homepage never ships a one-word title or an empty description.
+  {%- endcomment -%}
+  {%- liquid
+    assign seo_title = page_title
+    assign seo_desc = page_description
+    if request.page_type == 'index'
+      if settings.seo_home_title != blank
+        assign seo_title = settings.seo_home_title
+      endif
+      if seo_desc == blank or seo_desc == shop.name
+        if settings.seo_home_description != blank
+          assign seo_desc = settings.seo_home_description
+        endif
+      endif
+    endif
+    comment
+      /collections/all is Shopify's automatic collection: it has no admin
+      record, so no SEO fields, and Shopify titles it "Products" with no
+      description at all. Theme settings > SEO supplies both.
+    endcomment
+    if request.page_type == 'collection' and collection.handle == 'all'
+      if settings.seo_all_title != blank
+        assign seo_title = settings.seo_all_title
+      endif
+      if seo_desc == blank and settings.seo_all_description != blank
+        assign seo_desc = settings.seo_all_description
+      endif
+    endif
+    comment
+      Search results and a blog with no posts are thin pages: kept out of
+      the index, still followed so their links count.
+    endcomment
+    assign noindex = false
+    if request.page_type == 'search'
+      assign noindex = true
+    endif
+    if request.page_type == 'blog' and blog.articles_count == 0
+      assign noindex = true
+    endif
+    if request.page_type == 'cart'
+      assign seo_title = 'Your bag'
+    endif
+    assign seo_title_lc = seo_title | downcase
+    assign shop_name_lc = shop.name | downcase
+  -%}
+  <title>{{ seo_title }}{% if current_page != 1 %} &ndash; {{ current_page }}{% endif %}{% unless seo_title_lc contains shop_name_lc %} | {{ shop.name | upcase }}{% endunless %}</title>
+  {%- if seo_desc != blank -%}<meta name="description" content="{{ seo_desc | strip_html | escape }}">{%- endif -%}
+  {%- if noindex -%}<meta name="robots" content="noindex, follow">{%- endif -%}
+
+  {%- comment -%}
+    Faster page to page. Shopify already prefetches a link when it is
+    pressed; this starts a little earlier for product and collection links
+    (on hover, or as the finger lands), fetching the HTML only. Prefetch,
+    not prerender, on purpose: a prerendered page runs its scripts, which
+    would count page views for pages nobody opened.
+  {%- endcomment -%}
+  <script type="speculationrules">
+    {"prefetch":[{"source":"document","where":{"or":[{"href_matches":"/products/*"},{"href_matches":"/collections/*"}]},"eagerness":"moderate"}]}
+  </script>
+
+  {%- comment -%}
+    Page-to-page motion, with zorev-tokens.css (see "page to page"). In the
+    head and not deferred, because pagereveal fires before the first paint.
+    The product picture a visitor taps (or the one on screen for that
+    product) is named zv-product just before the old page is captured; on
+    the product page the first picture carries the name from the markup.
+    Coming Back to a list, the picture of the product just left takes the
+    name, so it flies home. Browsers without these events do nothing here.
+  {%- endcomment -%}
+  <script>
+    (function () {
+      if (!('onpagereveal' in window)) return;
+      var NAME = 'zv-product', named = [], lastHref = null, lastEl = null;
+      function handleOf(u) {
+        try { var m = new URL(u, location.href).pathname.match(/\/products\/([^\/?#]+)/); return m ? decodeURIComponent(m[1]) : null; }
+        catch (e) { return null; }
+      }
+      function seen(el) {
+        var r = el.getBoundingClientRect();
+        return r.width > 24 && r.height > 24 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth;
+      }
+      function pick(h) {
+        if (!h) return null;
+        var sel = '[data-vt-product="' + (window.CSS && CSS.escape ? CSS.escape(h) : h) + '"]';
+        var scope = lastEl && lastEl.isConnected && lastEl.closest ? lastEl.closest('a, [data-vt-scope]') : null;
+        var mine = scope ? (scope.matches(sel) ? scope : scope.querySelector(sel)) : null;
+        if (mine && seen(mine)) return mine;
+        var all = document.querySelectorAll(sel);
+        for (var i = 0; i < all.length; i++) { if (seen(all[i])) return all[i]; }
+        return null;
+      }
+      function set(el, v) { el.style.viewTransitionName = v; named.push(el); }
+      function clear() { named.forEach(function (el) { el.style.viewTransitionName = ''; }); named = []; }
+      document.addEventListener('click', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (a) { lastHref = a.href; lastEl = e.target; }
+      }, true);
+      window.addEventListener('pageswap', function (e) {
+        clear();
+        if (!e.viewTransition) return;
+        var to = (e.activation && e.activation.entry && e.activation.entry.url) || lastHref;
+        var fixed = document.querySelector('[data-vt-static]');
+        var el = pick(handleOf(to));
+        if (fixed && fixed !== el && (el || !seen(fixed))) set(fixed, 'none');
+        if (el && el !== fixed) set(el, NAME);
+      });
+      window.addEventListener('pagereveal', function (e) {
+        if (!e.viewTransition || document.querySelector('[data-vt-static]')) return;
+        /* Only a page restored whole (Back from the cache) can be trusted to
+           be laid out where the visitor left it. */
+        if (document.readyState !== 'complete') return;
+        var from = (window.navigation && navigation.activation && navigation.activation.from && navigation.activation.from.url) || document.referrer;
+        var el = pick(handleOf(from));
+        if (!el) return;
+        set(el, NAME);
+        e.viewTransition.finished.then(clear, clear);
+      });
+      window.addEventListener('pageshow', function (e) { if (e.persisted) clear(); });
+    })();
+  </script>
+
+  {% render 'meta-tags', seo_desc: seo_desc, seo_title: seo_title %}
+
+  {{ content_for_header }}
+
+  {%- comment -%}
+    Newsreader for editorial headings, Public Sans for UI and body, both
+    OFL and served from the theme rather than Google: one origin, no extra
+    connections, and trimmed to what the stylesheets use (Newsreader at 400
+    with its optical sizes, Public Sans 400-700): 81 KB against 159 KB.
+    display=swap, so a slow font never blocks first paint; the fallback
+    faces in zorev-tokens.css are sized to match, so the swap barely moves.
+  {%- endcomment -%}
+  {{ 'newsreader-latin-400.woff2' | asset_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}
+  {{ 'public-sans-latin.woff2' | asset_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}
+  <style>
+    @font-face{font-family:"Newsreader";src:url({{ 'newsreader-latin-400.woff2' | asset_url }}) format("woff2");font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+    @font-face{font-family:"Public Sans";src:url({{ 'public-sans-latin.woff2' | asset_url }}) format("woff2");font-weight:400 700;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  </style>
+
+  {%- comment -%} Tokens first, so zorev.css can still override anything. {%- endcomment -%}
+  <link rel="stylesheet" href="{{ 'zorev-tokens.css' | asset_url }}">
+  <link rel="stylesheet" href="{{ 'zorev-cards.css' | asset_url }}">
+  <link rel="stylesheet" href="{{ 'zorev-pages.css' | asset_url }}">
+  <link rel="stylesheet" href="{{ 'zorev.css' | asset_url }}">
+  {%- comment -%}
+    The film sections (cinematic hero, product stories, Made to move, real
+    media) live on the homepage and can be added to a product page; nowhere
+    else pays for their stylesheet.
+  {%- endcomment -%}
+  {%- if template.name == 'index' or template.name == 'product' -%}
+    <link rel="stylesheet" href="{{ 'zorev-film.css' | asset_url }}">
+  {%- endif -%}
+
+  {%- comment -%}
+    Marks the document as scripted. Scroll-reveal styles are scoped to
+    .zv-js, so with JS off (or broken, or a crawler) every section renders
+    at its final visible state instead of staying at opacity 0 forever.
+  {%- endcomment -%}
+  <script>document.documentElement.classList.add('zv-js');</script>
+
+  <script src="{{ 'zorev.js' | asset_url }}" defer></script>
+  {%- comment -%}
+    After zorev.js: it adds the scroll-reveal observer the .zv-js reveal
+    styles need, and syncs the one cart-count attribute zorev.js leaves alone.
+    It deliberately does NOT touch add-to-cart — zorev.js owns that.
+  {%- endcomment -%}
+  <script src="{{ 'zorev-enhance.js' | asset_url }}" defer></script>
+</head>
+<body class="tpl-{{ template.name }}">
+  <a class="skip" href="#main">Skip to content</a>
+  {%- comment -%}
+    Above the header and in normal flow, so it scrolls away and the sticky
+    header takes over. This relies on the header's overlay mode being off —
+    see config/settings_data.json.
+  {%- endcomment -%}
+  {% section 'announcement-bar' %}
+  {% section 'header' %}
+  <main id="main" role="main">{{ content_for_layout }}</main>
+  {% section 'footer' %}
+  {% render 'cutout-data' %}
+  {% render 'cart-drawer' %}
+</body>
+</html>

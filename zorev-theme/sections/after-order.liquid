@@ -1,0 +1,117 @@
+{%- comment -%}
+  After you order + reviews.
+
+  The homepage's "customer experience" moment, built from what is true
+  today. Left: what happens between checkout and the doorstep, each step
+  an editable block. Right: reviews — the real Judge.me count and average
+  when there are reviews, and an honest empty state until then. No names,
+  no quotes and no stars are ever written by the store.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign rn = 0
+  assign rsum = 0.0
+  for block in section.blocks
+    if block.type == 'rproduct'
+      assign rp = block.settings.product
+      assign rjd = rp.metafields.judgeme.review_widget_data.value
+      assign rc = rjd.number_of_reviews | default: 0
+      if rc > 0
+        assign rn = rn | plus: rc
+        assign part = rjd.average_rating | times: 1.0 | times: rc
+        assign rsum = rsum | plus: part
+      endif
+    endif
+  endfor
+  assign ravg = 0
+  if rn > 0
+    assign ravg = rsum | divided_by: rn | round: 1
+  endif
+-%}
+<section class="zao{% if s.raised %} zao--raised{% endif %}" aria-labelledby="zao-h-{{ section.id }}">
+  <div class="zv-wrap zao__grid">
+    <div class="zao__steps" data-zv-reveal>
+      {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
+      <h2 class="zv-h2" id="zao-h-{{ section.id }}">{{ s.heading }}</h2>
+      <ol class="zao__list" role="list">
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'step' -%}
+            <li class="zao__step" {{ block.shopify_attributes }}>
+              <span class="zao__ic" aria-hidden="true">{% render 'zicon', name: block.settings.icon %}</span>
+              <div>
+                <h3 class="zao__t">{{ block.settings.title | escape }}</h3>
+                <p class="zao__p">{{ block.settings.body | escape }}</p>
+              </div>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ol>
+    </div>
+
+    <div class="zao__rev" data-zv-reveal>
+      <p class="zao__rk">{{ s.reviews_eyebrow | escape }}</p>
+      {%- if rn > 0 -%}
+        <p class="zao__score"><strong>{{ ravg }}</strong> out of 5</p>
+        <p class="zao__rp">From {{ rn }} {{ rn | pluralize: 'review', 'reviews' }} of real orders.</p>
+      {%- else -%}
+        <h3 class="zao__rh">No reviews yet.</h3>
+        <p class="zao__rp">ZOREV is new. Reviews here will only ever come from customers who have received an order &mdash; we don&rsquo;t write them, buy them, or borrow them from other listings.</p>
+        <p class="zao__rp">Questions before you buy? <a href="mailto:{{ settings.support_email | escape }}">{{ settings.support_email | escape }}</a> &mdash; a person answers.</p>
+      {%- endif -%}
+    </div>
+  </div>
+  <style>
+    .zao{padding-block:var(--zv-section);background:var(--zv-bg)}
+    .zao--raised{background:var(--zv-bg-sunken);--zv-text-3:var(--zv-moss-strong);--text-3:var(--zv-moss-strong)}
+    .zao__grid{display:grid;gap:clamp(32px,5vw,72px)}
+    @media(min-width:900px){.zao__grid{grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);align-items:start}}
+    .zao__steps .zv-h2{margin:0 0 clamp(20px,3vw,32px)}
+    .zao__list{list-style:none;margin:0;padding:0;display:grid;gap:0;counter-reset:zao}
+    .zao__step{display:grid;grid-template-columns:44px minmax(0,1fr);gap:var(--zv-4);align-items:start;
+      padding:var(--zv-4) 0;border-top:1px solid var(--zv-line)}
+    .zao__step:last-child{border-bottom:1px solid var(--zv-line)}
+    .zao__ic{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;
+      background:color-mix(in srgb, var(--zv-forest) 9%, var(--zv-white));color:var(--zv-forest)}
+    .zao__t{margin:0 0 2px;font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-ink)}
+    .zao__p{margin:0;color:var(--zv-text-2);font-size:var(--zv-t-sm);max-width:52ch}
+    .zao__rev{padding:clamp(24px,3vw,36px);border-radius:var(--zv-r-lg);background:var(--zv-bg-raised);
+      box-shadow:inset 0 0 0 1px var(--zv-line)}
+    .zao__rk{margin:0 0 var(--zv-3);font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
+      text-transform:uppercase;color:var(--zv-forest)}
+    .zao__rh{margin:0 0 var(--zv-3);font-size:var(--zv-t-h3)}
+    .zao__score{margin:0;font-size:var(--zv-t-lead);color:var(--zv-ink)}
+    .zao__score strong{font-size:var(--zv-t-h1);font-weight:500;font-family:var(--zv-sans)}
+    .zao__rp{margin:0 0 var(--zv-3);color:var(--zv-text-2);font-size:var(--zv-t-sm)}
+    .zao__rp:last-child{margin-bottom:0}
+    .zao__rp a{color:var(--zv-ink);text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+  </style>
+</section>
+{% schema %}
+{
+  "name": "After you order",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "After you order" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "What happens next." },
+    { "type": "text", "id": "reviews_eyebrow", "label": "Reviews label", "default": "Reviews" },
+    { "type": "checkbox", "id": "raised", "label": "Raised background", "default": false }
+  ],
+  "blocks": [
+    { "type": "step", "name": "Step",
+      "settings": [
+        { "type": "select", "id": "icon", "label": "Icon", "default": "box",
+          "options": [
+            { "value": "box", "label": "Parcel" }, { "value": "truck", "label": "Truck" },
+            { "value": "mail", "label": "Email" }, { "value": "shield", "label": "Shield" },
+            { "value": "check", "label": "Check" }, { "value": "lock", "label": "Lock" }
+          ] },
+        { "type": "text", "id": "title", "label": "Title" },
+        { "type": "text", "id": "body", "label": "Body", "info": "Only what your fulfilment actually does. No delivery estimate you can't guarantee." }
+      ] },
+    { "type": "rproduct", "name": "Reviews from product", "limit": 4,
+      "settings": [ { "type": "product", "id": "product", "label": "Product",
+        "info": "Its Judge.me review count and average are added to the reviews panel." } ] }
+  ],
+  "presets": [{ "name": "After you order" }]
+}
+{% endschema %}

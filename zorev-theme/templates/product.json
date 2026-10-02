@@ -1,0 +1,107 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "settings": {
+        "sticky_atc": true
+      },
+      "blocks": {
+        "ship": {
+          "type": "accordion",
+          "settings": {
+            "title": "Shipping & returns",
+            "content": "<p><strong>Free shipping on every order, worldwide.</strong> Orders leave our fulfilment network within one business day, and a tracking number follows by email once the carrier scans the parcel. Delivery times and customs are on the <a href=\"/pages/shipping\">Shipping &amp; Delivery</a> page.</p><p><strong>Arrived damaged, defective or wrong?</strong> Email a photo to <a href=\"mailto:zorevhousing@gmail.com\">zorevhousing@gmail.com</a> and we'll make it right.</p><p><strong>Returns.</strong> Our <a href=\"/policies/refund-policy\">refund policy</a> doesn't take back personal care goods for a change of mind, and both ZOREV products are personal care goods. Orders shipped into the EU can still be cancelled or returned within 14 days of delivery, unused and in the original packaging.</p>"
+          }
+        },
+        "faq": {
+          "type": "accordion",
+          "settings": {
+            "title": "FAQ",
+            "content": "<p><strong>Do the multi-buy and pair savings need a code?</strong><br>No. They're applied automatically in your bag, and you'll see each one listed before checkout.</p><p><strong>Can I mix GODA options on a multi-buy?</strong><br>Yes. Choose 2 or 3 bottles and pick an option for each; the saving counts every GODA bottle in your bag, whichever options you choose.</p><p><strong>Who makes these?</strong><br>GODA makes the perfume oil and Hoygi makes the balm stick, both in China. We choose them, write the listings and answer for them.</p><p><strong>Is checkout secure?</strong><br>Yes. Checkout runs on Shopify's encrypted checkout, and we never see or store your card details.</p><p>More answers on the <a href=\"/pages/faq\">FAQ page</a>.</p>"
+          }
+        },
+        "scene_goda": {
+          "type": "scene",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil",
+            "image": "shopify://shop_images/zorev-v12-goda-wrist-overlook.jpg",
+            "image_alt": "A drop of GODA perfume oil falling from the dropper onto a wrist, the open bottle on a granite ledge above a forested valley",
+            "position": "73% 50%"
+          }
+        },
+        "scene_hoygi": {
+          "type": "scene",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm",
+            "image": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
+            "image_alt": "A Hoygi balm stick standing on a cafe table by a window, next to an espresso cup, sunglasses and a folded map",
+            "position": "90% 50%"
+          }
+        }
+      },
+      "block_order": [
+        "scene_goda",
+        "scene_hoygi",
+        "ship",
+        "faq"
+      ]
+    },
+    "reviews": {
+      "type": "product-reviews",
+      "settings": {
+        "eyebrow": "Reviews",
+        "heading": "From real orders only"
+      }
+    },
+    "scene": {
+      "type": "product-scene",
+      "settings": {},
+      "blocks": {
+        "goda": {
+          "type": "scene",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil",
+            "photo": "shopify://shop_images/zorev-v12-goda-wrist-overlook.jpg",
+            "photo_alt": "A drop of GODA perfume oil falling from the dropper onto a wrist above a forested valley",
+            "position": "62% 50%",
+            "position_mobile": "45% 50%",
+            "eyebrow": "In use",
+            "heading": "One or two drops. That’s the routine.",
+            "body": "<p>At the base of the throat and the inside of each wrist. Oil carries further than it seems on first contact, so start with less than you think, and warm it in with a fingertip.</p>"
+          }
+        },
+        "hoygi": {
+          "type": "scene",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm",
+            "photo": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
+            "photo_alt": "A Hoygi balm stick on a cafe table by a window, next to an espresso cup",
+            "position": "80% 55%",
+            "position_mobile": "78% 55%",
+            "eyebrow": "In use",
+            "heading": "Twist, glide, pocket.",
+            "body": "<p>Two or three millimetres, over clean skin wherever it runs dry. Warm it in with a fingertip; it layers over or under whatever else you use.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "goda",
+        "hoygi"
+      ]
+    }
+  },
+  "order": [
+    "main",
+    "scene",
+    "reviews"
+  ]
+}

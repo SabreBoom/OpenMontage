@@ -1,0 +1,99 @@
+{%- comment -%}
+  ZOREV — real media.
+
+  A home for real footage: customer clips, creator posts, product
+  demonstrations filmed by the shop. Each clip is a block with a
+  Shopify-hosted film, a poster, a caption and a credit, shown as a strip of
+  upright 9:16 frames that play only while on screen (snippets/zv-media),
+  never for reduced motion or Save-Data, always with a pause button.
+
+  Nothing here may be staged. A block only renders once "I have permission"
+  is ticked, and a customer or creator clip must carry its credit. With no
+  clips, the section says so plainly instead of filling itself with stock
+  footage or borrowed posts: an honest empty state, and an invitation.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign shown = 0
+  for block in section.blocks
+    if block.settings.permission and block.settings.video != blank or block.settings.permission and block.settings.poster != blank
+      assign shown = shown | plus: 1
+    endif
+  endfor
+-%}
+<section class="zrm{% if shown == 0 %} zrm--empty{% endif %}" id="{{ s.anchor | default: 'real' | handleize }}" aria-labelledby="zrm-h-{{ section.id }}">
+  <div class="zv-wrap">
+    <header class="zrm__head" data-zv-reveal>
+      {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
+      <h2 class="zrm__h" id="zrm-h-{{ section.id }}">{% if shown > 0 %}{{ s.heading }}{% else %}{{ s.empty_heading }}{% endif %}</h2>
+      {%- if shown > 0 and s.body != blank -%}
+        <div class="zv-lead zrm__lead">{{ s.body }}</div>
+      {%- elsif shown == 0 -%}
+        <div class="zv-lead zrm__lead">{{ s.empty_body }}</div>
+        {%- if settings.support_email != blank -%}
+          <p class="zrm__invite"><a class="zv-btn zv-btn--ghost" href="mailto:{{ settings.support_email }}?subject={{ 'My ZOREV clip' | url_escape }}">{{ s.empty_cta | default: 'Send us yours' | escape }}</a></p>
+        {%- endif -%}
+      {%- endif -%}
+    </header>
+  </div>
+
+  {%- if shown > 0 -%}
+    <div class="zrm__strip">
+      <ul class="zrm__track" role="list" tabindex="0" aria-label="{{ s.heading | strip_html | escape }}">
+        {%- for block in section.blocks -%}
+          {%- assign b = block.settings -%}
+          {%- if b.permission and b.video != blank or b.permission and b.poster != blank -%}
+            <li class="zrm__item" {{ block.shopify_attributes }}>
+              <figure class="zrm__fig" data-zv-reveal>
+                <div class="zrm__frame">
+                  {% render 'zv-media', media: b.video, image: b.poster, sizes: '(min-width: 900px) 22vw, 64vw', alt: b.caption %}
+                </div>
+                <figcaption class="zrm__cap">
+                  {%- if b.caption != blank -%}<span class="zrm__c">{{ b.caption | escape }}</span>{%- endif -%}
+                  {%- if b.credit != blank -%}
+                    <span class="zrm__by">
+                      {%- if b.kind == 'customer' -%}Filmed by a customer, {% elsif b.kind == 'creator' -%}Posted by {% else -%}Filmed by {% endif -%}
+                      {%- if b.source_url != blank -%}<a href="{{ b.source_url }}" rel="noopener" target="_blank">{{ b.credit | escape }}<span class="visually-hidden"> (opens in a new tab)</span></a>{%- else -%}{{ b.credit | escape }}{%- endif -%}
+                    </span>
+                  {%- endif -%}
+                </figcaption>
+              </figure>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ul>
+    </div>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Real media",
+  "tag": "section",
+  "settings": [
+    { "type": "paragraph", "content": "Real footage only: customer clips, creator posts shared with permission, or product films the shop made. Never stock footage, never someone else's post without permission." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "In the wild" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Out there with real people." },
+    { "type": "richtext", "id": "body", "label": "Intro" },
+    { "type": "text", "id": "anchor", "label": "Anchor", "default": "real" },
+    { "type": "header", "content": "Before there are any clips" },
+    { "type": "inline_richtext", "id": "empty_heading", "label": "Heading", "default": "Real footage, when there is some." },
+    { "type": "richtext", "id": "empty_body", "label": "Body", "default": "<p>ZOREV is new, so there is nothing from customers to show here yet, and we will not stage it. If you film yours on the road, on a trail or on an ordinary Tuesday, send it over. With your permission and your name on it, it goes here.</p>" },
+    { "type": "text", "id": "empty_cta", "label": "Button", "default": "Send us yours" }
+  ],
+  "blocks": [
+    { "type": "clip", "name": "Clip", "limit": 8,
+      "settings": [
+        { "type": "checkbox", "id": "permission", "label": "I have permission to show this clip", "default": false, "info": "The clip does not appear until this is ticked." },
+        { "type": "select", "id": "kind", "label": "Who made it", "default": "customer",
+          "options": [ { "value": "customer", "label": "A customer" }, { "value": "creator", "label": "A creator" }, { "value": "shop", "label": "ZOREV" } ] },
+        { "type": "video", "id": "video", "label": "Film", "info": "Upright 9:16, silent or muted, under 20 seconds." },
+        { "type": "image_picker", "id": "poster", "label": "Poster frame", "info": "A still from the film, 9:16." },
+        { "type": "text", "id": "caption", "label": "Caption", "info": "What happens in the clip, in plain words. Also read by screen readers." },
+        { "type": "text", "id": "credit", "label": "Credit", "info": "The person's name or handle, exactly as they asked to be credited." },
+        { "type": "url", "id": "source_url", "label": "Original post (optional)" }
+      ] }
+  ],
+  "presets": [{ "name": "Real media" }]
+}
+{% endschema %}

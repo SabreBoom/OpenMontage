@@ -1,0 +1,8 @@
+<section class="band"><div class="wrap" style="max-width:74ch">
+  <span class="eyebrow">{{ article.published_at | date: '%B %d, %Y' }}</span>
+  <h1>{{ article.title | escape }}</h1>
+  <div class="rte">{{ article.content }}</div>
+</div></section>
+{% schema %}
+{ "name": "Article", "settings": [] }
+{% endschema %}

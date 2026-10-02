@@ -1,0 +1,232 @@
+/* ZOREV — bridge layer.
+
+   This file used to be the whole design system: a near-black ground with
+   platinum and orchid accents. zorev-tokens.css replaced that with the
+   ink / forest / moss / warm-white palette, and for a while both were live —
+   which meant the homepage was warm paper and the product page was still
+   near-black, and two rules in here silently overrode the new system because
+   this sheet loads last:
+
+     *  a blanket `transition-duration:.01ms!important` under
+        prefers-reduced-motion, which undid the graded motion policy
+     *  `:focus-visible{outline:2px solid var(--focus)}` in blue, which
+        undid the ring that has to flip between forest and sand
+
+   Both are gone. What remains is a compatibility layer: the OLD token names
+   now resolve to the NEW palette, and the old structural selectors are kept
+   and reskinned. That way every section still written against the old names
+   — the product page, footer, cart drawer, bundle builder, scent notes,
+   contact form — renders in the new palette without each one having to be
+   rewritten first.
+
+   New work should use the --zv-* tokens and the .zv-* primitives directly.
+   Nothing new should reach for the names in this file.
+
+   One decision carried over deliberately: --plate stays white. Every
+   supplier photo is shot on pure white, so a tinted plate would leave a
+   white square floating inside it. On warm paper the plate now carries a
+   hairline so it still reads as a card rather than a hole. */
+
+:root{
+  /* ---- old names -> new palette ---- */
+  --ground:    var(--zv-warm);
+  --surface:   var(--zv-bg-sunken);
+  --surface-2: #E2DFD5;
+  --hairline:  var(--zv-line);
+
+  --text:   var(--zv-ink);
+  --text-2: var(--zv-text-2);
+  --text-3: var(--zv-muted);
+
+  /* Category accents. Both are text-safe on warm paper: forest 11.26:1,
+     olive 5.76:1. The old platinum (#C7D2DF) and orchid (#E594BD) were
+     tuned for a near-black ground and fail badly on this one. */
+  --fragrance: var(--zv-forest);
+  --skin:      var(--zv-olive);
+  --skin-ink:  var(--zv-forest);
+  --focus:     var(--zv-focus);
+
+  --plate: var(--zv-white);
+  --accent: var(--fragrance);
+
+  --glass: rgba(16,19,16,.04);
+  --r:     var(--zv-r-md);
+  --r-lg:  var(--zv-r-lg);
+  --tap:   44px;
+  --pad:   var(--zv-gutter);
+  --wrap:  var(--zv-container);
+  --sans:  var(--zv-sans);
+  --serif: var(--zv-serif);
+  --step:  var(--zv-section);
+  --ease:  var(--zv-ease);
+
+  /* Older aliases still named by a few section <style> blocks. */
+  --ob:    var(--ground);
+  --ob-2:  var(--surface);
+  --ink:   var(--text);
+  --ink-2: var(--text-2);
+  --ink-3: var(--text-3);
+  --line:  var(--hairline);
+  --gold:  var(--accent);
+}
+
+html{ -webkit-text-size-adjust: 100%; }
+body{
+  margin: 0;
+  background: var(--zv-bg);
+  color: var(--zv-text);
+  font-family: var(--zv-sans);
+  font-size: var(--zv-t-body);
+  line-height: var(--zv-lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img, video{ max-width: 100%; display: block; }
+a{ color: inherit; text-decoration: none; }
+button{ font: inherit; color: inherit; }
+
+.skip{ position: absolute; left: -9999px; }
+.skip:focus{
+  left: var(--zv-4); top: var(--zv-4); z-index: var(--zv-z-toast);
+  background: var(--zv-ink); color: var(--zv-warm);
+  padding: var(--zv-3) var(--zv-4); border-radius: var(--zv-r-sm);
+}
+
+/* ---- layout ---- */
+/* Same geometry as .zv-wrap, deliberately. The two used to differ above
+   ~1340px — .wrap put content 1240px wide, .zv-wrap 1240px minus gutters —
+   so the product page, cart and "Why ZOREV" rules started ~58px left of the
+   logo and every other section. One left edge for the whole site. */
+.wrap{ width: 100%; max-width: var(--zv-container); margin-inline: auto; padding-inline: var(--zv-gutter); }
+.band{ padding-block: var(--step); }
+.band--raised{ background: var(--surface); }
+.band--skin{ --accent: var(--skin); }
+.band--fragrance{ --accent: var(--fragrance); }
+
+/* ---- type: serif headings, sans UI, matching zorev-tokens.css ---- */
+.eyebrow{
+  display: block; font-family: var(--zv-sans);
+  font-size: var(--zv-t-micro); font-weight: 600;
+  letter-spacing: var(--zv-tr-caps); text-transform: uppercase;
+  color: var(--zv-text-3); margin: 0 0 var(--zv-4);
+}
+h1, .h1, h2, .h2, h3, .h3{
+  font-family: var(--zv-serif); font-weight: 400;
+  letter-spacing: var(--zv-tr-tight); color: var(--zv-text);
+  text-wrap: balance;
+}
+h1, .h1{ font-size: var(--zv-t-h1); line-height: var(--zv-lh-tight); margin: 0 0 var(--zv-4); }
+h2, .h2{ font-size: var(--zv-t-h2); line-height: var(--zv-lh-tight); margin: 0 0 var(--zv-4); }
+h3, .h3{ font-size: var(--zv-t-h4); line-height: var(--zv-lh-snug); margin: 0 0 var(--zv-2); }
+p{ margin: 0 0 var(--zv-4); color: var(--zv-text-2); max-width: var(--zv-measure); }
+.lead{ font-size: var(--zv-t-lead); color: var(--zv-text-2); }
+.fine{ font-size: var(--zv-t-fine); color: var(--zv-text-3); }
+
+/* ---- buttons ----
+   .btn is defined with .zv-btn in zorev-tokens.css — one rule, two names. */
+
+.grid{ display: grid; gap: var(--zv-6) var(--zv-5); }
+.grid--2{ grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr)); }
+.grid--3{ grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); }
+
+/* ---- the white plate ----
+   White stays, because the photos are shot on white. The hairline is new:
+   on a near-black page the plate read as a lit card on its own, on warm
+   paper it needs an edge or it reads as a hole. */
+.plate, .card__fig, .pdp__main, .hero__art{
+  background: var(--plate); border-radius: var(--r-lg); overflow: hidden;
+  /* --zv-line-input, not --zv-line. The plate is white and the page is warm
+     white, so the decorative hairline (#D9D8D1 = 1.28:1 on white) leaves the
+     plate edgeless and a product shot looks like it is floating in the page.
+     This is the boundary token, at 3.01:1: a considered rule, still quiet. */
+  box-shadow: inset 0 0 0 1px var(--zv-line-input);
+  aspect-ratio: 1 / 1; display: grid; place-items: center;
+}
+.plate img, .card__fig img, .pdp__main img, .hero__art img{
+  width: 100%; height: 100%; object-fit: contain;
+}
+
+/* ---- legacy card (the new one is .zcard in zorev-cards.css) ---- */
+.card{ display: block; border-radius: var(--r-lg);
+  transition: transform var(--zv-d-hover) var(--zv-ease); }
+@media (hover: hover) and (pointer: fine){
+  .card:hover{ transform: translateY(var(--zv-lift)); }
+  .card:hover .card__fig img{ transform: scale(1.03); }
+}
+.card__fig img{ transition: transform var(--zv-d-reveal) var(--zv-ease); }
+.card__body{ padding: var(--zv-4) var(--zv-1) 0; }
+.card__t{ font-family: var(--zv-serif); font-size: var(--zv-t-h4); font-weight: 400;
+  margin: 0 0 var(--zv-1); color: var(--zv-text); }
+.card__p{ color: var(--zv-text-2); font-size: var(--zv-t-sm); margin: 0;
+  font-variant-numeric: tabular-nums; }
+
+/* ---- product page ---- */
+.pdp{ display: grid; gap: var(--zv-7); grid-template-columns: 1fr; }
+@media (min-width: 900px){ .pdp{ grid-template-columns: 1.02fr .98fr; align-items: start; } }
+/* Pair card (sections/main-product.liquid): under 480px the option select
+   and the button share too little width and the button wraps, so each
+   takes the full row. */
+@media (max-width: 479px){ .pairc__pick, .pairc__btn{ flex-basis: 100%; } }
+.pdp__media{ display: grid; gap: var(--zv-3); }
+.pdp__thumbs{ display: flex; gap: var(--zv-2); flex-wrap: wrap; }
+.pdp__thumb{
+  width: var(--tap); height: var(--tap); min-width: var(--tap); min-height: var(--tap);
+  border-radius: var(--zv-r-sm); overflow: hidden; background: var(--plate);
+  border: 1px solid var(--zv-line-input); cursor: pointer; padding: 0;
+  transition: border-color var(--zv-d-hover) var(--zv-ease);
+}
+@media (min-width: 600px){ .pdp__thumb{ width: 66px; height: 66px; } }
+.pdp__thumb img{ width: 100%; height: 100%; object-fit: contain; }
+.pdp__thumb[aria-current="true"]{ border-color: var(--zv-accent); }
+@media (min-width: 900px){ .pdp__info{ position: sticky; top: 92px; } }
+
+.price{ font-family: var(--zv-sans); font-size: var(--zv-t-h3); font-weight: 600;
+  color: var(--zv-text); margin: 0 0 var(--zv-5); font-variant-numeric: tabular-nums; }
+.opts{ display: flex; gap: var(--zv-2); flex-wrap: wrap; margin: 0 0 var(--zv-5); }
+.opt{
+  min-height: var(--tap); display: inline-flex; align-items: center;
+  padding: 0 var(--zv-4); border-radius: var(--zv-r-pill);
+  background: transparent;
+  /* --zv-line-input, not the decorative hairline: an option you choose from
+     is a control, and its edge has to clear 3:1 for WCAG 1.4.11 */
+  border: 1px solid var(--zv-line-input); color: var(--zv-text-2);
+  font-family: var(--zv-sans); font-size: var(--zv-t-sm); cursor: pointer;
+  transition: border-color var(--zv-d-hover) var(--zv-ease),
+              color var(--zv-d-hover) var(--zv-ease),
+              background var(--zv-d-hover) var(--zv-ease);
+}
+@media (hover: hover) and (pointer: fine){ .opt:hover{ color: var(--zv-text); } }
+/* Selected state carries a 2px edge AND a fill, so it is not colour alone. */
+.opt[aria-checked="true"]{
+  border-color: var(--zv-accent); border-width: 2px; padding-inline: calc(var(--zv-4) - 1px);
+  color: var(--zv-text); background: var(--zv-bg-sunken); font-weight: 600;
+}
+
+.rte h3{ margin-top: var(--zv-6); color: var(--zv-text); }
+.rte ul{ padding-left: var(--zv-5); color: var(--zv-text-2); }
+.rte li{ margin: var(--zv-1) 0; }
+.rte li::marker{ color: var(--zv-moss-text); }
+.rte strong{ color: var(--zv-text); font-weight: 600; }
+.rte a{ color: var(--zv-text); text-decoration: underline;
+  text-decoration-color: var(--zv-hairline-2); text-underline-offset: 3px; }
+
+/* ---- cart line ---- */
+.line{ display: grid; grid-template-columns: 76px 1fr auto; gap: var(--zv-4);
+  align-items: center; padding: var(--zv-4) 0; border-bottom: 1px solid var(--zv-line); }
+.line img{ width: 76px; height: 76px; object-fit: contain; background: var(--plate);
+  border-radius: var(--zv-r-sm); box-shadow: inset 0 0 0 1px var(--zv-line-input); }
+
+/* ---- surfaces on the sunken ground ----
+   --zv-muted was measured against warm white, where it is 4.52:1. On the
+   sunken ground (#EBE8E0) the same value is 4.13:1 — it just misses, and the
+   footer's policy links and every `.fine` line on a raised band were sitting
+   right there. Rather than fix each one, every surface that uses the sunken
+   ground re-points the tertiary text token to --zv-moss-strong, 6.42:1. */
+.band--raised, .zsec--raised, .ftr, .zresult, .zpag .current, .zcard__fig {
+  --zv-text-3: var(--zv-moss-strong);
+  --text-3:    var(--zv-moss-strong);
+}
+
+/* ---- footer ---- */
+.ftr{ border-top: 1px solid var(--zv-line); padding-block: var(--zv-8);
+  background: var(--zv-bg-sunken); }

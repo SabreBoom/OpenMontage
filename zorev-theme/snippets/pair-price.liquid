@@ -1,0 +1,19 @@
+{%- comment -%}
+  The Pair's price, worked out from the products' own prices and the saving
+  in Theme settings > Offers (which mirrors the pair discount), so copy that
+  quotes it stays right when a price changes.
+
+  Write [pair_price] in a theme text setting (announcement claim, button
+  label) and the section renders it through this snippet:
+    {%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
+    {{ s.claim | replace: '[pair_price]', pp | escape }}
+  Renders nothing when the pair is not set up.
+{%- endcomment -%}
+{%- liquid
+  assign pa = settings.pair_product_a
+  assign pb = settings.pair_product_b
+  if settings.pair_enabled and cart.currency.iso_code == shop.currency and pa != blank and pb != blank and pa.price != blank and pb.price != blank
+    assign pp = pa.price | plus: pb.price | minus: settings.pair_save_cents
+    echo pp | money_without_trailing_zeros
+  endif
+-%}

@@ -1,0 +1,95 @@
+{%- comment -%}
+  Footer.
+
+  This used to render its links with class="hdr__nav", which zorev.css hides
+  below 720px — a rule meant for the header, where a hamburger takes over.
+  The footer has no hamburger, so on a phone every link here (Contact,
+  Shipping, FAQ, Track Order) simply vanished. It owns its own class now.
+{%- endcomment -%}
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr__in">
+      <div class="ftr__brand">
+        <span class="eyebrow">{{ shop.name }}</span>
+        {%- if section.settings.note != blank -%}
+          <p class="fine ftr__note">{{ section.settings.note }}</p>
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.menu.links.size > 0 -%}
+        <nav class="ftr__nav" aria-label="Footer">
+          <ul role="list">
+            {%- for link in section.settings.menu.links -%}
+              <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+    </div>
+
+    <div class="ftr__base">
+      <p class="fine">&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}</p>
+      {%- if section.settings.show_policies -%}
+        <nav class="ftr__legal" aria-label="Policies">
+          {%- for policy in shop.policies -%}
+            {%- if policy != blank -%}<a href="{{ policy.url }}">{{ policy.title }}</a>{%- endif -%}
+          {%- endfor -%}
+        </nav>
+      {%- endif -%}
+    </div>
+  </div>
+</footer>
+
+<style>
+  .ftr__in{display:grid;gap:var(--zv-6);align-items:start}
+  @media(min-width:760px){.ftr__in{grid-template-columns:1fr auto;gap:var(--zv-8)}}
+  .ftr__note{max-width:38ch;margin:0}
+
+  .ftr__nav ul{list-style:none;margin:0;padding:0;display:grid}
+  @media(min-width:760px){
+    .ftr__nav ul{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:var(--zv-8)}
+  }
+  /* 44px rows rather than a tight inline list: on a phone this is the only
+     way to reach Contact or Track Order. */
+  .ftr__nav a{
+    display:flex;align-items:center;min-height:44px;
+    font-family:var(--zv-sans);font-size:var(--zv-t-sm);color:var(--zv-text-2);
+    text-decoration:none;
+    transition:color var(--zv-d-hover) var(--zv-ease);
+  }
+  @media (hover:hover) and (pointer:fine){
+    .ftr__nav a:hover{color:var(--zv-ink);text-decoration:underline;text-underline-offset:3px}
+  }
+  .ftr__nav a:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
+
+  .ftr__base{
+    margin-top:var(--zv-7);padding-top:var(--zv-4);
+    border-top:1px solid var(--zv-line);
+    display:flex;flex-wrap:wrap;gap:var(--zv-1) var(--zv-5);
+    justify-content:space-between;align-items:center;
+  }
+  .ftr__base p{margin:0}
+  .ftr__legal{display:flex;flex-wrap:wrap;gap:0 var(--zv-5)}
+  .ftr__legal a{
+    display:inline-flex;align-items:center;min-height:44px;
+    font-family:var(--zv-sans);font-size:var(--zv-t-fine);
+    /* The footer sits on the sunken ground, where --zv-muted is 4.13:1. The
+       bridge layer re-points --zv-text-3 for this surface, so these policy
+       links resolve to moss-strong at 6.42:1 rather than just missing. */
+    color:var(--zv-text-3);text-decoration:none;
+  }
+  @media (hover:hover) and (pointer:fine){
+    .ftr__legal a:hover{color:var(--zv-ink);text-decoration:underline;text-underline-offset:3px}
+  }
+  .ftr__legal a:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){.ftr__nav a{transition-duration:120ms}}
+</style>
+{% schema %}
+{ "name": "Footer",
+  "settings": [
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "footer" },
+    { "type": "text", "id": "note", "label": "Note" },
+    { "type": "checkbox", "id": "show_policies", "label": "Show policy links", "default": true,
+      "info": "Links the store policies you have published (refund, privacy, terms, shipping)." }
+  ] }
+{% endschema %}

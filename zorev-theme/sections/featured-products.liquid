@@ -1,0 +1,68 @@
+{%- comment -%}
+  The line-up.
+
+  The grid class is chosen from the block count rather than hardcoded to 3.
+  With a two-product catalogue a three-up grid leaves a dead third column,
+  which reads as a shop that has run out of things rather than one that sells
+  two things on purpose.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign n = section.blocks.size
+  assign grid = 'zgrid zgrid--3'
+  if n <= 2
+    assign grid = 'zgrid zgrid--pair'
+  elsif n >= 4
+    assign grid = 'zgrid zgrid--4'
+  endif
+-%}
+
+<section class="zv-section{% if s.raised %} zsec--raised{% endif %}">
+  <div class="zv-wrap">
+    {%- if s.eyebrow != blank or s.heading != blank -%}
+      <header class="zsec__head" data-zv-reveal>
+        {%- if s.eyebrow != blank -%}
+          <span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>
+        {%- endif -%}
+        {%- if s.heading != blank -%}
+          <h2 class="zv-h2">{{ s.heading }}</h2>
+        {%- endif -%}
+        {%- if s.body != blank -%}
+          <div class="zv-lead zsec__lead">{{ s.body }}</div>
+        {%- endif -%}
+      </header>
+    {%- endif -%}
+
+    <div class="{{ grid }}">
+      {%- for b in section.blocks -%}
+        {%- assign p = all_products[b.settings.product] -%}
+        {%- if p != blank and p.title != blank -%}
+          {% render 'product-card',
+             card_product: p,
+             eager: forloop.first,
+             sizes: '(min-width: 1100px) 400px, (min-width: 560px) 45vw, 88vw' %}
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Featured products",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading" },
+    { "type": "richtext", "id": "body", "label": "Intro" },
+    { "type": "checkbox", "id": "raised", "label": "Raised background", "default": false }
+  ],
+  "blocks": [
+    { "type": "product", "name": "Product", "limit": 8,
+      "settings": [ { "type": "product", "id": "product", "label": "Product" } ] }
+  ],
+  "presets": [
+    { "name": "Featured products", "blocks": [{ "type": "product" }, { "type": "product" }] }
+  ]
+}
+{% endschema %}

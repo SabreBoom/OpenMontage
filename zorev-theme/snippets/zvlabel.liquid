@@ -1,0 +1,20 @@
+{%- comment -%}
+  Display name for a variant, for choosers only (chips and option selects).
+
+  The supplier's option values repeat the size on every option ("Black 15ml",
+  "Citrus 15ml Men") even though every option is the same 15 ml bottle and
+  the product title already says so. Choosers show just the part that
+  differs: "Black", "Citrus (men's)". Values without those patterns pass
+  through untouched. The cart, checkout and order emails keep Shopify's own
+  variant title — this changes a label, never the data.
+
+  Usage: {% render 'zvlabel', t: variant.title %}
+{%- endcomment -%}
+{%- liquid
+  assign out = t | replace: ' 15ml', '' | replace: '15ml ', '' | replace: ' 15 ml', ''
+  assign out = out | replace: ' Men', ' (men’s)' | replace: ' Women', ' (women’s)' | strip
+  if out == blank
+    assign out = t
+  endif
+-%}
+{{- out | escape -}}

@@ -1,0 +1,14 @@
+{%- comment -%}
+  Deprecated. Redundant with main-product's built-in gallery, shipped a
+  ~150KB three.js library, downloaded the LCP image a second time under a
+  legacy _1400x URL, ran a permanent WebGL loop with no dirty-check, and
+  leaked WebGL contexts in the theme editor. Removed from templates/product.json
+  on 26 Sep 2026 (Copy of Copy of ZOREV v10 draft).
+
+  This file is intentionally empty. `themeFilesDelete` is blocked by the MCP
+  safety policy; delete the file itself from Shopify admin > Code editor to
+  remove it from the section picker entirely.
+{%- endcomment -%}
+{% schema %}
+{ "name": "Spatial gallery (old)", "tag": "section", "settings": [] }
+{% endschema %}

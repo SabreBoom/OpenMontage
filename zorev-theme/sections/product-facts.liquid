@@ -1,0 +1,79 @@
+{%- comment -%}
+  Product facts — "what are these, physically".
+
+  One column per product: the type, the name, and a short list of
+  facts. Every default here is lifted from the product descriptions; none
+  of it is a performance claim. The makers' own claims (pheromones,
+  plumping) live on the product pages, labelled as theirs.
+{%- endcomment -%}
+{%- assign s = section.settings -%}
+<section class="zpf{% if s.raised %} zpf--raised{% endif %}" aria-labelledby="zpf-h-{{ section.id }}">
+  <div class="zv-wrap">
+    <header class="zpf__head" data-zv-reveal>
+      {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
+      <h2 class="zv-h2" id="zpf-h-{{ section.id }}">{{ s.heading }}</h2>
+    </header>
+    <div class="zpf__grid">
+      {%- for block in section.blocks -%}
+        {%- assign p = block.settings.product -%}
+        {%- if p != blank and p.title != blank -%}
+          {%- comment -%}
+            Type only, no product photo: by this point the page has already
+            shown both products three times (the line, the price ladders and
+            the pair), and a fourth pair of thumbnails is repetition, not
+            information. This band is the spec sheet.
+          {%- endcomment -%}
+          <article class="zpf__col" data-zv-reveal {{ block.shopify_attributes }}>
+            <div class="zpf__body">
+              <p class="zpf__k">{{ p.type | escape }}</p>
+              <h3 class="zpf__name"><a href="{{ p.url }}">{{ p.vendor | upcase | escape }}</a></h3>
+              {%- if block.settings.facts != blank -%}<div class="zpf__facts">{{ block.settings.facts }}</div>{%- endif -%}
+              <a class="zpf__more" href="{{ p.url }}">Full details<span aria-hidden="true">&nbsp;&rarr;</span></a>
+            </div>
+          </article>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+  <style>
+    .zpf{padding-block:var(--zv-section);background:var(--zv-bg)}
+    .zpf--raised{background:var(--zv-bg-sunken);--zv-text-3:var(--zv-moss-strong);--text-3:var(--zv-moss-strong)}
+    .zpf__head{max-width:38rem;margin-bottom:clamp(28px,4vw,48px)}
+    .zpf__head .zv-h2{margin:0}
+    .zpf__grid{display:grid;gap:clamp(32px,4vw,56px)}
+    @media(min-width:760px){.zpf__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .zpf__col{display:block;padding-top:var(--zv-4);border-top:2px solid var(--zv-ink)}
+    .zpf__k{margin:0;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);text-transform:uppercase;color:var(--zv-forest)}
+    .zpf__name{margin:4px 0 var(--zv-4);font-family:var(--zv-serif);font-weight:400;font-size:clamp(1.75rem,1.5rem + 1vw,2.25rem);line-height:1.05}
+    .zpf__name a{color:var(--zv-ink);text-decoration:none}
+    .zpf__facts ul{list-style:none;margin:0;padding:0;display:grid;border-top:1px solid var(--zv-hairline-2)}
+    .zpf__facts li{padding:12px 0;border-bottom:1px solid var(--zv-hairline-2);color:var(--zv-text-2);font-size:var(--zv-t-sm)}
+    .zpf__facts li strong{color:var(--zv-ink);font-weight:600}
+    .zpf__facts p{color:var(--zv-text-2);font-size:var(--zv-t-sm)}
+    /* inline-block, not inline-flex: as flex items the text and the arrow
+       split apart when the label wraps, and the arrow drifts to the edge. */
+    .zpf__more{display:inline-block;padding-block:12px;line-height:1.4;margin-top:var(--zv-1);
+      font-size:var(--zv-t-sm);font-weight:600;color:var(--zv-forest);text-decoration:none}
+    @media (hover:hover) and (pointer:fine){ .zpf__more:hover{text-decoration:underline;text-underline-offset:4px} }
+  </style>
+</section>
+{% schema %}
+{
+  "name": "Product facts",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "What they are" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Small, simple, and exactly what they say." },
+    { "type": "checkbox", "id": "raised", "label": "Raised background", "default": false }
+  ],
+  "blocks": [
+    { "type": "product", "name": "Product", "limit": 4,
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product" },
+        { "type": "richtext", "id": "facts", "label": "Facts",
+          "info": "Physical facts only, as a bulleted list. Leave the maker's own claims on the product page, labelled as theirs." }
+      ] }
+  ],
+  "presets": [{ "name": "Product facts", "blocks": [{ "type": "product" }, { "type": "product" }] }]
+}
+{% endschema %}

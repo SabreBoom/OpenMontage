@@ -1,0 +1,14 @@
+<section class="band"><div class="wrap">
+  <h1>{{ blog.title | escape }}</h1>
+  <div class="grid grid--3" style="margin-top:2rem">
+    {%- for a in blog.articles -%}
+      <a class="card" href="{{ a.url }}">
+        <div class="card__fig">{%- if a.image -%}<img src="{{ a.image | image_url: width: 700 }}" alt="" width="{{ a.image.width | default: 700 }}" height="{{ a.image.height | default: 700 }}" loading="lazy">{%- endif -%}</div>
+        <div class="card__body"><h3 class="card__t">{{ a.title | escape }}</h3><p class="fine">{{ a.published_at | date: '%B %d, %Y' }}</p></div>
+      </a>
+    {%- endfor -%}
+  </div>
+</div></section>
+{% schema %}
+{ "name": "Blog", "settings": [] }
+{% endschema %}

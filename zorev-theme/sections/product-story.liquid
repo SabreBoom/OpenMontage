@@ -1,0 +1,150 @@
+{%- comment -%}
+  ZOREV — product story.
+
+  One product as the hero of its own chapter: a photograph of the real
+  product in a real place, bled to the edge of the screen, beside a short
+  statement, three physical facts and the price ladder. The photograph is
+  the argument; the copy is a caption to it.
+
+  Depth, cheapest first:
+    1  the photograph opens from a slightly inset frame as it arrives
+       ([data-zv-reveal="media"]), and settles from a small scale
+    2  inside its frame it drifts a little slower than the page
+       ([data-zv-scene] / [data-zv-depth], zorev-enhance.js)
+    3  a specimen card with the real cutout overlaps the frame's corner and
+       leans toward a fine pointer ([data-zv-tilt]); it is the product on
+       paper, never pasted into the photograph's light
+  All three are off under prefers-reduced-motion; the layout is identical.
+
+  The ladder reads the product's own offer data (zorev.offer), the same
+  data the product page and the line-up read. The saving itself is
+  Shopify's automatic discount, shown by name in the bag.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign p = s.product
+  assign has_p = false
+  if p != blank and p.title != blank
+    assign has_p = true
+  endif
+  assign offer = p.metafields.zorev.offer.value
+  assign short = p.vendor | upcase
+  assign has_media = false
+  if s.photo != blank or s.video != blank
+    assign has_media = true
+  endif
+  assign sid = 'zps-' | append: section.id
+-%}
+<section class="zps zps--{{ s.tone }} zps--media-{{ s.media_side }}{% if s.tone == 'dark' %} zv-dark{% endif %}" id="{{ s.anchor | default: sid | handleize }}"
+         aria-labelledby="{{ sid }}-h"
+         style="--zps-pos: {{ s.position | default: '50% 50%' }}; --zps-pos-m: {{ s.position_mobile | default: s.position | default: '50% 50%' }};">
+  <div class="zps__grid">
+    {%- if has_media -%}
+      <figure class="zps__media">
+        <div class="zps__frame" data-zv-reveal="media" data-zv-scene data-zv-scene-scroll="-0.07">
+          <div class="zps__plate" data-zv-depth="1">
+            {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 900px) 60vw, 100vw', alt: s.photo_alt %}
+          </div>
+        </div>
+        {%- if s.show_card and has_p -%}
+          <a class="zps__card zps__card--{{ s.card_corner | default: 'bottom-right' }}" href="{{ p.url }}" data-zv-tilt="5" data-zv-reveal>
+            <span class="zps__card-obj" aria-hidden="true">{% render 'product-cutout', product: p, sizes: '140px', alt: '' %}</span>
+            <span class="zps__card-t">
+              <span class="zps__card-n">{{ short | escape }}</span>
+              <span class="zps__card-d">{{ s.card_line | default: p.type | escape }}</span>
+              <span class="zps__card-p">{{ p.price | money_without_trailing_zeros }}</span>
+            </span>
+            <span class="visually-hidden"> &mdash; view {{ p.title | escape }}</span>
+          </a>
+        {%- endif -%}
+      </figure>
+    {%- endif -%}
+
+    <div class="zps__copy" data-zv-reveal>
+      {%- assign eb = s.eyebrow | default: p.type -%}
+      {%- if eb != blank -%}<span class="zv-eyebrow zps__eyebrow">{{ eb | escape }}</span>{%- endif -%}
+      <h2 class="zps__h" id="{{ sid }}-h">{{ s.heading | default: short }}</h2>
+      {%- if s.body != blank -%}<div class="zv-lead zps__body">{{ s.body }}</div>{%- endif -%}
+
+      {%- if section.blocks.size > 0 -%}
+        <dl class="zps__facts">
+          {%- for block in section.blocks -%}
+            <div class="zps__fact" {{ block.shopify_attributes }}>
+              <dt>{{ block.settings.value | escape }}</dt>
+              <dd>{{ block.settings.label | escape }}</dd>
+            </div>
+          {%- endfor -%}
+        </dl>
+      {%- endif -%}
+
+      {%- if has_p -%}
+        {%- if s.show_ladder and offer.breaks.size > 0 -%}
+          <ol class="zps__ladder" aria-label="{{ short | escape }} multi-buy prices">
+            <li>
+              <span class="zps__q">1 {{ offer.unit | default: 'unit' | escape }}</span>
+              <span class="zps__t">{{ p.price | money_without_trailing_zeros }}</span>
+            </li>
+            {%- for t in offer.breaks -%}
+              {%- assign tot = p.price | times: t.qty | minus: t.save -%}
+              <li>
+                <span class="zps__q">{{ t.qty }} {{ offer.units | default: 'units' | escape }}</span>
+                <span class="zps__t">{{ tot | money_without_trailing_zeros }}</span>
+                <span class="zps__s">Save {{ t.save | money_without_trailing_zeros }}</span>
+              </li>
+            {%- endfor -%}
+          </ol>
+          <p class="zps__fine">{% if p.variants.size > 1 %}Applied automatically in your bag. Mix any options; no code needed.{% else %}Applied automatically in your bag. No code needed.{% endif %}</p>
+        {%- endif -%}
+        <div class="zps__act">
+          <a class="zv-btn" href="{{ p.url }}">{{ s.cta_label | default: 'Shop' | escape }}{% if s.cta_label == blank %} {{ short | escape }}{% endif %}</a>
+          {%- if s.link_label != blank -%}
+            <a class="zps__link" href="{{ s.link_url | default: p.url }}">{{ s.link_label | escape }}<span aria-hidden="true"> &rarr;</span></a>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product story",
+  "tag": "section",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Product" },
+    { "type": "select", "id": "tone", "label": "Tone", "default": "light",
+      "options": [ { "value": "light", "label": "Light paper" }, { "value": "dark", "label": "Dark" } ] },
+    { "type": "select", "id": "media_side", "label": "Photograph side", "default": "left",
+      "options": [ { "value": "left", "label": "Left" }, { "value": "right", "label": "Right" } ] },
+    { "type": "text", "id": "anchor", "label": "Anchor", "info": "For links to this chapter, e.g. goda. Letters and dashes." },
+    { "type": "header", "content": "Photograph" },
+    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "The real product in a real place (briefs G1, Y1). 16:9 or wider, at least 2400 px across." },
+    { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones (optional)", "info": "4:5, at least 1600 × 2000 px. Left empty, phones get a crop of the photograph above." },
+    { "type": "video", "id": "video", "label": "Film (optional)", "info": "Silent, 6 to 10 seconds, loops cleanly. Uses the photograph as its poster." },
+    { "type": "text", "id": "photo_alt", "label": "Photograph description", "info": "Used only if the image has no alt text in Content > Files." },
+    { "type": "text", "id": "position", "label": "Crop on wide screens", "default": "50% 50%", "info": "Where the frame centres on the photograph, as x% y%." },
+    { "type": "text", "id": "position_mobile", "label": "Crop on phones", "info": "Same, for the taller phone frame. Empty: the wide-screen crop." },
+    { "type": "checkbox", "id": "show_card", "label": "Show the specimen card", "default": true },
+    { "type": "select", "id": "card_corner", "label": "Specimen card corner", "default": "bottom-right",
+      "info": "Put it where it covers nothing that matters, never over the product in the photograph.",
+      "options": [ { "value": "bottom-left", "label": "Bottom left" }, { "value": "bottom-right", "label": "Bottom right" }, { "value": "top-left", "label": "Top left" }, { "value": "top-right", "label": "Top right" } ] },
+    { "type": "text", "id": "card_line", "label": "Specimen card line", "info": "Empty: the product type." },
+    { "type": "header", "content": "Copy" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "info": "Empty: the product type." },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading" },
+    { "type": "richtext", "id": "body", "label": "Body", "info": "Two or three sentences about what it physically is and how it is used. Leave the maker's claims on the product page, labelled as theirs." },
+    { "type": "checkbox", "id": "show_ladder", "label": "Show the multi-buy ladder", "default": true },
+    { "type": "text", "id": "cta_label", "label": "Button", "info": "Empty: Shop and the maker's name." },
+    { "type": "text", "id": "link_label", "label": "Text link" },
+    { "type": "url", "id": "link_url", "label": "Text link URL", "info": "Empty: the product page." }
+  ],
+  "blocks": [
+    { "type": "fact", "name": "Fact", "limit": 4,
+      "settings": [
+        { "type": "text", "id": "value", "label": "Figure", "info": "Short and physical: 15 ml, 9 g, 4 options." },
+        { "type": "text", "id": "label", "label": "What it means" }
+      ] }
+  ],
+  "presets": [{ "name": "Product story", "blocks": [{ "type": "fact" }, { "type": "fact" }, { "type": "fact" }] }]
+}
+{% endschema %}
