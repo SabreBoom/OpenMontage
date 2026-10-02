@@ -19,7 +19,7 @@ Do not redraw or retype the product labels; place the real cutouts.
 
 - Headings: Newsreader, regular weight (`zorev-theme/assets/newsreader-latin-400.woff2`).
 - Small labels and buttons: Public Sans, 600, uppercase, letter-spaced.
-- Ink `#101310`, warm white `#F7F5F0`, forest `#1F2A22`, sand `#D9CDB8`.
+- Ink `#101310`, warm white `#F4F2EC`, forest `#26372C`, sand `#D7D0C3` (from `zorev-tokens.css`).
 
 ## The three posts (feed 1080x1350, story 1080x1920)
 
