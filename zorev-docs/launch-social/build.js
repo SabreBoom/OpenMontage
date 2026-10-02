@@ -58,12 +58,15 @@ const COPY = '.eyebrow, .h1, .line, .name, .price, .big, .pill, .link';
   const pageHtml = p => {
     const els = p.items.map(i => {
       const text = esc(i.upper ? i.text.toUpperCase() : i.text);
-      const box = `position:absolute;left:${i.x.toFixed(1)}px;top:${i.y.toFixed(1)}px;width:${(i.w + (i.cls === 'h1' ? 0 : 6)).toFixed(1)}px`;
+      // Single lines get 6px of slack so a hair of metric difference in Canva's
+      // copy of the font can't wrap them; centred lines give half of it back.
+      const pad = i.cls === 'h1' || i.cls === 'pill' ? 0 : 6, centred = p.id === 'post-2';
+      const box = `position:absolute;left:${(i.x - (centred ? pad / 2 : 0)).toFixed(1)}px;top:${i.y.toFixed(1)}px;width:${(i.w + pad).toFixed(1)}px`;
       if (i.cls === 'pill') {
         return `    <div style="${box};height:${i.h}px;background:${i.bg};border-radius:${i.h / 2}px;display:flex;align-items:center;justify-content:center">` +
                `<p style="${textCss(i)}">${text}</p></div>`;
       }
-      const align = p.id === 'post-2' ? ';text-align:center' : '';
+      const align = centred ? ';text-align:center' : '';
       return `    <p style="${box};${textCss(i)}${align}">${text}</p>`;
     });
     return `  <section data-document-role="page" data-label="${esc(p.label)}" style="position:relative;width:${p.w}px;height:${p.h}px;overflow:hidden">\n` +
