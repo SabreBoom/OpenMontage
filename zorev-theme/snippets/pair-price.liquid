@@ -12,7 +12,7 @@
 {%- liquid
   assign pa = settings.pair_product_a
   assign pb = settings.pair_product_b
-  if pa != blank and pb != blank and pa.price != blank and pb.price != blank
+  if settings.pair_enabled and cart.currency.iso_code == shop.currency and pa != blank and pb != blank and pa.price != blank and pb.price != blank
     assign pp = pa.price | plus: pb.price | minus: settings.pair_save_cents
     echo pp | money_without_trailing_zeros
   endif

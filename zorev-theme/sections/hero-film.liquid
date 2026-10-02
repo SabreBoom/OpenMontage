@@ -69,9 +69,9 @@
           {%- if s.cta_label != blank -%}
             <a class="zv-btn zhf__cta1" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ s.cta_label | escape }}</a>
           {%- endif -%}
-          {%- if s.cta2_label != blank -%}
+          {%- if s.cta2_label != blank -%}{%- unless pp == blank and s.cta2_label contains '[pair_price]' -%}
             <a class="zv-btn zv-btn--ghost zhf__cta2" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">{{ s.cta2_label | replace: '[pair_price]', pp | escape }}</a>
-          {%- endif -%}
+          {%- endunless -%}{%- endif -%}
         </div>
       {%- endif -%}
       {%- if s.note != blank -%}<p class="zhf__note">{{ s.note | escape }}</p>{%- endif -%}

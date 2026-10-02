@@ -23,9 +23,9 @@
 <aside class="zann" aria-label="Store information">
   <div class="zv-wrap zann__in">
     <ul class="zann__list" role="list">
-      {%- if s.claim_1 != blank -%}<li>{{ s.claim_1 | replace: '[pair_price]', pp | escape }}</li>{%- endif -%}
-      {%- if s.claim_2 != blank -%}<li>{{ s.claim_2 | replace: '[pair_price]', pp | escape }}</li>{%- endif -%}
-      {%- if s.claim_3 != blank -%}<li>{{ s.claim_3 | replace: '[pair_price]', pp | escape }}</li>{%- endif -%}
+      {%- if s.claim_1 != blank -%}{%- unless pp == blank and s.claim_1 contains '[pair_price]' -%}<li>{{ s.claim_1 | replace: '[pair_price]', pp | escape }}</li>{%- endunless -%}{%- endif -%}
+      {%- if s.claim_2 != blank -%}{%- unless pp == blank and s.claim_2 contains '[pair_price]' -%}<li>{{ s.claim_2 | replace: '[pair_price]', pp | escape }}</li>{%- endunless -%}{%- endif -%}
+      {%- if s.claim_3 != blank -%}{%- unless pp == blank and s.claim_3 contains '[pair_price]' -%}<li>{{ s.claim_3 | replace: '[pair_price]', pp | escape }}</li>{%- endunless -%}{%- endif -%}
     </ul>
   </div>
 </aside>

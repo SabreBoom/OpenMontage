@@ -77,11 +77,12 @@
         { detail: { id: v.id, index: v.index, price: v.price, available: v.available } }));
     }
 
-    root.querySelectorAll('[data-variant-id]').forEach(function (el, i) {
+    var start = String((root.querySelector('[name="id"]') || {}).value || data[0].id);
+    root.querySelectorAll('[data-variant-id]').forEach(function (el) {
       el.addEventListener('click', function () {
         select(data.filter(function (v) { return String(v.id) === el.dataset.variantId; })[0], el);
       });
-      if (i === 0) select(data[0], el);
+      if (el.dataset.variantId === start) select(data.filter(function (v) { return String(v.id) === start; })[0], el);
     });
   });
 

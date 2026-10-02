@@ -43,9 +43,12 @@
             </a>
           {%- endif -%}
           {%- if s.cta2_label != blank -%}
+            {%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
+            {%- unless pp == blank and s.cta2_label contains '[pair_price]' -%}
             <a class="zv-btn zv-btn--ghost zstory__cta" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">
-              {%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}{{ s.cta2_label | replace: '[pair_price]', pp | escape }}
+              {{ s.cta2_label | replace: '[pair_price]', pp | escape }}
             </a>
+            {%- endunless -%}
           {%- endif -%}
         </div>
       {%- endif -%}

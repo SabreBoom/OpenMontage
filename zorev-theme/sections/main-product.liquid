@@ -404,6 +404,7 @@
               {% unless v.available %}disabled{% endunless %}>
               {% if v.available %}Add to bag{% else %}Sold out{% endif %}
             </button>
+            <p class="atc__err" role="alert" data-atc-error hidden></p>
           {%- endform -%}
         </div>
       </div>
@@ -806,11 +807,11 @@
     var mixSels = mix ? [].slice.call(mix.querySelectorAll('[data-qmix-sel]')) : [];
     var mixTouched = false;
     var mixForms = ['zpf-main', 'zpf-sticky'].map(function (id) { return document.getElementById(id); }).filter(Boolean);
-    var vPrice = {};
+    var vPrice = {}, vAvail = {};
     try {
       JSON.parse(document.querySelector('[data-variant-json]').textContent)
-        .forEach(function (x) { vPrice[String(x.id)] = x.price; });
-    } catch (e) { vPrice = {}; }
+        .forEach(function (x) { vPrice[String(x.id)] = x.price; vAvail[String(x.id)] = x.available; });
+    } catch (e) { vPrice = {}; vAvail = {}; }
 
     function mixOn(q) { return !!mix && q > 1; }
     function mixSum(q) {
@@ -843,7 +844,7 @@
     /* Registered before the price listener below, so the selects have
        followed the new option by the time the totals repaint. */
     document.addEventListener('variant:change', function (e) {
-      if (mixTouched || !e.detail || !e.detail.id) return;
+      if (!e.detail || !e.detail.id) return;
       mixSels.forEach(function (el) { el.value = String(e.detail.id); });
     });
 
@@ -868,10 +869,12 @@
     function paint() {
       mixPaint();
       var q = currentQty();
+      var ok = mixOn(q) ? mixSels.slice(0, q).every(function (el) { return vAvail[el.value] !== false; }) : available;
       var tot = mixOn(q) ? mixSum(q) - (Number(save[String(q)]) || 0) : totalFor(q);
       document.querySelectorAll('[data-add]').forEach(function (b) {
         if (b.getAttribute('aria-busy') === 'true') return;
-        label(b, available ? (q > 1 ? 'Add ' + q + ' to bag · ' : 'Add to bag · ') + short(tot) : 'Sold out');
+        b.disabled = !ok;
+        label(b, ok ? (q > 1 ? 'Add ' + q + ' to bag · ' : 'Add to bag · ') + short(tot) : 'Sold out');
       });
       document.querySelectorAll('[data-price]').forEach(function (el) { el.textContent = short(price); });
       document.querySelectorAll('[data-qo-mirror]').forEach(function (i) { i.value = q; });

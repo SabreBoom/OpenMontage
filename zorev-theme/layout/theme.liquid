@@ -14,6 +14,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   {%- if settings.favicon != blank -%}
     <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64 }}">
+  {%- else -%}
+    {%- comment -%}
+      Until Theme settings > Brand > Favicon is set: the brand Z, Public Sans
+      on the forest square (asset brief E3), for browser tabs and for the
+      home screen when someone saves the site on a phone.
+    {%- endcomment -%}
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ 'zorev-icon-32.png' | asset_url }}">
+    <link rel="apple-touch-icon" href="{{ 'zorev-icon-180.png' | asset_url }}">
   {%- endif -%}
   {%- comment -%}
     The homepage's title and description come from Online Store >
