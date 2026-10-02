@@ -93,7 +93,7 @@
               </li>
             {%- endfor -%}
           </ol>
-          <p class="zps__fine">Applied automatically in your bag, and you can mix options. No code.</p>
+          <p class="zps__fine">{% if p.variants.size > 1 %}Applied automatically in your bag. Mix any options; no code needed.{% else %}Applied automatically in your bag. No code needed.{% endif %}</p>
         {%- endif -%}
         <div class="zps__act">
           <a class="zv-btn" href="{{ p.url }}">{{ s.cta_label | default: 'Shop' | escape }}{% if s.cta_label == blank %} {{ short | escape }}{% endif %}</a>

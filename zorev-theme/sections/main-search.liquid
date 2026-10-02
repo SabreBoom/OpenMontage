@@ -38,7 +38,7 @@
                   <span class="zv-eyebrow">{{ item.object_type | capitalize }}</span>
                   <h2 class="zresult__t">{{ item.title | escape }}</h2>
                   {%- if item.content != blank -%}
-                    <p class="zv-fine">{{ item.content | strip_html | truncatewords: 24 }}</p>
+                    <p class="zv-fine">{{ item.content | strip_html | truncatewords: 24, '…' }}</p>
                   {%- endif -%}
                 </a>
               {%- endif -%}

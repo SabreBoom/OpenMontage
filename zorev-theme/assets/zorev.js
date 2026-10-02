@@ -197,7 +197,7 @@
         body.innerHTML =
           '<div class="cd__empty">' +
             '<p>Your bag is empty.</p>' +
-            '<a class="btn btn--ghost" href="/collections/all">Browse the collection</a>' +
+            '<a class="btn btn--ghost" href="/collections/all">Shop all</a>' +
           '</div>';
         foot.hidden = true;
         paintSavings(c);
@@ -207,8 +207,12 @@
 
       body.innerHTML = c.items.map(function (i, idx) {
         var line = idx + 1;
-        var variant = (i.variant_title && i.variant_title !== 'Default Title')
-          ? '<p class="cd__var fine">' + esc(i.variant_title) + '</p>' : '';
+        /* The same short option names the product page shows ("Citrus (men's)",
+           not "Citrus 15ml Men"); a bare size the title already gives is left out. */
+        var vt = (i.variant_title && i.variant_title !== 'Default Title') ? String(i.variant_title) : '';
+        vt = vt.replace(/ ?15 ?ml ?/i, ' ').replace(/ Men$/, ' (men\u2019s)').replace(/ Women$/, ' (women\u2019s)').trim();
+        if (/^\d+(\.\d+)? ?(g|ml|oz)$/i.test(vt)) vt = '';
+        var variant = vt ? '<p class="cd__var fine">' + esc(vt) + '</p>' : '';
 
         // original_line_price vs final_line_price is how Shopify reports a
         // line-level discount. Fall back to line_price when final is absent.
@@ -260,7 +264,7 @@
         .then(function (c) { paint(c); return c; })
         .catch(function () {
           if (body) body.innerHTML = '<p class="fine">Your bag could not be loaded. ' +
-            '<a href="/cart">Open the cart page</a>.</p>';
+            '<a href="/cart">Open your bag</a>.</p>';
         });
     }
 

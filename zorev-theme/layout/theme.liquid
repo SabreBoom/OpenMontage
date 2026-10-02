@@ -66,10 +66,13 @@
     if request.page_type == 'blog' and blog.articles_count == 0
       assign noindex = true
     endif
+    if request.page_type == 'cart'
+      assign seo_title = 'Your bag'
+    endif
     assign seo_title_lc = seo_title | downcase
     assign shop_name_lc = shop.name | downcase
   -%}
-  <title>{{ seo_title }}{% if current_page != 1 %} &ndash; {{ current_page }}{% endif %}{% unless seo_title_lc contains shop_name_lc %} &ndash; {{ shop.name }}{% endunless %}</title>
+  <title>{{ seo_title }}{% if current_page != 1 %} &ndash; {{ current_page }}{% endif %}{% unless seo_title_lc contains shop_name_lc %} | {{ shop.name | upcase }}{% endunless %}</title>
   {%- if seo_desc != blank -%}<meta name="description" content="{{ seo_desc | strip_html | escape }}">{%- endif -%}
   {%- if noindex -%}<meta name="robots" content="noindex, follow">{%- endif -%}
 

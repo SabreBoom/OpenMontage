@@ -311,7 +311,7 @@
         {%- if offer.breaks.size > 0 or show_pair -%}
           <li>{% render 'zicon', name: 'check' %}<span><strong>Savings apply in your bag</strong>, no code needed</span></li>
         {%- endif -%}
-        <li>{% render 'zicon', name: 'box' %}<span><strong>Ships the next business day</strong>, tracked</span></li>
+        <li>{% render 'zicon', name: 'box' %}<span><strong>Out within one business day</strong>, tracked</span></li>
         <li>{% render 'zicon', name: 'lock' %}<span><strong>Secure checkout</strong>, encrypted by Shopify</span></li>
         {%- if settings.returns_claim -%}
           <li>{% render 'zicon', name: 'return' %}<span><strong>30-day returns</strong> on unopened, sealed items</span></li>
@@ -991,8 +991,8 @@
         } else if (b > a) {
           pc.setAttribute('data-state', 'blocked');
           stateEl.hidden = false;
-          stateEl.textContent = 'The pair saving applies when your bag has at least as many ' +
-            cfg.a.short + ' as ' + cfg.b.short + '.';
+          stateEl.textContent = 'To get the pair saving, add one ' + cfg.a.short +
+            ' for each ' + cfg.b.short + ' in your bag.';
           if (priceEl) priceEl.hidden = true;
         } else {
           pc.removeAttribute('data-state');

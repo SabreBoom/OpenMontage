@@ -22,7 +22,7 @@
       <span class="zv-eyebrow">
         {{ count }} item{% if count != 1 %}s{% endif %}
       </span>
-      <h1 class="zv-h1">{{ collection.title | escape }}</h1>
+      <h1 class="zv-h1">{% if collection.handle == 'all' %}Shop all{% else %}{{ collection.title | escape }}{% endif %}</h1>
       {%- if collection.description != blank -%}
         <div class="zv-lead zsec__lead zv-rte">{{ collection.description }}</div>
       {%- endif -%}
@@ -49,7 +49,7 @@
       {%- else -%}
         <div class="zempty">
           <p class="zv-body">Nothing in this collection yet.</p>
-          <a class="zv-btn" href="{{ routes.all_products_collection_url }}">See everything</a>
+          <a class="zv-btn" href="{{ routes.all_products_collection_url }}">Shop all</a>
         </div>
       {%- endif -%}
     {%- endpaginate -%}
