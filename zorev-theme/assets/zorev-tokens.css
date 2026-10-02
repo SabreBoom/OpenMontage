@@ -18,6 +18,16 @@
            dark ones. A single ring colour cannot pass on both.
    ========================================================================== */
 
+/* Fallback faces sized to the brand fonts, so text barely reflows when
+   Newsreader and Public Sans arrive (measured on the homepage at 390 px:
+   up to 89 px of shift below the fold without these, 29 px with). */
+@font-face { font-family: "Newsreader Fallback"; src: local("Georgia");
+  size-adjust: 95%; ascent-override: 77%; descent-override: 28%; line-gap-override: 0%; }
+@font-face { font-family: "Newsreader Fallback Noto"; src: local("Noto Serif"), local("NotoSerif");
+  size-adjust: 88%; ascent-override: 83.5%; descent-override: 30%; line-gap-override: 0%; }
+@font-face { font-family: "Public Sans Fallback"; src: local("Arial"), local("ArialMT"), local("Roboto"), local("Segoe UI");
+  size-adjust: 105%; ascent-override: 90.5%; descent-override: 21.4%; line-gap-override: 0%; }
+
 :root {
   /* ---- raw palette -------------------------------------------------- */
   --zv-ink:         #101310;   /* near-black, green cast          */
@@ -49,9 +59,10 @@
   --zv-focus:       var(--zv-forest);
 
   /* ---- type --------------------------------------------------------- */
-  --zv-sans: "Public Sans", ui-sans-serif, system-ui, -apple-system,
-             "Segoe UI", Helvetica, Arial, sans-serif;
-  --zv-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --zv-sans: "Public Sans", "Public Sans Fallback", ui-sans-serif, system-ui,
+             -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --zv-serif: "Newsreader", "Newsreader Fallback", "Newsreader Fallback Noto",
+              Georgia, "Times New Roman", serif;
 
   /* Fluid scale. Body is 17px at every width — the one size that never
      shrinks, because shrinking body copy is how mobile gets unreadable. */
@@ -210,6 +221,9 @@
 h1, h2, h3, h4, p, li, dt, dd, figcaption, blockquote,
 .zv-h1, .zv-h2, .zv-h3 { overflow-wrap: break-word; }
 h1, h2, h3, .zv-h1, .zv-h2, .zv-h3 { hyphens: manual; text-wrap: balance; }
+/* Newsreader ships at one weight; a bolded word in an editor heading stays
+   at that weight instead of being smeared into a fake bold. */
+h1, h2, h3, h4, .zv-h1, .zv-h2, .zv-h3 { font-synthesis-weight: none; }
 p, li, dd, figcaption { text-wrap: pretty; }
 .zv-section { padding-block: var(--zv-section); background: var(--zv-bg); color: var(--zv-text); }
 
@@ -400,8 +414,10 @@ p, li, dd, figcaption { text-wrap: pretty; }
 .zv-stage[data-tone="noir"]::after {
   background: radial-gradient(42% 34% at 34% 24%, rgba(232, 222, 200, .14), rgba(232, 222, 200, 0) 72%);
 }
+/* The light drifts only in the product gallery, where people linger; on the
+   line-up and cards it would redraw every frame for a few pixels nobody sees. */
 @media (prefers-reduced-motion: no-preference) {
-  .zv-stage[data-tone]::after { animation: zv-stage-key 16s var(--zv-ease-loop) infinite alternate; }
+  .gal__slide--stage[data-tone]::after { animation: zv-stage-key 16s var(--zv-ease-loop) infinite alternate; }
 }
 /* off screen (zorev-enhance.js marks it), the light holds still */
 .zv-stage.zv-resting::after { animation-play-state: paused; }
@@ -557,5 +573,6 @@ p, li, dd, figcaption { text-wrap: pretty; }
                          box-shadow, opacity, fill, stroke, backdrop-filter !important;
   }
   .zv-js [data-zv-reveal] { opacity: 1 !important; transform: none !important; }
-  .zv-btn:hover, .zv-btn:active { transform: none; }
+  .zv-btn:hover, .zv-btn:active, .btn:hover, .btn:active, .card:hover, .card:hover .card__fig img,
+  .zcoll:hover .zcoll__fig img, .zmm__fig:hover .zv-media img { transform: none !important; }
 }

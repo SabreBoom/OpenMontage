@@ -47,7 +47,13 @@
       padding: clamp(1.4rem, 3vw, 2.2rem) 0;
       border-bottom: 1px solid var(--zv-line-input);
     }
-    @media (min-width: 760px){
+    /* Four columns only once each one can hold a readable line; between
+       tablet and laptop the promises sit two by two. */
+    @media (min-width: 760px) and (max-width: 1099.98px){
+      .zvs__row{ grid-template-columns: 1fr 1fr; column-gap: clamp(1.6rem, 4vw, 2.6rem); }
+    }
+    @media (min-width: 1100px){
+      .zvs__p{ font-size: var(--zv-t-sm); line-height: 1.55; }
       .zvs__row{
         grid-auto-flow: column; grid-auto-columns: 1fr;
         border-bottom: 1px solid var(--zv-line-input);
@@ -64,7 +70,7 @@
     }
     .zvs__n{
       display: block; color: var(--zv-accent);
-      font-size: var(--zv-t-fine); font-weight: 600;
+      font-size: var(--zv-t-micro); font-weight: 600;
       letter-spacing: var(--zv-tr-caps); text-transform: uppercase;
       margin-bottom: .55rem;
     }

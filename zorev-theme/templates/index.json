@@ -18,7 +18,7 @@
         "rays_x": 62,
         "rays_x_mobile": 34,
         "eyebrow": "Perfume oil · Balm stick",
-        "heading": "Made for wherever you're headed.",
+        "heading": "Made for wherever you’re headed.",
         "body": "<p>A 15 ml perfume oil and a 9 g balm stick. Small enough for a pocket, and shipped free.</p>",
         "note": "",
         "cta_label": "Shop ZOREV",
@@ -33,7 +33,7 @@
       "type": "hero-product",
       "settings": {
         "eyebrow": "Perfume oil · Balm stick",
-        "heading": "Made for wherever you're headed.",
+        "heading": "Made for wherever you’re headed.",
         "body": "<p>A 15 ml perfume oil and a 9 g balm stick. Both small enough for a pocket, both free to ship worldwide.</p>",
         "note": "",
         "cta_label": "Shop ZOREV",
@@ -246,7 +246,7 @@
       "settings": {
         "eyebrow": "Multi-buy",
         "heading": "The more you take, the less each one costs.",
-        "body": "<p>Savings are applied automatically in your bag — no code to hunt for. On GODA, mix any of the four options and the saving still counts.</p>"
+        "body": "<p>Savings are applied automatically in your bag&nbsp;— no code to hunt for. On GODA, mix any of the four options and the saving still counts.</p>"
       },
       "blocks": {
         "q1": {
@@ -324,7 +324,7 @@
           "settings": {
             "num": "Listings",
             "title": "Straight about the makers.",
-            "body": "Each page says who makes the product and where the maker's claims stop and ours begin."
+            "body": "Each page says who makes the product and where the maker’s claims stop and ours begin."
           }
         }
       },

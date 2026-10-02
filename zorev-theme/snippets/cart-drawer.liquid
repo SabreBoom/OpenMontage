@@ -239,6 +239,8 @@ html.cd-locked{overflow:hidden}
    soft grey blob in the empty part of the bag — decoration that read as a
    rendering fault. The scrim already separates the drawer from the page. */
 .cd.is-open .cd__panel{transform:none}
+/* leaving is a response, not an arrival: quicker, and done before zorev.js hides it at 380ms */
+.cd:not(.is-open) .cd__panel,.cd:not(.is-open) .cd__scrim{transition-duration:280ms}
 
 .cd__head{
   display:flex;align-items:center;justify-content:space-between;gap:var(--zv-4);
@@ -387,7 +389,7 @@ html.cd-locked{overflow:hidden}
   text-transform:uppercase;color:var(--zv-moss-strong)}
 .cd__pairpick select{width:100%;min-height:44px;padding:0 var(--zv-3);border-radius:var(--zv-r-pill);
   border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);
-  font:inherit;font-size:var(--zv-t-sm)}
+  font:inherit;font-size:var(--zv-t-body)}
 /* Outline, not filled: Checkout is the one primary action in the bag. */
 .cd__pairbtn{flex:1 0 auto;min-height:44px;padding:0 var(--zv-5);border-radius:var(--zv-r-pill);
   border:1px solid var(--zv-forest);background:transparent;color:var(--zv-forest);cursor:pointer;

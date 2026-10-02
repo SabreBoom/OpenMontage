@@ -653,7 +653,7 @@
     .pairc__picklabel{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
       text-transform:uppercase;color:var(--zv-moss-strong)}
     .pairc__pick select{width:100%;min-height:48px;padding:0 var(--zv-4);border-radius:var(--zv-r-pill);
-      border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-sm)}
+      border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-body)}
     .pairc__btn{flex:1 1 180px;min-height:48px;padding:0 var(--zv-5);border-radius:var(--zv-r-pill);cursor:pointer;
       border:1px solid var(--zv-forest);background:transparent;color:var(--zv-forest);
       font-family:var(--zv-sans);font-size:var(--zv-t-fine);font-weight:600;letter-spacing:var(--zv-tr-wide);text-transform:uppercase;
@@ -723,13 +723,13 @@
     .satc{position:fixed;left:0;right:0;bottom:0;z-index:var(--zv-z-sticky);
       border-top:1px solid var(--zv-line);background:var(--zv-warm);
       padding:.7rem var(--pad) calc(.7rem + env(safe-area-inset-bottom));
-      transform:translateY(110%);transition:transform var(--zv-d-drawer) var(--zv-ease-drawer);
+      transform:translateY(110%);transition:transform 280ms var(--zv-ease),visibility 0s linear 280ms;
       visibility:hidden;box-shadow:0 -8px 24px rgba(16,19,16,.08)}
     @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
       .satc{background:color-mix(in srgb, var(--zv-warm) 92%, transparent);
         backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
     }
-    .satc.is-on{transform:none;visibility:visible}
+    .satc.is-on{transform:none;visibility:visible;transition:transform var(--zv-d-drawer) var(--zv-ease-drawer),visibility 0s}
     @media(min-width:900px){.satc{display:none}}
     /* A fixed bar must never sit on top of the last thing on the page, so
        while it is showing the page gets a matching strip of space. */

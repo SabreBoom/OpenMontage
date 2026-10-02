@@ -257,6 +257,11 @@
   .zhdr__drawer a:not(.zv-btn):last-of-type{ border-bottom: 0; }
   .zhdr__drawer-cta{ margin-top: var(--zv-4); justify-content: center; }
   @media (min-width: 900px){ .zhdr__drawer{ display: none; } }
+  /* the menu drops a few pixels into place, in step with the burger turning */
+  @media (prefers-reduced-motion: no-preference){
+    .zhdr__drawer:not([hidden]){ animation: zhdr-drop var(--zv-d-ui) var(--zv-ease) backwards; }
+  }
+  @keyframes zhdr-drop{ from{ opacity: 0; transform: translateY(-6px); } }
 
   @media (prefers-reduced-motion: reduce){
     .zhdr__bar, .zhdr__bar::before, .zhdr__bars i,

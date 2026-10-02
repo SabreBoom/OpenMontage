@@ -163,11 +163,11 @@
   .zhf__mist--far { animation: zhf-mist-far 48s var(--zv-ease-loop) infinite alternate; }
   .zhf__mist--near { animation: zhf-mist-near 36s var(--zv-ease-loop) infinite alternate; }
   .zhf__cue span::after { animation: zhf-cue 2.6s var(--zv-ease-loop) infinite; }
-  .zv-js .zhf__copy > * { animation: zhf-rise 900ms var(--zv-ease) both; }
+  .zv-js .zhf__copy > * { animation: zhf-rise 900ms var(--zv-ease) backwards; }
   .zv-js .zhf__copy > :nth-child(2) { animation-delay: 80ms; }
   .zv-js .zhf__copy > :nth-child(3) { animation-delay: 160ms; }
   .zv-js .zhf__copy > :nth-child(4) { animation-delay: 240ms; }
-  .zv-js .zhf__card { animation: zhf-rise 1000ms var(--zv-ease) 420ms both; }
+  .zv-js .zhf__card { animation: zhf-rise 1000ms var(--zv-ease) 420ms backwards; }
 }
 @keyframes zhf-breathe { from { transform: scale(1.03); } to { transform: scale(1.10) translate3d(-.8%, -.6%, 0); } }
 @keyframes zhf-rays { from { opacity: .45; } to { opacity: 1; } }
@@ -315,6 +315,7 @@
 /* While a card follows the pointer it tracks quickly; let go, it springs
    back on the button spring. */
 .zhf__card.is-tilting, .zps__card.is-tilting { transition: transform 140ms var(--zv-ease); }
+.zv-js .zps__card.is-in:not(.is-tilting) { transition: opacity var(--zv-d-reveal) var(--zv-ease), transform var(--zv-d-spring) var(--zv-spring); }
 
 /* ---- made to move ------------------------------------------------------ */
 .zmm { padding-block: var(--zv-section); background: var(--zv-bg-sunken); color: var(--zv-text);
@@ -323,8 +324,8 @@
 /* the muted eyebrow grey is 4.5:1 on the page paper but not on this band's
    darker paper (axe: 4.3:1), so the band's eyebrow uses the deeper moss */
 .zmm__head .zv-eyebrow { color: var(--zv-moss-strong); }
-.zmm__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-display);
-  line-height: 1; letter-spacing: -0.024em; }
+.zmm__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h1);
+  line-height: var(--zv-lh-tight); letter-spacing: -0.024em; }
 .zmm__lead > :first-child { margin-top: 0; }
 .zmm__lead > :last-child { margin-bottom: 0; }
 
@@ -428,8 +429,8 @@
 }
 .zpsc__copy { display: grid; gap: var(--zv-3); max-width: 30rem; }
 .zpsc__k { color: var(--zv-sand); }
-.zpsc__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h1);
-  line-height: var(--zv-lh-tight); letter-spacing: var(--zv-tr-tight); color: var(--zv-warm); text-wrap: balance;
+.zpsc__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h2);
+  line-height: var(--zv-lh-tight); letter-spacing: var(--zv-tr-tight); color: var(--zv-warm); text-wrap: balance; max-width: 20ch;
   text-shadow: 0 2px 24px rgba(10,13,10,.4); }
 .zpsc__b { color: #E6E2D8; }
 .zpsc__b > :first-child { margin-top: 0; }
@@ -440,7 +441,11 @@
 @media (prefers-reduced-motion: reduce) { .zpsc__plate { transform: none !important; } }
 
 /* Off screen, ambient loops rest (zorev-enhance.js, "rest"). */
-.zv-resting, .zv-resting * { animation-play-state: paused !important; }
+.zv-resting, .zv-resting *, .zv-resting::before, .zv-resting::after,
+.zv-resting *::before, .zv-resting *::after { animation-play-state: paused !important; }
+/* the scroll-linked hero exit costs nothing at rest, and paused it would hold
+   the copy 48px high for a frame on a jump back to the top */
+.zv-resting .zhf__in { animation-play-state: running !important; }
 
 /* ---- reduced motion: the layout is the same, nothing travels ------------ */
 @media (prefers-reduced-motion: reduce) {

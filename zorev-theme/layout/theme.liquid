@@ -10,8 +10,6 @@
   <meta name="theme-color" content="{{ settings.bg | default: '#101310' }}">
   <link rel="canonical" href="{{ canonical_url }}">
   <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   {%- if settings.favicon != blank -%}
     <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64 }}">
   {%- else -%}
@@ -153,19 +151,19 @@
   {{ content_for_header }}
 
   {%- comment -%}
-    Newsreader for editorial headings, Public Sans for UI and body. Both
-    variable, both legible at 13px on a phone. display=swap so a slow font
-    never blocks first paint — the fallback stacks in zorev-tokens.css are
-    real, not decorative. Only the weights the stylesheets use are asked
-    for: 400/500/600 sans and one 700 for the wordmark.
+    Newsreader for editorial headings, Public Sans for UI and body, both
+    OFL and served from the theme rather than Google: one origin, no extra
+    connections, and trimmed to what the stylesheets use (Newsreader at 400
+    with its optical sizes, Public Sans 400-700): 81 KB against 159 KB.
+    display=swap, so a slow font never blocks first paint; the fallback
+    faces in zorev-tokens.css are sized to match, so the swap barely moves.
   {%- endcomment -%}
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap"
-        media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap">
-  </noscript>
+  <link rel="preload" as="font" type="font/woff2" href="{{ 'newsreader-latin-400.woff2' | asset_url }}" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="{{ 'public-sans-latin.woff2' | asset_url }}" crossorigin>
+  <style>
+    @font-face{font-family:"Newsreader";src:url({{ 'newsreader-latin-400.woff2' | asset_url }}) format("woff2");font-weight:400;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+    @font-face{font-family:"Public Sans";src:url({{ 'public-sans-latin.woff2' | asset_url }}) format("woff2");font-weight:400 700;font-style:normal;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  </style>
 
   {%- comment -%} Tokens first, so zorev.css can still override anything. {%- endcomment -%}
   <link rel="stylesheet" href="{{ 'zorev-tokens.css' | asset_url }}">

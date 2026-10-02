@@ -216,3 +216,25 @@ Mean colour is unchanged and the originals are kept in Content > Files.
 | --- | --- | --- | --- |
 | Made to move, Trail | `IMG_7283.jpg` (768×1376) | `zorev-v12-trail-moss-2x.jpg` | 1536×2752 |
 | Closer | `zorev-hero-forest-basalt.jpg` (2048×1152) | `zorev-v12-closer-forest-1_5x_58e5d243-dc0f-4343-ac84-55e50e73ccd9.jpg` (Shopify added the suffix) | 3072×1728 |
+
+## 3D background: decided against (2026-10-02)
+
+Judged pairwise in both orders (A = a WebGL or CSS 3D background, B = no 3D,
+depth from photographs), on brand fit, speed, reduced motion, product focus
+and upkeep in a plain Shopify theme. B won every criterion both times, so
+the decision holds:
+
+- Brand: the rule is "only the real product". A rendered scene behind a
+  real cut-out reads as synthetic, the same failure the faded landscape had.
+- Speed: three.js is about 150–170 KB gzipped from a third origin, competing
+  with the hero photograph (the page's largest paint) and a second
+  always-on GPU surface on phones, which also lose WebGL contexts.
+- Reduced motion: it would have to stand still anyway.
+
+Depth comes from what is already there: the layered hero (breathe, mist,
+light, pointer and scroll parallax) and, since this round, the product
+stages, a basalt ledge at the forest edge cut from the store's own Pair
+photograph. If more is wanted later, the cheap on-brand steps are a 6–8 s
+silent loop of real light through trees in the hero's film slot (already
+wired, with pause, skipped under reduced motion and Save-Data), or one
+foreground foliage layer at `data-zv-depth="1"`.
