@@ -63,7 +63,7 @@
               <a class="zsc__cover" href="{{ p.url }}" tabindex="-1" aria-hidden="true"></a>
             </div>
           {%- else -%}
-          <a class="zsc__stage{% if has_cut %} zv-stage{% else %} zsc__stage--plate{% endif %}" href="{{ p.url }}" tabindex="-1" aria-hidden="true">
+          <a class="zsc__stage{% if has_cut %} zv-stage{% else %} zsc__stage--plate{% endif %}"{% if has_cut %} data-tone="{{ p.metafields.zorev.stage_tone.value | default: 'sand' | escape }}"{% endif %} href="{{ p.url }}" tabindex="-1" aria-hidden="true">
             <span class="zsc__obj">
               {% render 'product-cutout', product: p, sizes: '(min-width: 760px) 34vw, 70vw', alt: '' %}
             </span>
@@ -135,7 +135,10 @@
     .zsc__cover{position:absolute;inset:0;z-index:2}
     .zsc__stage--scene img{transition:transform 900ms var(--zv-ease)}
     @media (hover:hover) and (pointer:fine){ .zsc__item:hover .zsc__stage--scene img{transform:scale(1.02)} }
-    .zsc__obj{position:absolute;inset:0;display:grid;place-items:end center;padding:8% 12% 11%;z-index:1;
+    /* One fixed-size cell: without it the picture's height:100% has nothing
+       definite to resolve against, so it sized itself by width and ran off
+       the bottom of the square (36px at 1440, 16px on a phone). */
+    .zsc__obj{position:absolute;inset:0;display:grid;grid-template:minmax(0,1fr) / minmax(0,1fr);place-items:end center;padding:8% 12% 11%;z-index:1;
       transition:transform var(--zv-d-reveal) var(--zv-ease)}
     .zsc__obj .zv-cut{width:auto;max-width:100%;height:100%;max-height:100%;object-fit:contain}
     .zsc__stage--plate .zsc__obj{padding:clamp(16px,3vw,36px);place-items:center}
@@ -147,7 +150,11 @@
       .zsc__item:hover .zsc__shadow{transform:translateX(-50%) scale(1.06);opacity:.75}
     }
 
-    .zsc__body{display:grid;gap:var(--zv-2)}
+    /* The price and buttons sit at the foot of each column, so two products
+       with descriptions of different length still line their buttons up. */
+    .zsc__item{grid-template-rows:auto 1fr}
+    .zsc__body{display:flex;flex-direction:column;align-items:stretch;gap:var(--zv-2)}
+    .zsc__buy{margin-top:auto}
     .zsc__k{margin:0;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
       text-transform:uppercase;color:var(--zv-forest)}
     .zsc__name{margin:0;font-family:var(--zv-serif);font-weight:400;font-size:clamp(2rem,1.7rem + 1.2vw,2.75rem);
@@ -162,7 +169,7 @@
     .zsc__facts li:last-child{border-bottom:1px solid var(--zv-line)}
     .zsc__facts strong{color:var(--zv-ink);font-weight:600}
     .zsc__facts p{margin:0;font-size:var(--zv-t-sm);color:var(--zv-text-2)}
-    .zsc__buy{display:grid;gap:var(--zv-4);margin-top:var(--zv-2)}
+    .zsc__buy{display:grid;gap:var(--zv-4);padding-top:var(--zv-2)}
     .zsc__price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:0;max-width:none;
       font-variant-numeric:tabular-nums}
     .zsc__from{font-size:var(--zv-t-h4);font-weight:600;color:var(--zv-ink);letter-spacing:-0.01em}

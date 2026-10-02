@@ -76,7 +76,7 @@
 
 <article class="zcard{% unless p.available %} zcard--out{% endunless %}" data-zv-reveal>
   <a class="zcard__link" href="{{ p.url }}" aria-label="{{ p.title | escape }}">
-    <div class="zcard__fig{% if card_cut %} zcard__fig--stage zv-stage{% endif %}">
+    <div class="zcard__fig{% if card_cut %} zcard__fig--stage zv-stage{% endif %}"{% if card_cut %} data-tone="{{ p.metafields.zorev.stage_tone.value | default: 'sand' | escape }}"{% endif %}>
       {%- if card_cut -%}
         <span class="zcard__obj">
           {% render 'product-cutout', product: p, sizes: sizes, alt: p.title, eager: eager %}

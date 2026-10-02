@@ -97,7 +97,7 @@
                 endcapture
               endif
             -%}
-            <div class="gal__slide gal__slide--stage zv-stage" data-thumb="{{ c | image_url: width: 160 }}" data-thumb-stage>
+            <div class="gal__slide gal__slide--stage zv-stage" data-tone="{{ product.metafields.zorev.stage_tone.value | default: 'sand' | escape }}" data-thumb="{{ c | image_url: width: 160 }}" data-thumb-stage>
               <div class="gal__obj" data-zv-tilt="4">
                 {% render 'product-cutout', product: product, index: forloop.index0, sizes: '(min-width: 900px) 44vw, 86vw', alt: cut_alt, eager: forloop.first, vt_static: forloop.first %}
               </div>

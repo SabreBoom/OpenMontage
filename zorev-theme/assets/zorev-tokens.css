@@ -315,6 +315,68 @@ p, li, dd, figcaption { text-wrap: pretty; }
   transform: translateX(-50%); background: var(--zv-stage-shadow); filter: blur(6px);
   pointer-events: none; z-index: -1; }
 
+/* ---- studio stage: a lit set in the product's own colour ----------------
+   A product with a "Product stage colour" (zorev.stage_tone) stands on a
+   small studio set instead of the faded landscape: a wall that darkens
+   toward a tabletop edge, a tabletop that catches the light at that edge
+   and falls off toward the viewer, a key light from the upper left, a
+   warm or cool glow behind the object, a vignette and a fine grain, so
+   it reads as photographed rather than pasted. The colour is chosen to
+   separate the packaging from the set: amber behind GODA's black box and
+   amber glass, sage behind HOYGI's plum (its complementary colour).
+   The product pixels are never lit, tinted or moved by any of this; the
+   key light drifts a few percent over 16 s, and is still for reduced
+   motion (the global rule below). */
+.zv-stage[data-tone] {
+  --tone-wall: linear-gradient(180deg, #F4EFE6 0%, #E9E0D1 48%, #DACDB8 70.6%, #EDE4D5 71%, #E1D5C2 86%, #D0C1AA 100%);
+  --tone-glow: rgba(255, 246, 228, .5);
+  --tone-edge: rgba(60, 46, 28, .16);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(58, 42, 22, .42), rgba(58, 42, 22, .14) 46%, rgba(58, 42, 22, 0) 72%);
+}
+.zv-stage[data-tone="amber"] {
+  --tone-wall: linear-gradient(180deg, #F6EAD6 0%, #ECD5B1 46%, #DDB98A 70.6%, #EED6AF 71%, #E3C398 86%, #D2A979 100%);
+  --tone-glow: rgba(226, 150, 66, .26);
+  --tone-edge: rgba(92, 56, 20, .2);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(86, 50, 16, .5), rgba(86, 50, 16, .18) 46%, rgba(86, 50, 16, 0) 72%);
+}
+.zv-stage[data-tone="sage"] {
+  --tone-wall: linear-gradient(180deg, #EBEFE6 0%, #D7E0CF 46%, #BFCDB4 70.6%, #DAE2D2 71%, #C9D5BF 86%, #AFC0A3 100%);
+  --tone-glow: rgba(255, 255, 250, .42);
+  --tone-edge: rgba(30, 48, 28, .2);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(28, 44, 26, .46), rgba(28, 44, 26, .16) 46%, rgba(28, 44, 26, 0) 72%);
+}
+.zv-stage[data-tone="stone"] {
+  --tone-wall: linear-gradient(180deg, #EFEFEC 0%, #E0E0DC 46%, #C9C9C4 70.6%, #E3E3DF 71%, #D3D3CE 86%, #BBBBB5 100%);
+  --tone-glow: rgba(255, 255, 255, .45);
+  --tone-edge: rgba(20, 22, 20, .18);
+}
+.zv-stage[data-tone="noir"] {
+  --tone-wall: linear-gradient(180deg, #2E322E 0%, #232723 46%, #191C19 70.6%, #2C302C 71%, #202320 86%, #141614 100%);
+  --tone-glow: rgba(214, 196, 160, .16);
+  --tone-edge: rgba(0, 0, 0, .4);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(0, 0, 0, .7), rgba(0, 0, 0, .3) 46%, rgba(0, 0, 0, 0) 72%);
+}
+.zv-stage[data-tone]::before {
+  -webkit-mask-image: none; mask-image: none;
+  background:
+    /* fine grain, so the gradients do not read as flat vector */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(130% 95% at 50% 38%, rgba(0, 0, 0, 0) 58%, var(--tone-edge) 100%),
+    radial-gradient(40% 32% at 52% 54%, var(--tone-glow), rgba(255, 255, 255, 0) 72%),
+    var(--tone-wall);
+}
+.zv-stage[data-tone]::after {
+  content: ""; position: absolute; inset: -12%; z-index: -2; pointer-events: none;
+  background: radial-gradient(42% 34% at 34% 24%, rgba(255, 252, 244, .62), rgba(255, 252, 244, 0) 72%);
+}
+.zv-stage[data-tone="noir"]::after {
+  background: radial-gradient(42% 34% at 34% 24%, rgba(232, 222, 200, .14), rgba(232, 222, 200, 0) 72%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .zv-stage[data-tone]::after { animation: zv-stage-key 16s var(--zv-ease-loop) infinite alternate; }
+}
+@keyframes zv-stage-key { from { transform: translate3d(-3%, -2%, 0); } to { transform: translate3d(4%, 2%, 0); } }
+
 /* ---- the two big stages are outdoors -------------------------------------
    The hero and the Pair scene (.zv-landed) get two slow signs of a real
    place. Both sit behind the products and neither touches them: the
