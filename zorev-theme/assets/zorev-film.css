@@ -97,12 +97,14 @@
     padding-top: clamp(56px, 8vw, 104px); padding-bottom: clamp(40px, 6vw, 72px);
   }
 }
-.zhf__copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--zv-4); max-width: 38rem; }
+.zhf__copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--zv-4); max-width: 44rem; }
 .zhf__eyebrow { color: var(--zv-sand); }
 .zhf__h1 {
   margin: 0; font-family: var(--zv-serif); font-weight: 400;
-  font-size: var(--zv-t-display); line-height: 1.01; letter-spacing: -0.024em;
-  color: var(--zv-warm); text-wrap: balance; max-width: 13ch;
+  /* Two lines, not three: a little smaller and a little wider than the
+     display size, so "Made for wherever / you're headed." breaks once. */
+  font-size: clamp(2.5rem, 1.55rem + 3.2vw, 4rem); line-height: 1.02; letter-spacing: -0.022em;
+  color: var(--zv-warm); text-wrap: balance; max-width: 17ch;
   text-shadow: 0 2px 30px rgba(10,13,10,.35);
 }
 .zhf__body { color: #E6E2D8; max-width: 34ch; }
@@ -225,8 +227,8 @@
 }
 .zps__eyebrow { color: var(--zv-moss-strong); }
 .zps--dark .zps__eyebrow { color: var(--zv-sand); }
-.zps__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h1);
-  line-height: var(--zv-lh-tight); letter-spacing: var(--zv-tr-tight); text-wrap: balance; max-width: 16ch; }
+.zps__h { margin: 0; font-family: var(--zv-serif); font-weight: 400; font-size: var(--zv-t-h2);
+  line-height: var(--zv-lh-tight); letter-spacing: var(--zv-tr-tight); text-wrap: balance; max-width: 20ch; }
 .zps__body { max-width: 40ch; }
 .zps__body > :first-child { margin-top: 0; }
 .zps__body > :last-child { margin-bottom: 0; }

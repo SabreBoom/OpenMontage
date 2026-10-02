@@ -46,7 +46,7 @@
     "products": {
       "type": "product-showcase",
       "settings": {
-        "eyebrow": "The line",
+        "eyebrow": "",
         "heading": "Two essentials.",
         "body": "<p>One goes on your pulse points, one goes on your skin. Both fit a jacket pocket, and the oil is well inside carry-on liquid limits.</p>",
         "raised": false
@@ -179,7 +179,7 @@
     "move": {
       "type": "made-to-move",
       "settings": {
-        "eyebrow": "Where it goes",
+        "eyebrow": "",
         "heading": "Made to move.",
         "body": "<p>Fifteen millilitres and nine grams. Small enough to come along on whatever the day turns into.</p>",
         "anchor": "made-to-move"
@@ -279,7 +279,7 @@
     "media": {
       "type": "real-media",
       "settings": {
-        "eyebrow": "In the wild",
+        "eyebrow": "",
         "heading": "Out there with real people.",
         "body": "",
         "anchor": "real",
@@ -291,7 +291,7 @@
     "why": {
       "type": "value-strip",
       "settings": {
-        "eyebrow": "Why Zorev",
+        "eyebrow": "",
         "heading": "Four things we can actually promise."
       },
       "blocks": {
@@ -403,7 +403,7 @@
       "settings": {
         "image": "shopify://shop_images/zorev-v12-closer-forest-1_5x_58e5d243-dc0f-4343-ac84-55e50e73ccd9.jpg",
         "image_alt": "Misty forest floor with wet basalt rock and morning light",
-        "eyebrow": "Zorev",
+        "eyebrow": "",
         "heading": "Two essentials. One simple order.",
         "body": "<p>Free shipping worldwide, savings applied in your bag, and a person on the other end of the email.</p>",
         "cta_label": "Shop Zorev",
