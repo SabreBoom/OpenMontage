@@ -363,8 +363,36 @@ p, li, dd, figcaption { text-wrap: pretty; }
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
     radial-gradient(130% 95% at 50% 38%, rgba(0, 0, 0, 0) 58%, var(--tone-edge) 100%),
     radial-gradient(40% 32% at 52% 54%, var(--tone-glow), rgba(255, 255, 255, 0) 72%),
+    var(--tone-photo, none) center bottom / cover no-repeat,
     var(--tone-wall);
 }
+/* Amber and sage are places, not paper: a wet basalt ledge at the edge of
+   a misty forest (the Pair photograph with the products removed), shot
+   with the forest out of focus so the product stands sharp in front of
+   it. Amber is the golden side for GODA's black box and amber glass; sage
+   the green side for HOYGI's plum. The relative URLs resolve beside this
+   stylesheet in the theme's assets; 800 px for 1x screens, 1600 px for 2x.
+   The drawn wall stays underneath as the fallback while a photo loads. */
+.zv-stage[data-tone="amber"] {
+  --tone-photo: url("zorev-stage-amber-800.jpg");
+  --tone-glow: rgba(255, 214, 150, .16);
+  --tone-edge: rgba(20, 14, 6, .28);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(6, 8, 6, .66), rgba(6, 8, 6, .24) 46%, rgba(6, 8, 6, 0) 72%);
+}
+.zv-stage[data-tone="sage"] {
+  --tone-photo: url("zorev-stage-sage-800.jpg");
+  --tone-glow: rgba(235, 245, 228, .14);
+  --tone-edge: rgba(8, 16, 8, .3);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(6, 8, 6, .66), rgba(6, 8, 6, .24) 46%, rgba(6, 8, 6, 0) 72%);
+}
+/* sharp screens get the 1600 px plate (a resolution query rather than
+   image-set() in a custom property, which older Safari would reject and so
+   drop the whole backdrop with it) */
+@media (min-resolution: 1.5dppx), (-webkit-min-device-pixel-ratio: 1.5) {
+  .zv-stage[data-tone="amber"] { --tone-photo: url("zorev-stage-amber.jpg"); }
+  .zv-stage[data-tone="sage"] { --tone-photo: url("zorev-stage-sage.jpg"); }
+}
+.zv-stage[data-tone="amber"]::after, .zv-stage[data-tone="sage"]::after { opacity: .45; }
 .zv-stage[data-tone]::after {
   content: ""; position: absolute; inset: -12%; z-index: -2; pointer-events: none;
   background: radial-gradient(42% 34% at 34% 24%, rgba(255, 252, 244, .62), rgba(255, 252, 244, 0) 72%);
