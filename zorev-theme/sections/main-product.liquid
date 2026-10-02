@@ -600,7 +600,7 @@
     /* ---- mix and match: one select per unit, under the quantity rows ---- */
     .qmix{display:grid;gap:var(--zv-3);margin-top:var(--zv-3);padding:var(--zv-4);border-radius:var(--zv-r-md);
       background:var(--zv-bg-raised);box-shadow:inset 0 0 0 1px var(--zv-hairline-2)}
-    .qmix.is-in{animation:qmix-in var(--zv-d-ui) var(--zv-ease) both}
+    .qmix.is-in,.qmix__row.is-in{animation:qmix-in var(--zv-d-ui) var(--zv-ease) both}
     @keyframes qmix-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
     .qmix__h{margin:0}
     .qmix__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--zv-2)}
@@ -615,7 +615,7 @@
     @media (hover:hover) and (pointer:fine){ .qmix__sel:hover{box-shadow:inset 0 0 0 1px var(--zv-forest)} }
     .qmix__sel:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
     .qmix__note{margin:0;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
-    @media(prefers-reduced-motion:reduce){ .qmix.is-in{animation:none} }
+    @media(prefers-reduced-motion:reduce){ .qmix.is-in,.qmix__row.is-in{animation:none} }
     .pdp__atc{min-height:54px;font-size:var(--zv-t-sm)}
     /* the label is re-set when the total changes; it rises into place */
     .atc__lbl,.satc__p [data-satc-sum]{display:inline-block}
@@ -824,7 +824,13 @@
       var q = currentQty(), on = mixOn(q), was = !mix.hidden;
       mix.hidden = !on;
       if (on && !was) { mix.classList.remove('is-in'); void mix.offsetWidth; mix.classList.add('is-in'); }
-      mixSels.forEach(function (el, i) { el.closest('[data-qmix-row]').hidden = i >= q; });
+      /* A row revealed while the panel is already open (2 -> 3) arrives the
+         way the panel did, instead of popping in. */
+      mixSels.forEach(function (el, i) {
+        var row = el.closest('[data-qmix-row]'), show = i < q;
+        if (show && row.hidden && was) { row.classList.remove('is-in'); void row.offsetWidth; row.classList.add('is-in'); }
+        row.hidden = !show;
+      });
       var items = null;
       if (on) {
         var by = {}, order = [];

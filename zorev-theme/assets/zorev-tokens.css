@@ -375,6 +375,8 @@ p, li, dd, figcaption { text-wrap: pretty; }
 @media (prefers-reduced-motion: no-preference) {
   .zv-stage[data-tone]::after { animation: zv-stage-key 16s var(--zv-ease-loop) infinite alternate; }
 }
+/* off screen (zorev-enhance.js marks it), the light holds still */
+.zv-stage.zv-resting::after { animation-play-state: paused; }
 @keyframes zv-stage-key { from { transform: translate3d(-3%, -2%, 0); } to { transform: translate3d(4%, 2%, 0); } }
 
 /* ---- the two big stages are outdoors -------------------------------------

@@ -264,7 +264,9 @@
      loops are paused until it comes back: the page scrolls without paying
      for a hero nobody is looking at. */
   (function rest() {
-    var els = [].slice.call(document.querySelectorAll('[data-zv-rest]'));
+    /* Studio sets too: their key light drifts, and a gallery slide or card
+       out of view has nothing to show. */
+    var els = [].slice.call(document.querySelectorAll('[data-zv-rest], .zv-stage[data-tone]'));
     if (!els.length || !('IntersectionObserver' in window)) { return; }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { e.target.classList.toggle('zv-resting', !e.isIntersecting); });
