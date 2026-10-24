@@ -9,7 +9,7 @@
  */
 {
   "current": {
-    "bg": "#101310",
+    "bg": "#0F1211",
     "accent": "#26372C",
     "pair_enabled": true,
     "pair_product_a": "goda-pheromone-perfume-oil",
@@ -30,6 +30,6 @@
         }
       }
     },
-    "social_image": "shopify://shop_images/zorev-v12-pair-basalt-dawn.jpg"
+    "social_image": "shopify://shop_images/GODA_Pheromone_Perfume_in_Blue_Smoke.png"
   }
 }

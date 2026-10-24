@@ -26,7 +26,7 @@
           "type": "accordion",
           "settings": {
             "title": "FAQ",
-            "content": "<p><strong>Do the multi-buy and pair savings need a code?</strong><br>No. They're applied automatically in your bag, and you'll see each one listed before checkout.</p><p><strong>Can I mix GODA options on a multi-buy?</strong><br>Yes. Choose 2 or 3 bottles and pick an option for each; the saving counts every GODA bottle in your bag, whichever options you choose.</p><p><strong>Who makes these?</strong><br>GODA makes the perfume oil and Hoygi makes the balm stick, both in China. We choose them, write the listings and answer for them.</p><p><strong>Is checkout secure?</strong><br>Yes. Checkout runs on Shopify's encrypted checkout, and we never see or store your card details.</p><p>More answers on the <a href=\"/pages/faq\">FAQ page</a>.</p>"
+            "content": "<p><strong>Do the multi-buy and pair savings need a code?</strong><br>No. They're applied automatically in your bag, and you'll see each one listed before checkout.</p><p><strong>Can I mix options on a multi-buy?</strong><br>Yes. The saving counts every unit of that product in your bag, whichever options you choose.</p><p><strong>Who makes these?</strong><br>GODA makes the perfume oil and Hoygi makes the balm stick, both in China. We choose them, write the listings and answer for them.</p><p><strong>Is checkout secure?</strong><br>Yes. Checkout runs on Shopify's encrypted checkout, and we never see or store your card details.</p><p>More answers on the <a href=\"/pages/faq\">FAQ page</a>.</p>"
           }
         },
         "scene_goda": {
@@ -36,7 +36,8 @@
             "image": "shopify://shop_images/zorev-v12-goda-wrist-overlook.jpg",
             "image_alt": "A drop of GODA perfume oil falling from the dropper onto a wrist, the open bottle on a granite ledge above a forested valley",
             "position": "73% 50%"
-          }
+          },
+          "disabled": true
         },
         "scene_hoygi": {
           "type": "scene",
@@ -45,7 +46,8 @@
             "image": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
             "image_alt": "A Hoygi balm stick standing on a cafe table by a window, next to an espresso cup, sunglasses and a folded map",
             "position": "90% 50%"
-          }
+          },
+          "disabled": true
         }
       },
       "block_order": [
@@ -75,7 +77,7 @@
             "position": "62% 50%",
             "position_mobile": "45% 50%",
             "eyebrow": "In use",
-            "heading": "One or two drops. That’s the routine.",
+            "heading": "One or two drops. That's the routine.",
             "body": "<p>At the base of the throat and the inside of each wrist. Oil carries further than it seems on first contact, so start with less than you think, and warm it in with a fingertip.</p>"
           }
         },
@@ -96,7 +98,8 @@
       "block_order": [
         "goda",
         "hoygi"
-      ]
+      ],
+      "disabled": true
     }
   },
   "order": [

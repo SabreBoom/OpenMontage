@@ -37,32 +37,27 @@
       return;
     }
 
-    /* The stagger counts only what arrives together, so a section scrolled
-       into view starts at once instead of inheriting a delay from its place
-       in the page; capped, because a long cascade makes a grid feel slow. */
     var io = new IntersectionObserver(function (entries) {
-      var n = 0;
-      entries.forEach(function (e) { if (e.isIntersecting) { show(e.target, n++); } });
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) { return; }
+        e.target.classList.add('is-in');
+        io.unobserve(e.target);   /* reveal is one-way; stop paying for it */
+      });
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.01 });
 
-    function show(el, n) {
-      if (el.classList.contains('is-in')) { return; }
-      io.unobserve(el);   /* reveal is one-way; stop paying for it */
-      var d = Math.min(n, 4) * 70;
-      if (d) { el.style.transitionDelay = d + 'ms'; }
-      el.classList.add('is-in');
-      /* once it has run, drop the delay so a later hover or tilt starts at once */
-      if (d) { setTimeout(function () { el.style.transitionDelay = ''; }, d + 1500); }
-    }
-    items.forEach(function (el) { io.observe(el); });
+    items.forEach(function (el, idx) {
+      /* a small stagger, capped — a long cascade makes a grid feel slow */
+      var step = Math.min(idx, 5) * 55;
+      el.style.transitionDelay = step + 'ms';
+      io.observe(el);
+    });
 
     /* Anything already past the fold on load (deep link, restored scroll)
        should not sit hidden waiting for a scroll that never comes. */
     requestAnimationFrame(function () {
-      var n = 0;
       items.forEach(function (el) {
         var r = el.getBoundingClientRect();
-        if (r.top < window.innerHeight && r.bottom > 0) { show(el, n++); }
+        if (r.top < window.innerHeight && r.bottom > 0) { el.classList.add('is-in'); }
       });
     });
   })();
@@ -269,9 +264,7 @@
      loops are paused until it comes back: the page scrolls without paying
      for a hero nobody is looking at. */
   (function rest() {
-    /* Studio sets too: their key light drifts, and a gallery slide or card
-       out of view has nothing to show. */
-    var els = [].slice.call(document.querySelectorAll('[data-zv-rest], .zv-stage[data-tone]'));
+    var els = [].slice.call(document.querySelectorAll('[data-zv-rest]'));
     if (!els.length || !('IntersectionObserver' in window)) { return; }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { e.target.classList.toggle('zv-resting', !e.isIntersecting); });

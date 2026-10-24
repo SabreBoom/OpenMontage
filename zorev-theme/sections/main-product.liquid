@@ -18,11 +18,16 @@
 {%- endcomment -%}
 {%- liquid
   assign shots = product.media | where: 'media_type', 'image'
-  assign cuts = product.metafields.zorev.cutouts.value
+  comment
+    V14: the gallery leads with the product's own photographs (Products >
+    Media in Shopify, featured image first). The generated cutouts on the
+    drawn stage are retired; the zorev.cutouts metafield stays on the
+    product but this section no longer reads it.
+  endcomment
+  assign cuts = blank
   assign has_cuts = false
-  if cuts.size > 0
-    assign has_cuts = true
-  endif
+  assign media_ids = product.media | map: 'id' | join: ','
+  assign media_ids = ',' | append: media_ids | append: ','
   assign gallery = product.metafields.zorev.gallery.value
   assign has_gallery = false
   if gallery.size > 0
@@ -60,30 +65,42 @@
       it can actually stick while the longer information column scrolls.
     {%- endcomment -%}
     {%- comment -%}
-      Slides, in order:
-        1  the clean cutouts (product.metafields.zorev.cutouts), one per
-           option, each on the same lit stage as the homepage. The first is
-           the LCP. On a fine-pointer device the stage leans a few degrees
-           toward the cursor (data-zv-tilt, zorev-enhance.js) — the one
-           place the site lets you "pick the product up". Off on touch and
-           under reduced motion; the photograph is the same either way.
-        2  the curated gallery (product.metafields.zorev.gallery): real
-           photographs and short silent films of this product, in the
-           order they are listed on the product (visual asset brief, G-
-           series: detail, scale, texture, in use). Photographs fill the
-           square; films play only while their slide is on screen, with a
-           pause button, and never under reduced motion. Empty, nothing is
-           added: no placeholder frames.
-        3  the maker's own listing images, only if the section setting
-           asks for them. They carry the maker's marketing claims, which
-           the store labels as theirs rather than repeats, so they are off
-           by default.
-      A product with no cutouts and no gallery shows its images exactly as
-      before.
+      Slides, in order (V14):
+        1  the product's own photographs (Products > the product > Media in
+           Shopify), in the order they are listed there. The first is the
+           LCP and carries the page-to-page name. Choosing an option
+           scrolls to the photograph assigned to it (the variant's image).
+        2  in-use photographs from the "Scene" blocks, if any are enabled.
+        3  the curated gallery (product.metafields.zorev.gallery): real
+           photographs and short silent films of this product. Anything
+           already shown from the product's own media is skipped, so no
+           photograph appears twice. Films play only while their slide is
+           on screen, with a pause button, and never under reduced motion.
+      The generated cutouts on the drawn stage (zorev.cutouts) are retired;
+      the has_cuts branch below is inert and kept only so it can be
+      restored.
     {%- endcomment -%}
     <div class="pdp__media gal" data-gal>
       <div class="gal__track" data-gal-track tabindex="0" role="group"
            aria-label="{{ product.title | strip_html | escape }} images">
+        {%- comment -%}
+          The product's own photographs first, in the order they are listed
+          on the product in Shopify; the first is the LCP and carries the
+          page-to-page name. Each slide carries its media id, so choosing an
+          option scrolls to the photograph assigned to that option
+          (Products > the product > the variant's image).
+        {%- endcomment -%}
+        {%- for m in shots limit: 10 -%}
+          <div class="gal__slide gal__slide--shot" data-thumb="{{ m | image_url: width: 160 }}" data-media-id="{{ m.id }}">
+            <img src="{{ m | image_url: width: 1400 }}"
+                 srcset="{{ m | image_url: width: 700 }} 700w, {{ m | image_url: width: 1000 }} 1000w, {{ m | image_url: width: 1400 }} 1400w"
+                 sizes="(min-width: 900px) 52vw, 100vw"
+                 alt="{{ m.alt | default: product.title | strip_html | escape }}"
+                 width="{{ m.width | default: 1400 }}" height="{{ m.height | default: 1400 }}"
+                 {% if forloop.first %}fetchpriority="high" data-vt-static data-vt-product="{{ product.handle | escape }}"{% else %}loading="lazy"{% endif %}
+                 decoding="async">
+          </div>
+        {%- endfor -%}
         {%- if has_cuts -%}
           {%- for c in cuts -%}
             {%- liquid
@@ -97,7 +114,7 @@
                 endcapture
               endif
             -%}
-            <div class="gal__slide gal__slide--stage zv-stage" data-tone="{{ product.metafields.zorev.stage_tone.value | default: 'sand' | escape }}" data-thumb="{{ c | image_url: width: 160 }}" data-thumb-stage>
+            <div class="gal__slide gal__slide--stage zv-stage" data-thumb="{{ c | image_url: width: 160 }}" data-thumb-stage>
               <div class="gal__obj" data-zv-tilt="4">
                 {% render 'product-cutout', product: product, index: forloop.index0, sizes: '(min-width: 900px) 44vw, 86vw', alt: cut_alt, eager: forloop.first, vt_static: forloop.first %}
               </div>
@@ -107,8 +124,8 @@
         {%- endif -%}
         {%- comment -%}
           In-use photographs from the "Scene" blocks: the real product in a
-          real place, after the cutouts (so a variant still scrolls to its
-          own cutout by index) and before the curated gallery. A block set
+          real place, after the product's own photographs and before the
+          curated gallery. A block set
           to a product shows on that product's page only. Kept in the theme,
           not in product metafields, so a draft theme can carry them without
           touching what the published theme shows.
@@ -124,10 +141,13 @@
         {%- endfor -%}
         {%- if has_gallery -%}
           {%- for f in gallery -%}
+            {%- comment -%} Skip anything already shown from the product's own media. {%- endcomment -%}
+            {%- capture fkey -%},{{ f.id }},{%- endcapture -%}
+            {%- if media_ids contains fkey -%}{%- continue -%}{%- endif -%}
             {%- liquid
               assign g_alt = f.alt | default: product.title
               assign g_eager = false
-              if has_cuts == false and forloop.first
+              if shots.size == 0 and forloop.first
                 assign g_eager = true
               endif
             -%}
@@ -140,32 +160,6 @@
                 {% render 'zv-media', image: f, sizes: '(min-width: 900px) 44vw, 92vw', alt: g_alt, eager: g_eager %}
               </div>
             {%- endif -%}
-          {%- endfor -%}
-        {%- endif -%}
-        {%- liquid
-          comment
-            Liquid reads and/or right to left with no brackets, so the
-            condition is built in two steps rather than written in one line.
-          endcomment
-          assign show_shots = false
-          if has_cuts == false and has_gallery == false
-            assign show_shots = true
-          endif
-          if section.settings.show_maker_images
-            assign show_shots = true
-          endif
-        -%}
-        {%- if show_shots -%}
-          {%- for m in shots limit: 10 -%}
-            <div class="gal__slide" data-thumb="{{ m | image_url: width: 160 }}">
-              <img src="{{ m | image_url: width: 1400 }}"
-                   srcset="{{ m | image_url: width: 700 }} 700w, {{ m | image_url: width: 1000 }} 1000w, {{ m | image_url: width: 1400 }} 1400w"
-                   sizes="(min-width: 900px) 52vw, 100vw"
-                   alt="{{ m.alt | default: product.title | strip_html | escape }}"
-                   width="1400" height="1400"
-                   {% if forloop.first and has_cuts == false and has_gallery == false %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
-                   decoding="async">
-            </div>
           {%- endfor -%}
         {%- endif -%}
       </div>
@@ -311,7 +305,7 @@
         {%- if offer.breaks.size > 0 or show_pair -%}
           <li>{% render 'zicon', name: 'check' %}<span><strong>Savings apply in your bag</strong>, no code needed</span></li>
         {%- endif -%}
-        <li>{% render 'zicon', name: 'box' %}<span><strong>Out within one business day</strong>, tracked</span></li>
+        <li>{% render 'zicon', name: 'box' %}<span><strong>Ships the next business day</strong>, tracked</span></li>
         <li>{% render 'zicon', name: 'lock' %}<span><strong>Secure checkout</strong>, encrypted by Shopify</span></li>
         {%- if settings.returns_claim -%}
           <li>{% render 'zicon', name: 'return' %}<span><strong>30-day returns</strong> on unopened, sealed items</span></li>
@@ -411,7 +405,7 @@
     {%- endif -%}
 
     <script type="application/json" data-variant-json>
-      [{% for var in product.variants %}{"id":{{ var.id }},"price":{{ var.price }},"available":{{ var.available }},"index":{{ forloop.index0 }}}{% unless forloop.last %},{% endunless %}{% endfor %}]
+      [{% for var in product.variants %}{"id":{{ var.id }},"price":{{ var.price }},"available":{{ var.available }},"index":{{ forloop.index0 }},"media":{{ var.featured_media.id | default: 0 }}}{% unless forloop.last %},{% endunless %}{% endfor %}]
     </script>
   </div>
 
@@ -447,7 +441,7 @@
       scroll-snap-align:center;background:var(--plate);border-radius:var(--r-lg);
       aspect-ratio:1/1;display:grid;place-items:center;overflow:hidden;
       /* inset, because the track clips anything outside the slide */
-      box-shadow:inset 0 0 0 1px rgba(16,19,16,.22);
+      box-shadow:inset 0 0 0 1px rgba(237,239,235,.08);
     }
     .gal__slide img{width:100%;height:100%;object-fit:contain}
     /* A cutout slide is the stage from the homepage, not a white plate: the
@@ -600,7 +594,7 @@
     /* ---- mix and match: one select per unit, under the quantity rows ---- */
     .qmix{display:grid;gap:var(--zv-3);margin-top:var(--zv-3);padding:var(--zv-4);border-radius:var(--zv-r-md);
       background:var(--zv-bg-raised);box-shadow:inset 0 0 0 1px var(--zv-hairline-2)}
-    .qmix.is-in,.qmix__row.is-in{animation:qmix-in var(--zv-d-ui) var(--zv-ease) both}
+    .qmix.is-in{animation:qmix-in var(--zv-d-ui) var(--zv-ease) both}
     @keyframes qmix-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
     .qmix__h{margin:0}
     .qmix__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--zv-2)}
@@ -610,12 +604,12 @@
     .qmix__sel{appearance:none;-webkit-appearance:none;width:100%;min-height:48px;margin:0;
       padding:0 42px 0 var(--zv-4);border:0;border-radius:var(--zv-r-md);
       box-shadow:inset 0 0 0 1px var(--zv-line-input);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-body);
-      background:var(--zv-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23101310' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center/12px 8px;
+      background:var(--zv-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23EDEFEB' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center/12px 8px;
       cursor:pointer;transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
     @media (hover:hover) and (pointer:fine){ .qmix__sel:hover{box-shadow:inset 0 0 0 1px var(--zv-forest)} }
     .qmix__sel:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
     .qmix__note{margin:0;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
-    @media(prefers-reduced-motion:reduce){ .qmix.is-in,.qmix__row.is-in{animation:none} }
+    @media(prefers-reduced-motion:reduce){ .qmix.is-in{animation:none} }
     .pdp__atc{min-height:54px;font-size:var(--zv-t-sm)}
     /* the label is re-set when the total changes; it rises into place */
     .atc__lbl,.satc__p [data-satc-sum]{display:inline-block}
@@ -653,7 +647,7 @@
     .pairc__picklabel{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
       text-transform:uppercase;color:var(--zv-moss-strong)}
     .pairc__pick select{width:100%;min-height:48px;padding:0 var(--zv-4);border-radius:var(--zv-r-pill);
-      border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-body)}
+      border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-sm)}
     .pairc__btn{flex:1 1 180px;min-height:48px;padding:0 var(--zv-5);border-radius:var(--zv-r-pill);cursor:pointer;
       border:1px solid var(--zv-forest);background:transparent;color:var(--zv-forest);
       font-family:var(--zv-sans);font-size:var(--zv-t-fine);font-weight:600;letter-spacing:var(--zv-tr-wide);text-transform:uppercase;
@@ -721,15 +715,15 @@
 
     /* ---- sticky add-to-cart (phones) ---- */
     .satc{position:fixed;left:0;right:0;bottom:0;z-index:var(--zv-z-sticky);
-      border-top:1px solid var(--zv-line);background:var(--zv-warm);
+      border-top:1px solid var(--zv-line);background:var(--zv-bg);
       padding:.7rem var(--pad) calc(.7rem + env(safe-area-inset-bottom));
-      transform:translateY(110%);transition:transform 280ms var(--zv-ease),visibility 0s linear 280ms;
-      visibility:hidden;box-shadow:0 -8px 24px rgba(16,19,16,.08)}
+      transform:translateY(110%);transition:transform var(--zv-d-drawer) var(--zv-ease-drawer);
+      visibility:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.4)}
     @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-      .satc{background:color-mix(in srgb, var(--zv-warm) 92%, transparent);
+      .satc{background:color-mix(in srgb, var(--zv-bg) 92%, transparent);
         backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
     }
-    .satc.is-on{transform:none;visibility:visible;transition:transform var(--zv-d-drawer) var(--zv-ease-drawer),visibility 0s}
+    .satc.is-on{transform:none;visibility:visible}
     @media(min-width:900px){.satc{display:none}}
     /* A fixed bar must never sit on top of the last thing on the page, so
        while it is showing the page gets a matching strip of space. */
@@ -807,11 +801,11 @@
     var mixSels = mix ? [].slice.call(mix.querySelectorAll('[data-qmix-sel]')) : [];
     var mixTouched = false;
     var mixForms = ['zpf-main', 'zpf-sticky'].map(function (id) { return document.getElementById(id); }).filter(Boolean);
-    var vPrice = {}, vAvail = {};
+    var vPrice = {}, vAvail = {}, vMedia = {};
     try {
       JSON.parse(document.querySelector('[data-variant-json]').textContent)
-        .forEach(function (x) { vPrice[String(x.id)] = x.price; vAvail[String(x.id)] = x.available; });
-    } catch (e) { vPrice = {}; vAvail = {}; }
+        .forEach(function (x) { vPrice[String(x.id)] = x.price; vAvail[String(x.id)] = x.available; vMedia[String(x.id)] = String(x.media || ''); });
+    } catch (e) { vPrice = {}; vAvail = {}; vMedia = {}; }
 
     function mixOn(q) { return !!mix && q > 1; }
     function mixSum(q) {
@@ -824,13 +818,7 @@
       var q = currentQty(), on = mixOn(q), was = !mix.hidden;
       mix.hidden = !on;
       if (on && !was) { mix.classList.remove('is-in'); void mix.offsetWidth; mix.classList.add('is-in'); }
-      /* A row revealed while the panel is already open (2 -> 3) arrives the
-         way the panel did, instead of popping in. */
-      mixSels.forEach(function (el, i) {
-        var row = el.closest('[data-qmix-row]'), show = i < q;
-        if (show && row.hidden && was) { row.classList.remove('is-in'); void row.offsetWidth; row.classList.add('is-in'); }
-        row.hidden = !show;
-      });
+      mixSels.forEach(function (el, i) { el.closest('[data-qmix-row]').hidden = i >= q; });
       var items = null;
       if (on) {
         var by = {}, order = [];
@@ -991,8 +979,8 @@
         } else if (b > a) {
           pc.setAttribute('data-state', 'blocked');
           stateEl.hidden = false;
-          stateEl.textContent = 'To get the pair saving, add one ' + cfg.a.short +
-            ' for each ' + cfg.b.short + ' in your bag.';
+          stateEl.textContent = 'The pair saving applies when your bag has at least as many ' +
+            cfg.a.short + ' as ' + cfg.b.short + '.';
           if (priceEl) priceEl.hidden = true;
         } else {
           pc.removeAttribute('data-state');
@@ -1123,9 +1111,15 @@
         }, { root: track, threshold: 0.6 });
         slides.forEach(function (s) { io.observe(s); });
       }
+      /* An option scrolls to the photograph assigned to it in Shopify (the
+         variant's image). An option with no photograph of its own leaves
+         the gallery where it is, rather than guessing by position. */
       document.addEventListener('variant:change', function (e) {
-        var idx = e && e.detail && e.detail.index;
-        if (typeof idx === 'number' && slides[idx]) { go(idx); }
+        var mid = e && e.detail ? vMedia[String(e.detail.id)] : '';
+        if (!mid || mid === '0') { return; }
+        for (var k = 0; k < slides.length; k++) {
+          if (slides[k].getAttribute('data-media-id') === mid) { go(k); return; }
+        }
       });
     });
   })();
@@ -1137,14 +1131,13 @@
   "settings": [
     { "type": "checkbox", "id": "sticky_atc", "label": "Sticky add-to-cart bar", "default": true,
       "info": "Phones and small tablets only. It appears once the real button scrolls off screen, and the page reserves space for it so it never covers content." },
-    { "type": "checkbox", "id": "show_maker_images", "label": "Also show the maker's listing images", "default": false,
-      "info": "The gallery leads with the product's clean cutouts (the 'Clean product cutouts' field on the product). Turn this on to append the maker's original listing images after them. Off by default: those images carry the maker's own marketing claims, which the store labels as theirs rather than repeats." },
+    { "type": "paragraph", "content": "The gallery shows the product's own photographs from Products > Media, in that order. Set each option's photograph on the product (Edit variant > image) and choosing that option scrolls to it." },
     { "type": "paragraph", "content": "The quantity offer reads each product's 'Quantity offer' metafield. The pair card and the trust row read Theme settings > Offers and > Trust. Product-specific accordions come from the description's own headings (Details, How to use, What's included); the store-wide ones are the blocks below." }
   ],
   "blocks": [
     { "type": "scene", "name": "In-use photograph",
       "settings": [
-        { "type": "paragraph", "content": "A photograph of the real product in use, added to the gallery after the cutouts. Never a photograph of a different product or a redesigned one." },
+        { "type": "paragraph", "content": "A photograph of the real product in use, added to the gallery after the product's own photographs. Never a photograph of a different product or a redesigned one." },
         { "type": "product", "id": "product", "label": "Product", "info": "The page this photograph belongs to. Empty: every product page." },
         { "type": "image_picker", "id": "image", "label": "Photograph", "info": "Square frame; at least 1600 px on the short side." },
         { "type": "text", "id": "image_alt", "label": "Description", "info": "What is in the picture, for screen readers." },

@@ -33,16 +33,27 @@
   if s.photo != blank or s.video != blank
     assign has_media = true
   endif
+  comment
+    V14: a square-ish photograph (the store's own product shots are 1:1)
+    gets a square frame inside the content column instead of the wide,
+    edge-bled scene frame, so the whole product shows at every screen
+    width; it also stands still (no scroll drift), the way a product shot
+    should. A wide scene photograph or a film keeps the original layout.
+  endcomment
+  assign is_square = false
+  if s.video == blank and s.photo != blank and s.photo.aspect_ratio < 1.3
+    assign is_square = true
+  endif
   assign sid = 'zps-' | append: section.id
 -%}
-<section class="zps zps--{{ s.tone }} zps--media-{{ s.media_side }}{% if s.tone == 'dark' %} zv-dark{% endif %}" id="{{ s.anchor | default: sid | handleize }}"
+<section class="zps zps--{{ s.tone }} zps--media-{{ s.media_side }}{% if s.tone == 'dark' %} zv-dark{% endif %}{% if is_square %} zps--square{% endif %}" id="{{ s.anchor | default: sid | handleize }}"
          aria-labelledby="{{ sid }}-h"
          style="--zps-pos: {{ s.position | default: '50% 50%' }}; --zps-pos-m: {{ s.position_mobile | default: s.position | default: '50% 50%' }};">
   <div class="zps__grid">
     {%- if has_media -%}
       <figure class="zps__media">
-        <div class="zps__frame" data-zv-reveal="media" data-zv-scene data-zv-scene-scroll="-0.07">
-          <div class="zps__plate" data-zv-depth="1">
+        <div class="zps__frame" data-zv-reveal="media"{% unless is_square %} data-zv-scene data-zv-scene-scroll="-0.07"{% endunless %}>
+          <div class="zps__plate"{% unless is_square %} data-zv-depth="1"{% endunless %}>
             {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 900px) 60vw, 100vw', alt: s.photo_alt %}
           </div>
         </div>
@@ -93,7 +104,7 @@
               </li>
             {%- endfor -%}
           </ol>
-          <p class="zps__fine">{% if p.variants.size > 1 %}Applied automatically in your bag. Mix any options; no code needed.{% else %}Applied automatically in your bag. No code needed.{% endif %}</p>
+          <p class="zps__fine">Applied automatically in your bag, and you can mix options. No code.</p>
         {%- endif -%}
         <div class="zps__act">
           <a class="zv-btn" href="{{ p.url }}">{{ s.cta_label | default: 'Shop' | escape }}{% if s.cta_label == blank %} {{ short | escape }}{% endif %}</a>
@@ -118,7 +129,7 @@
       "options": [ { "value": "left", "label": "Left" }, { "value": "right", "label": "Right" } ] },
     { "type": "text", "id": "anchor", "label": "Anchor", "info": "For links to this chapter, e.g. goda. Letters and dashes." },
     { "type": "header", "content": "Photograph" },
-    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "The real product in a real place (briefs G1, Y1). 16:9 or wider, at least 2400 px across." },
+    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "The real product in a real place (briefs G1, Y1), 16:9 or wider and at least 2400 px across; or a square product photograph, which gets a square frame." },
     { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones (optional)", "info": "4:5, at least 1600 × 2000 px. Left empty, phones get a crop of the photograph above." },
     { "type": "video", "id": "video", "label": "Film (optional)", "info": "Silent, 6 to 10 seconds, loops cleanly. Uses the photograph as its poster." },
     { "type": "text", "id": "photo_alt", "label": "Photograph description", "info": "Used only if the image has no alt text in Content > Files." },

@@ -17,10 +17,11 @@
   White should not have to fix the bag afterwards. The scene follows it:
   pick White and the bottle in the picture is the White one.
 
-  Asset slot (visual asset brief, P1 / P1-F). The scene is assembled from
-  cutouts because no photograph of the pair together exists. When it does,
-  "Photograph" replaces the assembled scene in the same frame and at the
-  same size; empty, the section is exactly as before.
+  Asset slot (visual asset brief, P1 / P1-F). V14: the staged scene was
+  assembled from the generated cutouts, which are retired. Until a real
+  photograph of the pair together exists, the band shows the two products'
+  own photographs from Shopify side by side, and the GODA one follows the
+  option chosen. "Photograph" replaces them in the same frame when it does.
 {%- endcomment -%}
 {%- liquid
   assign s = section.settings
@@ -33,12 +34,13 @@
     assign vb = pb.selected_or_first_available_variant
     assign full = pa.price | plus: pb.price
     assign pair = full | minus: settings.pair_save_cents
-    assign cuts_a = pa.metafields.zorev.cutouts.value
-    assign cuts_b = pb.metafields.zorev.cutouts.value
+    comment
+      V14: the cutouts (zorev.cutouts) are no longer read, so the staged
+      scene below is inert; the two photographs are the fallback branch.
+    endcomment
+    assign cuts_a = blank
+    assign cuts_b = blank
     assign has_scene = false
-    if cuts_a.size > 0 and cuts_b.size > 0
-      assign has_scene = true
-    endif
     assign has_photo = false
     if s.photo != blank or s.video != blank
       assign has_photo = true
@@ -76,7 +78,13 @@
       </div>
     {%- else -%}
       <div class="zpr__figs" data-zv-reveal>
-        <a class="zpr__fig" href="{{ pa.url }}" tabindex="-1" aria-hidden="true">{% render 'product-cutout', product: pa, sizes: '(min-width: 900px) 24vw, 44vw', alt: '' %}</a>
+        <a class="zpr__fig" href="{{ pa.url }}" tabindex="-1" aria-hidden="true">
+          {%- for pv in pa.variants -%}
+            <span class="zpr__variant" data-zpr-cut="{{ pv.id }}"{% unless pv.id == va.id %} hidden{% endunless %}>
+              {% render 'product-cutout', product: pa, index: forloop.index0, sizes: '(min-width: 900px) 24vw, 44vw', alt: '' %}
+            </span>
+          {%- endfor -%}
+        </a>
         <span class="zpr__plus" aria-hidden="true">{% render 'zicon', name: 'plus' %}</span>
         <a class="zpr__fig" href="{{ pb.url }}" tabindex="-1" aria-hidden="true">{% render 'product-cutout', product: pb, sizes: '(min-width: 900px) 24vw, 44vw', alt: '' %}</a>
       </div>
@@ -117,7 +125,7 @@
     .zpr{position:relative;isolation:isolate;overflow:hidden;overflow:clip;padding-block:var(--zv-section);
       background:
         radial-gradient(70% 80% at 22% 40%, rgba(83,99,75,.24), transparent 72%),
-        var(--zv-ink);
+        var(--zv-night-deep);
       color:var(--zv-warm);scroll-margin-top:72px}
     .zpr [hidden]{display:none !important}
     .zpr__in{display:grid;gap:clamp(32px,5vw,72px);align-items:center}
@@ -153,9 +161,11 @@
 
     /* ---- fallback: two plates ---- */
     .zpr__figs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:clamp(8px,1.5vw,16px)}
-    .zpr__fig{display:block;aspect-ratio:1 / 1;border-radius:var(--zv-r-lg);overflow:hidden;background:var(--zv-white);
-      box-shadow:0 1px 2px rgba(0,0,0,.25),0 18px 36px -18px rgba(0,0,0,.6)}
-    .zpr__fig .zv-cut{width:100%;height:100%;object-fit:contain;padding:clamp(12px,2vw,24px);filter:none}
+    /* V14: each tile is the product's own photograph, edge to edge. */
+    .zpr__fig{display:block;aspect-ratio:1 / 1;border-radius:var(--zv-r-lg);overflow:hidden;background:var(--zv-bg-sunken);
+      box-shadow:0 0 0 1px rgba(237,239,235,.08),0 1px 2px rgba(0,0,0,.25),0 18px 36px -18px rgba(0,0,0,.6)}
+    .zpr__fig .zpr__variant{width:100%;height:100%}
+    .zpr__fig .zv-cut{width:100%;height:100%;object-fit:cover;padding:0;filter:none}
     .zpr__plus{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;
       border:1px solid rgba(244,242,236,.38);color:var(--zv-sand)}
     .zpr__plus .zicon{width:16px;height:16px}
@@ -169,8 +179,8 @@
     .zpr__price strong{font-family:var(--zv-sans);font-size:clamp(2.25rem,1.8rem + 1.6vw,3.25rem);
       font-weight:500;letter-spacing:-0.02em;color:var(--zv-warm);line-height:1}
     .zpr__price s{font-size:var(--zv-t-lead);color:#CFCCC2}
-    .zpr__save{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-      color:var(--zv-ink);background:var(--zv-sand);padding:5px 10px;border-radius:var(--zv-r-pill)}
+    .zpr__save{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);text-transform:uppercase;
+      color:var(--zv-night);background:var(--zv-sand);padding:5px 10px;border-radius:var(--zv-r-pill)}
     .zpr__tag{font-family:var(--zv-serif);font-size:var(--zv-t-h4);color:var(--zv-sand);margin:0 0 var(--zv-5);max-width:none}
     .zpr__body p{color:#CFCCC2}
     .zpr__act{display:flex;flex-wrap:wrap;gap:var(--zv-3);align-items:flex-end;margin-top:var(--zv-2)}
@@ -233,7 +243,7 @@
     { "type": "paragraph", "content": "The products, price and saving come from Theme settings > Offers, so this section, the product page and the cart always agree." },
     { "type": "richtext", "id": "body", "label": "Extra copy" },
     { "type": "header", "content": "Photograph or film (optional)" },
-    { "type": "paragraph", "content": "Empty: the two cutouts staged together. Add a real photograph of GODA and HOYGI together (visual asset brief P1) and it replaces the staged scene at the same size." },
+    { "type": "paragraph", "content": "Empty: the two products' own photographs side by side. Add a real photograph of GODA and HOYGI together (visual asset brief P1) and it replaces them at the same size." },
     { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "Square 1:1, at least 2400 × 2400 px, both products inside the central 5:4 band. Set the focal point in Content > Files." },
     { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones (optional)", "info": "5:4, at least 1600 × 1280 px. Left empty, phones get a 5:4 crop of the photograph above." },
     { "type": "video", "id": "video", "label": "Film (optional)", "info": "Square, 6 to 10 seconds, silent, loops cleanly (brief P1-F). Uses the photograph as its poster." },
