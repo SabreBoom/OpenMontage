@@ -14,6 +14,9 @@
   index      which option, usually the selected variant's index. An index
              past the last option falls back to the featured image.
   eager      true for the LCP candidate only.
+  sizes      the slot's rendered width. The srcset starts at 120w, so a
+             48-96 px thumbnail (hero card, pair card, bag lines) fetches a
+             small file instead of a 360 px one.
   vt_static  true for the one picture that carries the page-to-page name
              from the markup (the product page's first picture). Every
              picture also says which product it is (data-vt-product), so the
@@ -32,9 +35,18 @@
   assign sizes_attr = sizes | default: '(min-width: 900px) 40vw, 90vw'
 -%}
 {%- if img -%}
+  {%- capture cut_set -%}
+    {%- assign rungs = '120,180,240,360,540,720,900,1200' | split: ',' -%}
+    {%- assign iw = img.width | default: 1200 -%}
+    {%- for r in rungs -%}
+      {%- assign rn = r | plus: 0 -%}
+      {%- if rn < iw and rn < 1200 -%}{{ img | image_url: width: rn }} {{ rn }}w, {% endif -%}
+    {%- endfor -%}
+    {%- if iw <= 1200 -%}{{ img | image_url: width: iw }} {{ iw }}w{%- else -%}{{ img | image_url: width: 1200 }} 1200w{%- endif -%}
+  {%- endcapture -%}
   <img class="zv-cut zv-photo{% if class != blank %} {{ class }}{% endif %}"
        src="{{ img | image_url: width: 900 }}"
-       srcset="{{ img | image_url: width: 360 }} 360w, {{ img | image_url: width: 540 }} 540w, {{ img | image_url: width: 720 }} 720w, {{ img | image_url: width: 900 }} 900w, {{ img | image_url: width: 1200 }} 1200w"
+       srcset="{{ cut_set | strip }}"
        sizes="{{ sizes_attr }}"
        width="{{ img.width | default: 1200 }}" height="{{ img.height | default: 1200 }}"
        alt="{{ alt_text | strip_html | escape }}"

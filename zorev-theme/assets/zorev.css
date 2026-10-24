@@ -31,7 +31,7 @@
   /* ---- old names -> new palette ---- */
   --ground:    var(--zv-warm);
   --surface:   var(--zv-bg-sunken);
-  --surface-2: #E2DFD5;
+  --surface-2: var(--zv-bg-deep);
   --hairline:  var(--zv-line);
 
   --text:   var(--zv-ink);
@@ -70,7 +70,9 @@
   --gold:  var(--accent);
 }
 
-html{ -webkit-text-size-adjust: 100%; }
+/* The header is sticky (64px + hairline), so an anchor or a focused field
+   would otherwise land underneath it. */
+html{ -webkit-text-size-adjust: 100%; scroll-padding-top: 80px; }
 body{
   margin: 0;
   background: var(--zv-bg);
@@ -227,6 +229,7 @@ p{ margin: 0 0 var(--zv-4); color: var(--zv-text-2); max-width: var(--zv-measure
   --text-3:    var(--zv-moss-strong);
 }
 
-/* ---- footer ---- */
+/* ---- footer ----
+   The deeper stone (stone-2), so the page ends on a ground of its own. */
 .ftr{ border-top: 1px solid var(--zv-line); padding-block: var(--zv-8);
-  background: var(--zv-bg-sunken); }
+  background: var(--zv-bg-deep); color: var(--zv-text); }

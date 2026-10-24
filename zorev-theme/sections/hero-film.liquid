@@ -7,18 +7,20 @@
   and on a wide screen a small printed card in the corner names them, so a
   first-time visitor never has to guess what the shop sells.
 
-  The frame is alive in four cheap layers, all transform and opacity:
-    1  breathe   the photograph drifts in scale over 30 s, eased and
-                 alternating, so there is no loop point to notice
-    2  depth     zorev-enhance.js moves the plate a little slower than the
-                 page as it scrolls away, and a few pixels against a fine
-                 pointer ([data-zv-scene] / [data-zv-depth])
-    3  mist      two soft bands of haze cross the lower frame at different
-                 speeds, the way fog moves through trees
-    4  light     the shafts in the canopy brighten and dim on a slow breath
-  Under prefers-reduced-motion every one of them is off and the frame is a
-  still photograph. The copy never moves after it has arrived, and the veil
-  keeps it at AA contrast over any frame of the film.
+  V15 motion, all transform-only and all in CSS (zorev-film.css):
+    1  breathe   the photograph drifts in scale (1.02 -> 1.07) over 40 s,
+                 eased and alternating, around the image's focal point, so
+                 there is no loop point to notice
+    2  depth     as the hero scrolls away the photograph lags the page by a
+                 few percent: a CSS scroll-driven animation, so it costs no
+                 script, and browsers without scroll timelines keep it still
+    3  light     drawn light shafts and mist, OFF by default ("Drawn light
+                 and mist"): the photograph already has real fog and light
+  The copy is visible from the first paint; it only settles a few pixels as
+  the page opens (transform, never opacity), so it never delays the LCP.
+  Under prefers-reduced-motion everything is a still photograph. The veil
+  keeps the copy at AA contrast over the photograph (measured on phones:
+  the eyebrow is the weakest line, >= 5.4:1 at the 5th percentile).
 
   A film (Shopify-hosted, silent, looping) plays over the photograph while
   on screen, with a pause button, never under reduced motion or Save-Data.
@@ -41,20 +43,50 @@
   if pb.price < from
     assign from = pb.price
   endif
+
+  comment
+    The breathe scales around the photograph's focal point (Content >
+    Files), so the subject stays put while the frame drifts. An unset focal
+    point reads 50/50; the trail photograph's light then gets the old
+    hand-set origin.
+  endcomment
+  assign fx = '58%'
+  assign fy = '46%'
+  assign fp = s.photo.presentation.focal_point
+  if s.photo != blank and fp != blank
+    unless fp.x == 50 and fp.y == 50
+      assign fx = fp.x | append: '%'
+      assign fy = fp.y | append: '%'
+    endunless
+  endif
+  assign fxm = '50%'
+  assign fym = '50%'
+  assign fpm = s.photo_mobile.presentation.focal_point
+  if s.photo_mobile != blank and fpm != blank
+    assign fxm = fpm.x | append: '%'
+    assign fym = fpm.y | append: '%'
+  endif
 -%}
 {%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
-<section class="zhf zv-dark{% unless has_media %} zhf--flat{% endunless %}" id="zhf-{{ section.id }}" data-zv-rest aria-labelledby="zhf-h-{{ section.id }}"
-         style="--zhf-rays-x: {{ s.rays_x | default: 62 }}%; --zhf-rays-x-m: {{ s.rays_x_mobile | default: 34 }}%;">
+<section class="zhf zv-dark{% unless has_media %} zhf--flat{% endunless %}{% if s.drawn_light %} zhf--drawn{% endif %}" id="zhf-{{ section.id }}" data-zv-rest aria-labelledby="zhf-h-{{ section.id }}"
+         style="--zhf-rays-x: {{ s.rays_x | default: 62 }}%; --zhf-rays-x-m: {{ s.rays_x_mobile | default: 34 }}%; --zhf-fx: {{ fx }}; --zhf-fy: {{ fy }}; --zhf-fx-m: {{ fxm }}; --zhf-fy-m: {{ fym }};">
   {%- if has_media -%}
-    <div class="zhf__scene" data-zv-scene data-zv-scene-pointer="7" data-zv-scene-scroll="-0.16">
-      <div class="zhf__plate" data-zv-depth="1">
+    <div class="zhf__scene">
+      <div class="zhf__plate">
         <div class="zhf__breathe">
-          {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '100vw', alt: s.photo_alt, eager: true, position: '50% 50%' %}
+          {%- comment -%}
+            sizes describe the picture, not the frame: the plate is 18% taller
+            than the hero and breathes up to 1.07, so on a wide screen the
+            photograph is drawn about 1.25 x the viewport width, and the
+            portrait phone photograph about 1.4 x (images.md §5).
+          {%- endcomment -%}
+          {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '125vw', sizes_mobile: '140vw', alt: s.photo_alt, eager: true, position: '50% 50%' %}
         </div>
       </div>
-      <div class="zhf__rays" aria-hidden="true"></div>
-      <div class="zhf__mist zhf__mist--far" aria-hidden="true"></div>
-      <div class="zhf__mist zhf__mist--near" aria-hidden="true"></div>
+      {%- if s.drawn_light -%}
+        <div class="zhf__rays" aria-hidden="true"></div>
+        <div class="zhf__mist zhf__mist--far" aria-hidden="true"></div>
+      {%- endif -%}
       <div class="zhf__veil" aria-hidden="true"></div>
     </div>
   {%- endif -%}
@@ -79,13 +111,20 @@
 
     {%- if show_card -%}
       {%- comment -%}
-        Printed card, not a composite: the two cutouts sit on paper of their
-        own, so they are never pasted into the photograph's light.
+        Printed card, not a composite: the two studio packshots sit on a
+        plate of their own, so they are never pasted into the photograph's
+        light. HOYGI shows its second studio image (the stick with its box,
+        cut out), which stands on the plate the way GODA's packshot does.
       {%- endcomment -%}
-      <a class="zhf__card" href="{{ s.card_link | default: '#line' }}" data-zv-tilt="3">
-        <span class="zhf__card-objs" aria-hidden="true">
-          <span class="zhf__card-obj">{% render 'product-cutout', product: pa, sizes: '96px', alt: '' %}</span>
-          <span class="zhf__card-obj">{% render 'product-cutout', product: pb, sizes: '96px', alt: '' %}</span>
+      {%- liquid
+        assign va = pa.selected_or_first_available_variant
+        assign vb = pb.selected_or_first_available_variant
+        assign ib = s.card_index_b | default: 2 | minus: 1
+      -%}
+      <a class="zhf__card" href="{{ s.card_link | default: '#line' }}">
+        <span class="zhf__thumbs" aria-hidden="true">
+          <span class="zhf__thumb zv-studio">{% render 'studio-image', product: pa, variant: va, index: 0, widths: '120,180', sizes: '54px', class: 'zhf__thumb-img', loading: 'lazy', fetchpriority: 'auto', alt: '' %}</span>
+          <span class="zhf__thumb zv-studio">{% render 'studio-image', product: pb, variant: vb, index: ib, widths: '120,180', sizes: '54px', class: 'zhf__thumb-img', loading: 'lazy', fetchpriority: 'auto', alt: '' %}</span>
         </span>
         <span class="zhf__card-t">
           <span class="zhf__card-k">The line</span>
@@ -95,10 +134,6 @@
       </a>
     {%- endif -%}
   </div>
-
-  {%- if has_media -%}
-    <a class="zhf__cue" href="{{ s.card_link | default: '#line' }}" aria-label="Scroll to the products"><span aria-hidden="true"></span></a>
-  {%- endif -%}
 </section>
 
 {% schema %}
@@ -106,26 +141,28 @@
   "name": "Cinematic hero",
   "tag": "section",
   "settings": [
-    { "type": "paragraph", "content": "A full-width place with the copy set into its quiet side. The photograph breathes, mist crosses it and the light shifts, all off for visitors who ask for reduced motion." },
-    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "Wide 16:9, at least 2400 px across, with a dark or quiet left third for the copy (brief H1). This is the page's largest image and loads first." },
-    { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones", "info": "Portrait 9:16, at least 1080 × 1920 px, quiet in the lower half where the copy sits on a phone (brief H1-M)." },
+    { "type": "paragraph", "content": "A full-width place with the copy set into its quiet side. The photograph breathes slowly and lags a little as the page scrolls; both are off for visitors who ask for reduced motion." },
+    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "Wide 16:9, at least 2400 px across, with a dark or quiet left third for the copy (brief H1). This is the page's largest image and loads first. Set its focal point in Content > Files: the slow zoom centres on it." },
+    { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones", "info": "Portrait 9:16, at least 1080 × 1920 px (1440 × 2560 is sharper on large phones), quiet in the lower half where the copy sits on a phone (brief H1-M)." },
     { "type": "video", "id": "video", "label": "Film (optional)", "info": "8 to 12 seconds, silent, loops cleanly, same framing as the photograph (brief H1-F). Plays only on screen, never for reduced motion or Save-Data, always with a pause button." },
     { "type": "text", "id": "photo_alt", "label": "Photograph description", "info": "Used only if the image has no alt text in Content > Files." },
+    { "type": "checkbox", "id": "drawn_light", "label": "Drawn light and mist", "default": false, "info": "Adds drawn light shafts and a band of haze over the photograph. Leave off when the photograph has real light and fog of its own." },
     { "type": "range", "id": "rays_x", "label": "Light source across the photograph", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 62 },
     { "type": "range", "id": "rays_x_mobile", "label": "Light source across the phone photograph", "min": 0, "max": 100, "step": 2, "unit": "%", "default": 34 },
     { "type": "header", "content": "Copy" },
     { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Perfume oil · Balm stick" },
-    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Made for wherever you're headed." },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Made for wherever you’re headed." },
     { "type": "richtext", "id": "body", "label": "Body" },
     { "type": "text", "id": "note", "label": "Fine print", "info": "One short true line, or nothing." },
     { "type": "text", "id": "cta_label", "label": "Primary button", "default": "Shop Zorev" },
     { "type": "url", "id": "cta_link", "label": "Primary link" },
-    { "type": "text", "id": "cta2_label", "label": "Secondary button" },
+    { "type": "text", "id": "cta2_label", "label": "Secondary button", "info": "[pair_price] is replaced by the pair price from Theme settings > Offers." },
     { "type": "url", "id": "cta2_link", "label": "Secondary link" },
     { "type": "header", "content": "Product card (wide screens)" },
     { "type": "checkbox", "id": "show_card", "label": "Show the product card", "default": true },
     { "type": "product", "id": "product_a", "label": "First product", "info": "Empty: the pair from Theme settings > Offers." },
     { "type": "product", "id": "product_b", "label": "Second product" },
+    { "type": "range", "id": "card_index_b", "label": "Second product: studio image", "min": 1, "max": 3, "step": 1, "default": 2, "info": "Which of the second product's studio images (Theme settings > Studio images) the card shows." },
     { "type": "url", "id": "card_link", "label": "Card link", "info": "Empty: the product line-up below (#line)." }
   ],
   "presets": [{ "name": "Cinematic hero" }]
