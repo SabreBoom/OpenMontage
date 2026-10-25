@@ -193,6 +193,13 @@
 
     function items(n) { n = Number(n) || 0; return n + (n === 1 ? ' item' : ' items'); }
 
+    /* Line prices read like the product page ("$30", "$25.33"); the savings
+       list and the subtotal keep their cents, as the cart page's receipt. */
+    function lineMoney(c) {
+      var s = money(c, fmt);
+      return Math.round(Number(c) || 0) % 100 === 0 ? s.replace(/[.,]00(?=\D*$)/, '') : s;
+    }
+
     // Studio plate: the map's picture for the variant, else the line's own.
     function thumb(item) {
       var m = media(item.variant_id);
@@ -325,9 +332,9 @@
         var now = (i.final_line_price != null) ? Number(i.final_line_price)
                                               : Number(i.line_price) || 0;
         var priceBlock = (was > now)
-          ? '<s class="fine"><span class="visually-hidden">Regular price </span>' + esc(money(was, fmt)) + '</s>' +
-            '<span class="cd__lp">' + esc(money(now, fmt)) + '</span>'
-          : '<span class="cd__lp">' + esc(money(now, fmt)) + '</span>';
+          ? '<s class="fine"><span class="visually-hidden">Regular price </span>' + esc(lineMoney(was)) + '</s>' +
+            '<span class="cd__lp">' + esc(lineMoney(now)) + '</span>'
+          : '<span class="cd__lp">' + esc(lineMoney(now)) + '</span>';
 
         return '' +
           '<li class="cd__line" data-cd-key="' + esc(i.key) + '" data-cd-line="' + line + '">' +

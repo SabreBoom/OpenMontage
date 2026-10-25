@@ -69,17 +69,46 @@
           <h2 class="zv-h3 zcol__sub" data-zv-reveal>Or one at a time</h2>
         {%- endif -%}
         <div class="{{ grid }}">
-          {%- for p in collection.products -%}
+          {%- if is_pair -%}
             {%- comment -%}
-              heading_level 2 directly under the page h1; 3 under the
-              "Or one at a time" h2 on the pair page.
+              The pair page lists the pair's own order — product A (GODA),
+              then product B (HOYGI), then anything else — whatever sort the
+              collection has in admin, so it reads like the band above it
+              and the homepage line-up. The cards sit below the band, so
+              none of them is the page's first (eager) picture.
             {%- endcomment -%}
-            {% render 'product-card',
-               card_product: p,
-               eager: forloop.first,
-               heading_level: card_level,
-               sizes: card_sizes %}
-          {%- endfor -%}
+            {%- liquid
+              assign pid_a = settings.pair_product_a.id
+              assign pid_b = settings.pair_product_b.id
+            -%}
+            {%- for p in collection.products -%}
+              {%- if p.id == pid_a -%}
+                {% render 'product-card', card_product: p, eager: false, heading_level: card_level, sizes: card_sizes %}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- for p in collection.products -%}
+              {%- if p.id == pid_b -%}
+                {% render 'product-card', card_product: p, eager: false, heading_level: card_level, sizes: card_sizes %}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- for p in collection.products -%}
+              {%- unless p.id == pid_a or p.id == pid_b -%}
+                {% render 'product-card', card_product: p, eager: false, heading_level: card_level, sizes: card_sizes %}
+              {%- endunless -%}
+            {%- endfor -%}
+          {%- else -%}
+            {%- for p in collection.products -%}
+              {%- comment -%}
+                heading_level 2 directly under the page h1; 3 under the
+                "Or one at a time" h2 on the pair page.
+              {%- endcomment -%}
+              {% render 'product-card',
+                 card_product: p,
+                 eager: forloop.first,
+                 heading_level: card_level,
+                 sizes: card_sizes %}
+            {%- endfor -%}
+          {%- endif -%}
         </div>
 
         {%- if paginate.pages > 1 -%}

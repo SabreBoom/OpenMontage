@@ -29,22 +29,58 @@
         </p>
 
         {%- if search.results_count > 0 -%}
-          <div class="zgrid zgrid--3">
-            {%- for item in search.results -%}
-              {%- if item.object_type == 'product' -%}
-                {% render 'product-card', card_product: item, eager: forloop.first, heading_level: 2,
-                   sizes: '(min-width: 1200px) 380px, (min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw' %}
-              {%- else -%}
-                <a class="zresult" href="{{ item.url }}">
-                  <span class="zv-eyebrow">{{ item.object_type | capitalize }}</span>
-                  <h2 class="zresult__t">{{ item.title | escape }}</h2>
-                  {%- if item.content != blank -%}
-                    <p class="zv-fine">{{ item.content | strip_html | truncatewords: 24 }}</p>
-                  {%- endif -%}
-                </a>
-              {%- endif -%}
-            {%- endfor -%}
-          </div>
+          {%- comment -%}
+            Products as cards in the grid; pages and articles as a compact
+            list under it. Mixed into one grid, a text result was stretched
+            to the height of a product card and read as an empty stone box.
+          {%- endcomment -%}
+          {%- liquid
+            assign n_products = 0
+            assign n_other = 0
+            for item in search.results
+              if item.object_type == 'product'
+                assign n_products = n_products | plus: 1
+              else
+                assign n_other = n_other | plus: 1
+              endif
+            endfor
+            assign other_level = 2
+            if n_products > 0
+              assign other_level = 3
+            endif
+          -%}
+          {%- if n_products > 0 -%}
+            <div class="zgrid zgrid--3 zsearch__grid">
+              {%- assign first_card = true -%}
+              {%- for item in search.results -%}
+                {%- if item.object_type == 'product' -%}
+                  {% render 'product-card', card_product: item, eager: first_card, heading_level: 2,
+                     sizes: '(min-width: 1200px) 380px, (min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw' %}
+                  {%- assign first_card = false -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+          {%- if n_other > 0 -%}
+            {%- if n_products > 0 -%}
+              <h2 class="zv-h3 zsearch__sub">Pages</h2>
+            {%- endif -%}
+            <ul class="zsearch__list" role="list">
+              {%- for item in search.results -%}
+                {%- unless item.object_type == 'product' -%}
+                  <li>
+                    <a class="zresult zsearch__item" href="{{ item.url }}">
+                      <span class="zv-eyebrow">{{ item.object_type | capitalize }}</span>
+                      <h{{ other_level }} class="zresult__t">{{ item.title | escape }}</h{{ other_level }}>
+                      {%- if item.content != blank -%}
+                        <p class="zv-fine">{{ item.content | strip_html | truncatewords: 24 }}</p>
+                      {%- endif -%}
+                    </a>
+                  </li>
+                {%- endunless -%}
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
 
           {%- if paginate.pages > 1 -%}
             <nav class="zpag" aria-label="Pagination">{{ paginate | default_pagination }}</nav>
@@ -64,6 +100,13 @@
   /* Packshots on the card plates stand on the plate's floor shadow
      (snippets/product-card; same rule as the collection page). */
   .zcard__fig.zv-studio .zcard__img{object-position:50% 100%}
+  .zsearch__grid{align-items:start}
+  /* pages and articles: one compact column of text results */
+  .zsearch__sub{margin:var(--zv-7) 0 var(--zv-4)}
+  .zsearch__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--zv-3);max-width:var(--zv-container-narrow)}
+  .zsearch__grid + .zsearch__list{margin-top:var(--zv-7)}
+  .zsearch__item{padding:var(--zv-4) var(--zv-5);gap:var(--zv-1)}
+  .zsearch__item p{margin:0}
 </style>
 
 {% schema %}

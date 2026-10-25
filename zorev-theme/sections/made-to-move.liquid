@@ -16,10 +16,12 @@
   JavaScript meets a dead button; without it a mouse gets the strip's
   scrollbar instead. A thin progress line sits under the strip.
 
-  Per frame (block): an optional phone crop (image_mobile), an optional crop
-  region for wide screens (Crop region, in the original's pixels, cut on
-  Shopify's CDN: it keeps the composited product out of the Everyday frame
-  at 3:2), an optional link, and an optional product chip (studio
+  Per frame (block): an optional phone photograph (image_mobile), optional
+  crop regions for wide screens and phones (in the original's pixels, cut
+  on Shopify's CDN, so a frame downloads only what it shows; the wide one
+  also keeps the composited product out of the Everyday frame at 3:2), a
+  grade (natural / warm / soften / lift: one look for photographs shot in
+  different light), an optional link, and an optional product chip (studio
   packshot, name and price, linking to the product).
 {%- endcomment -%}
 {%- liquid
@@ -93,6 +95,15 @@
             assign ar_m = ar
             if b.image_mobile != blank
               assign ar_m = b.image_mobile.aspect_ratio
+            elsif b.region_mobile != blank and b.image != blank
+              assign rpm = b.region_mobile | split: ','
+              if rpm.size == 4
+                assign rwm = rpm[2] | strip | times: 1.0
+                assign rhm = rpm[3] | strip | times: 1.0
+                if rwm > 0 and rhm > 0
+                  assign ar_m = rwm | divided_by: rhm
+                endif
+              endif
             endif
             assign km = ar_m | divided_by: 0.8
             if km < 1
@@ -114,9 +125,10 @@
               echo '(min-width: 1348px) ' | append: d_max | append: 'px, (min-width: 957px) ' | append: d_vw | append: 'vw, ' | append: d_min | append: 'px'
             endcapture
             assign has_mob = false
-            if b.image_mobile != blank or b.region != blank
+            if b.image_mobile != blank or b.region != blank or b.region_mobile != blank
               assign has_mob = true
             endif
+            assign grade = b.grade | default: 'natural'
             if has_mob
               assign sz_all = sz_d
             else
@@ -125,9 +137,9 @@
             assign cp = b.product
           -%}
           <li class="zmm__item" id="{{ sid }}-f{{ forloop.index }}" data-zv-strip-item {{ block.shopify_attributes }}>
-            <figure class="zmm__fig{% if b.link != blank %} zmm__fig--link{% endif %}" style="--zmm-pos: {{ b.position | default: '50% 50%' }};">
+            <figure class="zmm__fig zmm__fig--{{ grade }}{% if b.link != blank %} zmm__fig--link{% endif %}" style="--zmm-pos: {{ b.position | default: '50% 50%' }};">
               <div class="zmm__frame" data-zv-reveal="media">
-                {% render 'zv-media', media: b.video, image: b.image, image_mobile: b.image_mobile, region: b.region, sizes: sz_all, sizes_mobile: sz_m, alt: b.image_alt %}
+                {% render 'zv-media', media: b.video, image: b.image, image_mobile: b.image_mobile, region: b.region, region_mobile: b.region_mobile, sizes: sz_all, sizes_mobile: sz_m, alt: b.image_alt %}
               </div>
               <figcaption class="zmm__cap">
                 {%- if b.label != blank -%}<span class="zmm__k"><span class="zmm__n">{{ num }}</span> {{ b.label | escape }}</span>{%- endif -%}
@@ -178,6 +190,10 @@
         { "type": "text", "id": "image_alt", "label": "Photograph description" },
         { "type": "text", "id": "position", "label": "Crop", "default": "50% 50%", "info": "Where the frame centres on the photograph, as x% y%. On wide screens the crop region below wins." },
         { "type": "text", "id": "region", "label": "Crop region on wide screens (optional)", "info": "left, top, width, height in pixels of the original photograph, cut on Shopify's CDN, e.g. 40,180,1935,1290. Use a 3:2 box (width = 1.5 × height) to keep something out of the frame." },
+        { "type": "text", "id": "region_mobile", "label": "Crop region on phones (optional)", "info": "The same for phones, a 4:5 box (width = 0.8 × height). Ignored when a phone photograph is set." },
+        { "type": "select", "id": "grade", "label": "Grade", "default": "natural",
+          "info": "Brings photographs shot in different light into one look. Lifestyle photographs only.",
+          "options": [ { "value": "natural", "label": "Natural (the shared light grade)" }, { "value": "warm", "label": "Warm" }, { "value": "soften", "label": "Soften (mute cool colours)" }, { "value": "lift", "label": "Lift (a dark photograph)" } ] },
         { "type": "url", "id": "link", "label": "Link (optional)" },
         { "type": "product", "id": "product", "label": "Product chip (optional)", "info": "Shows the product's studio packshot, name and price under the caption, linking to it." }
       ] }

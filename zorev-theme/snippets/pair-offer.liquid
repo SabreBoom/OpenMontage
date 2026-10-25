@@ -52,7 +52,12 @@
 
   NO SCRIPT
   The form posts items[][id] / items[][quantity] for both products to
-  /cart/add, which lands on the cart page. With script, the band posts the
+  /cart/add, which lands on the cart page; the option radios themselves are
+  the first items[][id]. With script, they are renamed pair_a as soon as the
+  band loads and a hidden items[][id] mirrors the checked one: Shopify's
+  own analytics listener treats a changing input named like a variant id
+  inside a cart form as a product-page variant switch and logs an error on
+  pages without a product (home, the Pair collection). With script, the band posts the
   same two lines to /cart/add.js once, then opens the bag drawer
   (ZorevCart.show(button) so focus comes back to the button) and refreshes
   it. While posting, the button is aria-busy / aria-disabled, never
@@ -75,7 +80,9 @@
     Params: product, variant, widths, sizes, cls, loading, fetchpriority,
     alt ('none' = decorative), wrap (a class: wraps the img in a stand
     span with the picture's proportions), wrap_attrs, shadow (true: a
-    contact shadow inside the stand).
+    contact shadow inside the stand). output: 'url' prints only the URL of
+    the chosen packshot, cut to the product, url_width wide (default 240,
+    never above the file) — for JSON data such as snippets/pair-data.
   {%- endcomment -%}
   {%- liquid
     assign p = product
@@ -216,6 +223,19 @@
         endif
       endif
     -%}
+    {%- if output == 'url' -%}
+      {%- liquid
+        assign uw = url_width | default: 240 | plus: 0
+        if uw > cw
+          assign uw = cw
+        endif
+        if cut
+          echo img | image_url: width: uw, crop: 'region', crop_left: x0, crop_top: y0, crop_width: cw, crop_height: ch
+        else
+          echo img | image_url: width: uw
+        endif
+      -%}
+    {%- else -%}
     {%- if wrap != blank -%}<span class="{{ wrap }}{% if is_studio %} is-studio{% else %} is-photo{% endif %}{% if cut %} is-cut{% endif %}" style="aspect-ratio: {{ cw }} / {{ ch }}"{% if wrap_attrs != blank %} {{ wrap_attrs }}{% endif %}>{%- endif -%}
     <img{% if cls != blank %} class="{{ cls }}"{% endif %}
          src="{{ src_u }}"
@@ -227,6 +247,7 @@
          {%- if loading == 'eager' %} loading="eager"{% else %} loading="lazy" decoding="async"{% endif -%}
          {%- if fetchpriority == 'high' %} fetchpriority="high"{% endif %}>
     {%- if wrap != blank -%}{%- if shadow -%}<span class="zpp__shadow" aria-hidden="true"></span>{%- endif -%}</span>{%- endif -%}
+    {%- endif -%}
   {%- endif -%}
 
 {%- when 'plate' -%}
@@ -466,8 +487,11 @@
       .zpr__save{align-self:center;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);text-transform:uppercase;
         color:var(--zv-on-accent);background:var(--zv-accent);padding:5px 10px;border-radius:var(--zv-r-pill)}
       .zpr__tag{margin:0 0 var(--zv-4);font-family:var(--zv-serif);font-size:var(--zv-t-h4);line-height:var(--zv-lh-snug);color:var(--zv-text);max-width:none}
-      .zpr__inc{list-style:none;margin:0 0 var(--zv-5);padding:0;display:grid;gap:4px;font-size:var(--zv-t-sm);line-height:var(--zv-lh-body);color:var(--zv-text-2)}
-      .zpr__inc a{color:var(--zv-text);text-decoration:underline;text-decoration-color:var(--zv-hairline-2);text-underline-offset:3px}
+      .zpr__inc{list-style:none;margin:0 0 var(--zv-4);padding:0;display:grid;gap:0;font-size:var(--zv-t-sm);line-height:var(--zv-lh-body);color:var(--zv-text-2)}
+      /* each product link is a 44px-tall target (brief), without spacing
+         the two lines apart more than the text needs */
+      .zpr__inc a{display:inline-block;min-height:44px;padding-block:10px;color:var(--zv-text);
+        text-decoration:underline;text-decoration-color:var(--zv-hairline-2);text-underline-offset:3px}
       @media (hover: hover) and (pointer: fine){.zpr__inc a:hover{text-decoration-color:currentColor}}
       .zpr__qty{color:var(--zv-text-3);font-variant-numeric:tabular-nums}
       .zpr__body{color:var(--zv-text-2)}
@@ -596,9 +620,29 @@
           if (!hit) return;
           stands.forEach(function (s) { s.classList.toggle('is-off', s !== hit); });
         }
+        /* The radios post as items[][id] without script. With script they
+           become pair_a, and a hidden items[][id] in their place carries the
+           choice, so Shopify's analytics listener never sees a "variant id"
+           input change on a page without a product. */
+        var radios = Array.prototype.slice.call(form.querySelectorAll('input[type="radio"][data-zpr-opt]'));
+        var mirror = null;
+        if (radios.length) {
+          var firstQty = form.querySelector('input[name="items[][quantity]"]');
+          mirror = document.createElement('input');
+          mirror.type = 'hidden';
+          mirror.name = 'items[][id]';
+          mirror.setAttribute('data-zpr-mirror', '');
+          var on = radios.filter(function (r) { return r.checked; })[0] || radios[0];
+          mirror.value = on.value;
+          if (firstQty && firstQty.parentNode) firstQty.parentNode.insertBefore(mirror, firstQty);
+          else form.appendChild(mirror);
+          radios.forEach(function (r) { r.name = 'pair_a'; });
+        }
         form.addEventListener('change', function (e) {
           var r = e.target;
-          if (r && r.hasAttribute && r.hasAttribute('data-zpr-opt') && r.checked) showCut(r.value);
+          if (!r || !r.hasAttribute || !r.hasAttribute('data-zpr-opt') || !r.checked) return;
+          if (mirror) mirror.value = r.value;
+          showCut(r.value);
         });
         var c0 = form.querySelector('[data-zpr-opt]:checked');
         if (c0) showCut(c0.value);

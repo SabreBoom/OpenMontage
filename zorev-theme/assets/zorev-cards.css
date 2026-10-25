@@ -164,6 +164,13 @@
 /* With a two-product catalogue a 4-up grid leaves two dead columns, so the
    two-item case is centred and capped rather than stretched. */
 .zgrid--pair { max-width: 860px; margin-inline: auto; }
+/* ...and the collection page's head (eyebrow, H1, description) stands in
+   the same 860px column, so the title and the cards share one left edge
+   (V15 QA MINOR 2). The head and the grid are sibling blocks of the same
+   section (sections/main-collection.liquid: .zcol, then .zcol__list), with
+   the pair band between them on the pair page. Browsers without :has()
+   keep the head on the container edge, as before. */
+.zcol:has(~ .zcol__list .zgrid--pair) .zsec__head { max-width: 860px; margin-inline: auto; }
 
 /* ==========================================================================
    Section furniture shared by the homepage bands.

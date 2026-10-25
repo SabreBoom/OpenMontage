@@ -102,7 +102,7 @@
   }
 }
 .zhf__copy { display: flex; flex-direction: column; align-items: flex-start; gap: var(--zv-4); max-width: 38rem; }
-.zhf__eyebrow { color: var(--zv-sand); }
+.zhf__eyebrow { color: var(--zv-sand); text-shadow: 0 1px 10px color-mix(in srgb, var(--zv-bg) 50%, transparent); }
 .zhf__h1 {
   margin: 0; font-family: var(--zv-serif); font-weight: 400;
   font-size: var(--zv-t-display); line-height: 1.01; letter-spacing: -0.024em;
@@ -242,8 +242,12 @@
 .zps.zps--plate .zps__plate { inset: 0; transform: none; will-change: auto; }
 .zps.zps--plate .zps__plate img { object-position: 50% 50% !important; }
 .zps.zps--plate .zps__copy { padding-inline: 0; }
+/* Tablets: one column, so the plate (and the options row under it) is
+   centred rather than left-aligned with the space beside it empty. */
 @media (min-width: 700px) and (max-width: 899px) {
-  .zps.zps--plate .zps__frame { aspect-ratio: 1 / 1; width: min(100%, 560px); }
+  .zps.zps--plate .zps__frame { aspect-ratio: 1 / 1; width: min(100%, 560px); margin-inline: auto; }
+  .zps.zps--plate .zps__opts { max-width: 560px; margin-inline: auto; }
+  .zps.zps--plate .zps__copy { width: min(100%, 560px); margin-inline: auto; }
 }
 @media (min-width: 900px) {
   .zps.zps--plate .zps__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(40px, 6vw, 96px); align-items: center; }
@@ -456,12 +460,19 @@ html:not(.zv-js) .zmm__track::-webkit-scrollbar { display: block; height: 6px; }
   background: var(--zv-bg); }
 @media (min-width: 700px) { .zmm__frame { aspect-ratio: 3 / 2; } }
 .zmm__frame .zv-media { position: absolute; inset: 0; }
-/* One grade for four photographs shot in four lights: a touch less
-   saturation and a faint warm matte, the same on every frame. Lifestyle
+/* One grade for four photographs shot in four lights. Every frame gets a
+   touch less saturation and a faint warm matte (natural); a block can ask
+   for more where its photograph is the odd one out (section setting
+   "Grade"): warm, soften (mutes a cool teal/pink frame) or lift (opens up
+   a very dark frame). Static filters, never animated. Lifestyle
    photographs only; product pictures are never graded. */
-.zmm__frame img, .zmm__frame .zv-media__vid { object-position: var(--zmm-pos) !important; filter: saturate(.88) sepia(.06); }
+.zmm__fig { --zmm-grade: saturate(.88) sepia(.06); --zmm-wash: .07; }
+.zmm__fig--warm   { --zmm-grade: saturate(.86) sepia(.12); --zmm-wash: .07; }
+.zmm__fig--soften { --zmm-grade: saturate(.5) sepia(.34) contrast(.94); --zmm-wash: .10; }
+.zmm__fig--lift   { --zmm-grade: contrast(.8) brightness(1.42) saturate(.78) sepia(.14); --zmm-wash: .12; }
+.zmm__frame img, .zmm__frame .zv-media__vid { object-position: var(--zmm-pos) !important; filter: var(--zmm-grade); }
 .zmm__frame::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: var(--zv-sand); opacity: .07; }
+  background: var(--zv-sand); opacity: var(--zmm-wash); }
 .zmm__cap { display: grid; gap: 4px; padding-inline: 2px; }
 .zmm__k { display: flex; align-items: baseline; gap: 10px; font-size: var(--zv-t-micro); font-weight: 600;
   letter-spacing: var(--zv-tr-caps); text-transform: uppercase; color: var(--zv-moss-strong); }

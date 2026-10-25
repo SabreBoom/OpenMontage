@@ -71,6 +71,31 @@
       assign pair_note = true
     endif
   endif
+
+  comment
+    Thumbnail slot, as in snippets/cutout-data: HOYGI (pair product B) uses
+    its second studio slot, the clean stick-and-box cutout, whenever that
+    variant has one; its first slot is a busy still life that reads as a
+    muddy square at thumbnail size. Everything else keeps its first slot.
+  endcomment
+  assign cut_ids = ','
+  if settings.studio_mode == 'on' and pb != blank
+    for pv in pb.variants
+      assign xid = pv.id | append: ''
+      assign hits = 0
+      for n in (1..10)
+        assign kv = 'studio_' | append: n | append: '_variant'
+        assign ki = 'studio_' | append: n | append: '_image'
+        assign sv = settings[kv] | append: '' | strip
+        if sv == xid and settings[ki] != blank
+          assign hits = hits | plus: 1
+        endif
+      endfor
+      if hits > 1
+        assign cut_ids = cut_ids | append: xid | append: ','
+      endif
+    endfor
+  endif
 -%}
 {%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
 {%- assign pp = pp | strip -%}
@@ -90,11 +115,23 @@
           <p class="zcart__emptyp">Start with {{ pa.vendor | upcase | escape }} or {{ pb.vendor | upcase | escape }}, or take both as {{ settings.pair_name | escape }}{% if pp != blank %}, {{ pp }} together{% endif %}.</p>
           <ul class="zempty" role="list">
             {%- for k in (1..2) -%}
-              {%- if k == 1 -%}{%- assign ep = pa -%}{%- else -%}{%- assign ep = pb -%}{%- endif -%}
+              {%- liquid
+                if k == 1
+                  assign ep = pa
+                else
+                  assign ep = pb
+                endif
+                assign ev = ep.selected_or_first_available_variant
+                assign ti = 0
+                assign needle = ',' | append: ev.id | append: ','
+                if cut_ids contains needle
+                  assign ti = 1
+                endif
+              -%}
               <li>
                 <a class="zempty__p" href="{{ ep.url }}">
                   <span class="zempty__plate zv-studio" aria-hidden="true">
-                    {%- render 'studio-image', product: ep, variant: ep.selected_or_first_available_variant, index: 0, widths: '120,180,240,360', sizes: '(max-width: 560px) 42vw, 180px', class: 'zempty__img', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
+                    {%- render 'studio-image', product: ep, variant: ev, index: ti, widths: '120,180,240,360', sizes: '(max-width: 560px) 42vw, 180px', class: 'zempty__img', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
                   </span>
                   <span class="zempty__n">{{ ep.title | escape }}</span>
                   <span class="zempty__pr">{{ ep.price | money_without_trailing_zeros }}</span>
@@ -121,13 +158,18 @@
               if item.product.variants.size > 1
                 assign multi = true
               endif
+              assign ti = 0
+              assign needle = ',' | append: item.variant_id | append: ','
+              if cut_ids contains needle
+                assign ti = 1
+              endif
             -%}
             {%- capture vlab -%}{%- if multi -%}{% render 'zvlabel', t: item.variant.title %}{%- endif -%}{%- endcapture -%}
             {%- assign vlab = vlab | strip -%}
             {%- capture lname -%}{{ item.product.title | escape }}{% if vlab != blank %}, {{ vlab }}{% endif %}{%- endcapture -%}
             <li class="zline" data-line="{{ forloop.index }}" data-key="{{ item.key | escape }}">
               <a class="zline__fig zv-studio" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
-                {%- render 'studio-image', product: item.product, variant: item.variant, index: 0, widths: '120,180,240', sizes: '(max-width: 560px) 72px, 96px', class: 'zline__img', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
+                {%- render 'studio-image', product: item.product, variant: item.variant, index: ti, widths: '120,180,240', sizes: '(max-width: 560px) 72px, 96px', class: 'zline__img', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
               </a>
               <div class="zline__info">
                 <a class="zline__name" href="{{ item.url }}">{{ item.product.title | escape }}</a>
@@ -164,9 +206,9 @@
               </div>
               <div class="zline__price">
                 {%- if item.original_line_price > item.final_line_price -%}
-                  <s><span class="visually-hidden">Regular price </span>{{ item.original_line_price | money }}</s>
+                  <s><span class="visually-hidden">Regular price </span>{{ item.original_line_price | money_without_trailing_zeros }}</s>
                 {%- endif -%}
-                <span class="zline__now">{{ item.final_line_price | money }}</span>
+                <span class="zline__now">{{ item.final_line_price | money_without_trailing_zeros }}</span>
               </div>
             </li>
           {%- endfor -%}
@@ -191,10 +233,15 @@
             endif
             assign avail = offer_p.variants | where: 'available'
             assign ov = offer_p.selected_or_first_available_variant
+            assign ti = 0
+            assign needle = ',' | append: ov.id | append: ','
+            if cut_ids contains needle
+              assign ti = 1
+            endif
           -%}
           <div class="zpair" data-cart-pair>
             <span class="zpair__img zv-studio" aria-hidden="true" data-cart-pair-img>
-              {%- render 'studio-image', product: offer_p, variant: ov, index: 0, widths: '120,180', sizes: '64px', class: 'zpair__pic', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
+              {%- render 'studio-image', product: offer_p, variant: ov, index: ti, widths: '120,180', sizes: '64px', class: 'zpair__pic', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
             </span>
             <div class="zpair__txt">
               <p class="zpair__k">Complete your {{ settings.pair_name | remove_first: 'The ' | escape }}</p>

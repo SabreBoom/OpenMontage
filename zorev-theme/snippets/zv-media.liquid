@@ -24,7 +24,10 @@
                 and everything outside it never reaches the browser. Phones
                 (under 700px) then get the uncropped photograph through their
                 own <source>, cropped by `position` as before, unless
-                image_mobile is set.
+                image_mobile or region_mobile is set.
+  region_mobile the same box for phones (under 700px), cut from `image`
+                when there is no image_mobile: a 4:5 box for a 4:5 phone
+                frame means the phone downloads only what it shows.
   fit           'cover' (default) or 'contain'.
   class         extra classes on the wrapper.
   position      the crop to use while the image has no focal point of its
@@ -60,7 +63,7 @@
   assign label = alt | default: still.alt | default: vid.alt | strip_html | escape
   assign sizes_attr = sizes | default: '100vw'
   assign sizes_m = sizes_mobile | default: '100vw'
-  assign ladder = '600,900,1200,1600,2200,3000' | split: ','
+  assign ladder = '600,900,1200,1600,1800,2000,2200,3000' | split: ','
   assign crop = still.presentation.focal_point | default: '50% 50%'
   if position != blank and still.presentation.focal_point.x == 50 and still.presentation.focal_point.y == 50
     assign crop = position
@@ -95,6 +98,26 @@
     assign img_w = rw
     assign img_h = rh
   endif
+
+  assign use_mregion = false
+  assign ml = 0
+  assign mt = 0
+  assign mw = 0
+  assign mh = 0
+  if region_mobile != blank and image_mobile == blank and still != blank
+    assign mparts = region_mobile | split: ','
+    if mparts.size == 4
+      assign ml = mparts[0] | strip | plus: 0
+      assign mt = mparts[1] | strip | plus: 0
+      assign mw = mparts[2] | strip | plus: 0
+      assign mh = mparts[3] | strip | plus: 0
+      assign m_right = ml | plus: mw
+      assign m_bottom = mt | plus: mh
+      if ml >= 0 and mt >= 0 and mw > 0 and mh > 0 and m_right <= still.width and m_bottom <= still.height
+        assign use_mregion = true
+      endif
+    endif
+  endif
 -%}
 {%- if still != blank or vid -%}
 <div class="zv-media{{ fit_class }}{% if class != blank %} {{ class }}{% endif %}" data-zv-media>
@@ -120,12 +143,21 @@
       assign mob = nil
       if image_mobile != blank
         assign mob = image_mobile
-      elsif use_region
+      elsif use_region or use_mregion
         assign mob = still
       endif
     -%}
     <picture>
-      {%- if mob != blank -%}
+      {%- if use_mregion -%}
+        {%- capture mob_set -%}
+          {%- for w in ladder -%}
+            {%- assign wn = w | plus: 0 -%}
+            {%- if wn < mw and wn <= 1600 -%}{{ still | image_url: width: wn, crop: 'region', crop_left: ml, crop_top: mt, crop_width: mw, crop_height: mh }} {{ wn }}w, {% endif -%}
+          {%- endfor -%}
+          {%- if mw <= 2200 -%}{{- still | image_url: crop: 'region', crop_left: ml, crop_top: mt, crop_width: mw, crop_height: mh }} {{ mw }}w{%- else -%}{{- still | image_url: width: 2200, crop: 'region', crop_left: ml, crop_top: mt, crop_width: mw, crop_height: mh }} 2200w{%- endif -%}
+        {%- endcapture -%}
+        <source media="(max-width: 699px)" srcset="{{ mob_set | strip }}" sizes="{{ sizes_m }}" width="{{ mw }}" height="{{ mh }}">
+      {%- elsif mob != blank -%}
         {%- capture mob_set -%}
           {%- for w in ladder -%}
             {%- assign wn = w | plus: 0 -%}
