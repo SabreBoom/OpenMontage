@@ -511,7 +511,7 @@
                 </span>
               </label>
             {%- endif -%}
-            {%- capture offer_label -%}Add the pair{% if pp != blank %} &middot; {{ pp }}{% endif %}{%- endcapture -%}
+            {%- capture offer_label -%}Add the pair{% if pp != blank %} · {{ pp }}{% endif %}{%- endcapture -%}
             <button type="button" class="pairc__add" data-pairc-add
                     data-a="{{ pva.id }}" data-b="{{ pvb.id }}"
                     data-label-offer="{{ offer_label | escape_once }}" data-label-plain="Add one of each">{% if pair_state == 'blocked' %}Add one of each{% else %}{{ offer_label }}{% endif %}</button>
@@ -781,7 +781,7 @@
       font-size:var(--zv-t-sm);color:var(--zv-text-2);text-decoration:underline;text-underline-offset:3px}
     .pdp__rating .zicon{color:var(--zv-forest)}
     .pdp__pricerow{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--zv-2) var(--zv-5);
-      margin:0 0 var(--zv-4);padding-bottom:var(--zv-4);border-bottom:1px solid var(--zv-line)}
+      margin:0 0 var(--zv-3);padding-bottom:var(--zv-3);border-bottom:1px solid var(--zv-line)}
     .pdp__price{margin:0;font-size:clamp(1.375rem,1.25rem + .5vw,1.625rem);letter-spacing:-0.01em;color:var(--zv-text)}
     .pdp__ship{display:inline-flex;align-items:center;gap:8px;margin:0;
       font-size:var(--zv-t-sm);color:var(--zv-text-2)}
@@ -791,7 +791,7 @@
       letter-spacing:var(--zv-tr-caps);text-transform:uppercase;color:var(--zv-text-2)}
 
     /* ---- option picker: radios with the option's own packshot ---- */
-    .vpick{margin:0 0 var(--zv-4)}
+    .vpick{margin:0 0 var(--zv-3)}
     .vpick__set{border:0;margin:0;padding:0;min-width:0}
     .vpick__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--zv-2)}
     .vopt{position:relative;display:flex;align-items:center;gap:var(--zv-3);min-height:52px;
