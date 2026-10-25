@@ -743,6 +743,10 @@
       position:relative;scroll-snap-align:center;scroll-snap-stop:always;
       aspect-ratio:1/1;display:grid;place-items:center;overflow:hidden;
       border-radius:var(--zv-r-lg);background:var(--zv-plate);
+      /* The packshots already carry their own white margin, which the
+         plate's multiply dissolves; no extra studio padding, so the main
+         picture is as large as the square allows. */
+      --zv-studio-pad:0;
     }
     .gal__slide--shot img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
     /* A curated photograph or film fills its square edge to edge. */
@@ -761,7 +765,7 @@
     /* Thumbnails (600px and up): small studio plates, the chosen one ringed. */
     .gal__thumbs{display:none;gap:var(--zv-2);flex-wrap:wrap}
     @media(min-width:600px){.gal__thumbs{display:flex}}
-    .gal__thumb{position:relative;width:64px;height:64px;padding:0;border:0;cursor:pointer;
+    .gal__thumb{position:relative;width:64px;height:64px;padding:0;border:0;cursor:pointer;--zv-studio-pad:0;
       border-radius:var(--zv-r-md);overflow:hidden;background:var(--zv-plate);
       -webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
       box-shadow:inset 0 0 0 1px var(--zv-line);transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
@@ -807,7 +811,7 @@
     .vopt.is-on,.vopt:has(.vopt__in:checked){box-shadow:inset 0 0 0 2px var(--zv-forest);
       background:color-mix(in srgb, var(--zv-forest) 5%, var(--zv-bg-raised))}
     .vopt:has(.vopt__in:focus-visible){outline:2px solid var(--zv-focus);outline-offset:2px}
-    .vopt__sw{flex:0 0 auto;width:42px;height:42px;border-radius:var(--zv-r-sm);overflow:hidden;
+    .vopt__sw{flex:0 0 auto;width:42px;height:42px;border-radius:var(--zv-r-sm);overflow:hidden;--zv-studio-pad:0;
       background:var(--zv-plate);display:grid;place-items:center}
     .vopt__sw img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
     .vopt__t{min-width:0;font-family:var(--zv-sans);font-size:var(--zv-t-sm);font-weight:600;line-height:1.25;color:var(--zv-text)}
@@ -910,9 +914,9 @@
     .atc__err,.pairc__err{margin:var(--zv-2) 0 0;padding:var(--zv-2) var(--zv-3);border-radius:var(--zv-r-sm);
       border:1px solid var(--zv-error, #8C2F2F);background:color-mix(in srgb, var(--zv-error, #8C2F2F) 6%, transparent);
       color:var(--zv-text);font-size:var(--zv-t-sm);max-width:none}
-    .pdp__note{display:flex;align-items:center;gap:8px;margin:var(--zv-3) 0 0;
-      font-size:var(--zv-t-sm);color:var(--zv-text-2);max-width:none}
-    .pdp__note .zicon{flex:0 0 auto;width:18px;height:18px;color:var(--zv-forest)}
+    .pdp__note{display:flex;align-items:flex-start;gap:8px;margin:var(--zv-3) 0 0;
+      font-size:var(--zv-t-sm);line-height:1.45;color:var(--zv-text-2);max-width:none}
+    .pdp__note .zicon{flex:0 0 auto;width:18px;height:18px;margin-top:1px;color:var(--zv-forest)}
 
     /* ---- the pair ---- */
     .pairc{
@@ -921,7 +925,7 @@
       border-radius:var(--zv-r-lg);background:var(--zv-bg-sunken);
     }
     .pairc__figs{display:flex;align-items:center;gap:4px}
-    .pairc__plate{width:60px;height:60px;border-radius:var(--zv-r-sm);overflow:hidden;
+    .pairc__plate{width:60px;height:60px;border-radius:var(--zv-r-sm);overflow:hidden;--zv-studio-pad:0;
       background:var(--zv-plate);display:grid;place-items:center}
     .pairc__plate img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
     .pairc__plus{color:var(--zv-text-2);display:grid;place-items:center}

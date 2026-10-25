@@ -9,14 +9,18 @@
   Quantity changes post to /cart/change.js and ask Shopify to re-render
   THIS section in the same request (the Section Rendering API), then swap
   the new markup in. The page never reloads, the scroll position holds,
-  and the totals are still Liquid's — the same template, rendered again
-  by Shopify with the new cart. With JS off, the quantity buttons are
-  ordinary forms that post and come back to this page.
+  focus returns to the same control of the same line, and the totals are
+  still Liquid's — the same template, rendered again by Shopify with the new
+  cart. With JS off, every control is an ordinary form that posts and comes
+  back to this page.
 
-  The pair offer follows the same measured rule as the drawer: Shopify
-  applies the pair when the bag holds at least as many of product A as of
-  product B. It is offered only when adding one unit would satisfy that,
-  and confirmed only when the pair discount actually appears in the cart.
+  The pair follows the one shared rule (window.ZorevPair.applies in
+  assets/zorev.js; the same expression in Liquid below): with G GODA and H
+  HOYGI in the bag, Shopify applies the pair saving once per order when
+  G >= 1, H >= 1 and (H <= 2 or G >= H). Inferred from measured carts, so
+  the page offers the pair only where one more unit would satisfy it,
+  confirms it only when Shopify's own discount title is in the cart, and
+  says plainly when the bag holds both but the rule rules it out.
 {%- endcomment -%}
 {%- liquid
   assign pa = settings.pair_product_a
@@ -24,6 +28,10 @@
   assign pair_on = false
   if settings.pair_enabled and pa != blank and pb != blank and pa.title != blank and pb.title != blank
     assign pair_on = true
+  endif
+  assign local_money = false
+  if cart.currency.iso_code == shop.currency
+    assign local_money = true
   endif
   assign qa = 0
   assign qb = 0
@@ -43,21 +51,33 @@
       assign pair_amt = d.total_allocated_amount
     endif
   endfor
+  assign pair_applies = false
+  if qa >= 1 and qb >= 1
+    if qb <= 2 or qa >= qb
+      assign pair_applies = true
+    endif
+  endif
   assign offer_p = nil
+  assign offer_other = 0
+  assign pair_note = false
   if pair_on and pair_hit == false
     if qa >= 1 and qb == 0
       assign offer_p = pb
       assign offer_other = qa
-    elsif qb == 1 and qa == 0
+    elsif qa == 0 and qb >= 1 and qb <= 2
       assign offer_p = pa
       assign offer_other = qb
+    elsif qa >= 1 and qb >= 1 and pair_applies == false
+      assign pair_note = true
     endif
   endif
 -%}
+{%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
+{%- assign pp = pp | strip -%}
 <section class="band zcart" data-cart-section data-section-id="{{ section.id }}">
   <div class="wrap zcart__wrap">
     <header class="zcart__head">
-      <h1>Your bag</h1>
+      <h1 tabindex="-1" data-cart-heading>Your bag</h1>
       {%- if cart.item_count > 0 -%}
         <p class="zcart__count">{{ cart.item_count }} {{ cart.item_count | pluralize: 'item', 'items' }}</p>
       {%- endif -%}
@@ -65,64 +85,80 @@
 
     {%- if cart.item_count == 0 -%}
       <div class="zcart__empty">
-        <p class="lead">Your bag is empty.</p>
+        <p class="zcart__emptyh" tabindex="-1" data-cart-empty-focus>Your bag is empty.</p>
+        {%- if pair_on -%}
+          <p class="zcart__emptyp">Start with {{ pa.vendor | upcase | escape }} or {{ pb.vendor | upcase | escape }}, or take both as {{ settings.pair_name | escape }}{% if pp != blank %}, {{ pp }} together{% endif %}.</p>
+          <ul class="zempty" role="list">
+            {%- for k in (1..2) -%}
+              {%- if k == 1 -%}{%- assign ep = pa -%}{%- else -%}{%- assign ep = pb -%}{%- endif -%}
+              <li>
+                <a class="zempty__p" href="{{ ep.url }}">
+                  <span class="zempty__plate zv-studio" aria-hidden="true">
+                    {%- render 'studio-image', product: ep, variant: ep.selected_or_first_available_variant, index: 0, widths: '120,180,240,360', sizes: '(max-width: 560px) 42vw, 180px', class: 'zempty__img', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
+                  </span>
+                  <span class="zempty__n">{{ ep.title | escape }}</span>
+                  <span class="zempty__pr">{{ ep.price | money_without_trailing_zeros }}</span>
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
         <div class="zcart__emptyact">
           <a class="btn" href="{{ routes.all_products_collection_url }}">Shop ZOREV</a>
           {%- if pair_on -%}
-            <a class="btn btn--ghost" href="{{ routes.root_url }}#pair">{{ settings.pair_name | escape }}</a>
+            <a class="btn btn--ghost" href="{{ routes.root_url }}#pair">{{ settings.pair_name | escape }}{% if pp != blank %} &middot; {{ pp }}{% endif %}</a>
           {%- endif -%}
         </div>
       </div>
     {%- else -%}
       <div class="zcart__grid">
         <div class="zcart__main">
-        <div class="zcart__lines" data-cart-lines aria-busy="false">
+        <p class="zcart__err" role="alert" data-cart-err hidden></p>
+        <ul class="zcart__lines" role="list" data-cart-lines aria-busy="false">
           {%- for item in cart.items -%}
             {%- liquid
-              assign vi = 0
-              for pv in item.product.variants
-                if pv.id == item.variant_id
-                  assign vi = forloop.index0
-                endif
-              endfor
-              assign has_cut = false
-              if item.product.metafields.zorev.cutouts.value.size > 0
-                assign has_cut = true
+              assign multi = false
+              if item.product.variants.size > 1
+                assign multi = true
               endif
             -%}
-            <article class="zline" data-line="{{ forloop.index }}">
-              <a class="zline__fig{% if has_cut %} zline__fig--stage{% endif %}" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
-                {% render 'product-cutout', product: item.product, index: vi, sizes: '96px', alt: '' %}
+            {%- capture vlab -%}{%- if multi -%}{% render 'zvlabel', t: item.variant.title %}{%- endif -%}{%- endcapture -%}
+            {%- assign vlab = vlab | strip -%}
+            {%- capture lname -%}{{ item.product.title | escape }}{% if vlab != blank %}, {{ vlab }}{% endif %}{%- endcapture -%}
+            <li class="zline" data-line="{{ forloop.index }}" data-key="{{ item.key | escape }}">
+              <a class="zline__fig zv-studio" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+                {%- render 'studio-image', product: item.product, variant: item.variant, index: 0, widths: '120,180,240', sizes: '(max-width: 560px) 72px, 96px', class: 'zline__img', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
               </a>
               <div class="zline__info">
                 <a class="zline__name" href="{{ item.url }}">{{ item.product.title | escape }}</a>
-                {%- unless item.product.has_only_default_variant -%}
-                  <p class="zline__var">{% render 'zvlabel', t: item.variant.title %}</p>
-                {%- endunless -%}
+                {%- if vlab != blank -%}
+                  <p class="zline__var">{{ vlab }}</p>
+                {%- endif -%}
                 {%- for a in item.line_level_discount_allocations -%}
                   <p class="zline__disc">{% render 'zicon', name: 'check' %}<span>{{ a.discount_application.title | escape }}</span></p>
                 {%- endfor -%}
-                <div class="qty" role="group" aria-label="Quantity for {{ item.product.title | escape }}">
+                <div class="qty" role="group" aria-label="Quantity for {{ lname }}">
                   <form action="{{ routes.cart_change_url }}" method="post" class="qty__f">
                     <input type="hidden" name="line" value="{{ forloop.index }}">
                     <input type="hidden" name="return_to" value="{{ routes.cart_url }}">
                     <button class="qty__b" type="submit" name="quantity" value="{{ item.quantity | minus: 1 }}"
-                            data-qty="{{ forloop.index }}" data-to="{{ item.quantity | minus: 1 }}"
+                            data-qty="{{ forloop.index }}" data-to="{{ item.quantity | minus: 1 }}" data-dir="dec"
                             aria-label="Decrease quantity">&minus;</button>
                   </form>
-                  <span class="qty__n" aria-live="polite">{{ item.quantity }}</span>
+                  <span class="qty__n">{{ item.quantity }}</span>
                   <form action="{{ routes.cart_change_url }}" method="post" class="qty__f">
                     <input type="hidden" name="line" value="{{ forloop.index }}">
                     <input type="hidden" name="return_to" value="{{ routes.cart_url }}">
                     <button class="qty__b" type="submit" name="quantity" value="{{ item.quantity | plus: 1 }}"
-                            data-qty="{{ forloop.index }}" data-to="{{ item.quantity | plus: 1 }}"
+                            data-qty="{{ forloop.index }}" data-to="{{ item.quantity | plus: 1 }}" data-dir="inc"
                             aria-label="Increase quantity">+</button>
                   </form>
                   <form action="{{ routes.cart_change_url }}" method="post" class="qty__f">
                     <input type="hidden" name="line" value="{{ forloop.index }}">
                     <input type="hidden" name="return_to" value="{{ routes.cart_url }}">
                     <button class="qty__x" type="submit" name="quantity" value="0"
-                            data-qty="{{ forloop.index }}" data-to="0">Remove</button>
+                            data-qty="{{ forloop.index }}" data-to="0" data-dir="rm"
+                            aria-label="Remove {{ lname }}">Remove</button>
                   </form>
                 </div>
               </div>
@@ -132,14 +168,17 @@
                 {%- endif -%}
                 <span class="zline__now">{{ item.final_line_price | money }}</span>
               </div>
-            </article>
+            </li>
           {%- endfor -%}
-        </div>
+        </ul>
 
         {%- comment -%}
           The pair offer sits under the lines, as the natural next line of
           the bag, and not inside the order summary: the summary stays a
-          clean receipt with one primary action, Checkout.
+          clean receipt with one primary action, Checkout. Its form is
+          data-no-ajax so assets/zorev.js leaves it alone: the script below
+          is its one owner (one add per click), and with JS off it posts
+          and comes back here.
         {%- endcomment -%}
         {%- if offer_p != blank -%}
           {%- liquid
@@ -150,47 +189,54 @@
             else
               assign mine = pa
             endif
-            assign offer_cut = false
-            if offer_p.metafields.zorev.cutouts.value.size > 0
-              assign offer_cut = true
-            endif
+            assign avail = offer_p.variants | where: 'available'
+            assign ov = offer_p.selected_or_first_available_variant
           -%}
           <div class="zpair" data-cart-pair>
-            <span class="zpair__img{% if offer_cut %} zpair__img--stage{% endif %}">{% render 'product-cutout', product: offer_p, sizes: '64px', alt: '' %}</span>
+            <span class="zpair__img zv-studio" aria-hidden="true" data-cart-pair-img>
+              {%- render 'studio-image', product: offer_p, variant: ov, index: 0, widths: '120,180', sizes: '64px', class: 'zpair__pic', loading: 'lazy', fetchpriority: 'auto', alt: '' -%}
+            </span>
             <div class="zpair__txt">
               <p class="zpair__k">Complete your {{ settings.pair_name | remove_first: 'The ' | escape }}</p>
-              <p class="zpair__h">Add {{ offer_p.vendor | upcase | escape }} and save {{ settings.pair_save_cents | money_without_trailing_zeros }}</p>
-              <p class="zpair__l">
-                {%- if offer_other > 1 -%}
-                  {{ offer_p.vendor | upcase | escape }} for {{ alone | money_without_trailing_zeros }} with your {{ mine.vendor | upcase | escape }}
-                {%- else -%}
-                  {{ both | money_without_trailing_zeros }} together
-                {%- endif -%}
-              </p>
+              {%- if local_money -%}
+                <p class="zpair__h">Add {{ offer_p.vendor | upcase | escape }} and save {{ settings.pair_save_cents | money_without_trailing_zeros }}</p>
+                <p class="zpair__l">
+                  {%- if offer_other > 1 -%}
+                    {{ offer_p.vendor | upcase | escape }} for {{ alone | money_without_trailing_zeros }} with your {{ mine.vendor | upcase | escape }}
+                  {%- else -%}
+                    {{ both | money_without_trailing_zeros }} together
+                  {%- endif -%}
+                </p>
+              {%- else -%}
+                <p class="zpair__h">Add {{ offer_p.vendor | upcase | escape }} to make it a pair</p>
+                <p class="zpair__l">The pair saving comes off in your bag, once per order.</p>
+              {%- endif -%}
             </div>
-            <form class="zpair__form" action="{{ routes.cart_add_url }}" method="post" data-cart-pair-form>
-              {%- assign avail = offer_p.variants | where: 'available' -%}
+            <form class="zpair__form" action="{{ routes.cart_add_url }}" method="post" data-cart-pair-form data-no-ajax>
               {%- if avail.size > 1 -%}
                 <label class="zpair__pick">
                   <span class="zpair__picklabel">{{ offer_p.vendor | upcase | escape }} option</span>
                   <select name="id">
-                    {%- for pv in avail -%}<option value="{{ pv.id }}">{% render 'zvlabel', t: pv.title %}</option>{%- endfor -%}
+                    {%- for pv in avail -%}<option value="{{ pv.id }}"{% if pv.id == ov.id %} selected{% endif %}>{% render 'zvlabel', t: pv.title %}</option>{%- endfor -%}
                   </select>
                 </label>
               {%- else -%}
-                <input type="hidden" name="id" value="{{ offer_p.selected_or_first_available_variant.id }}">
+                <input type="hidden" name="id" value="{{ ov.id }}">
               {%- endif -%}
               <input type="hidden" name="quantity" value="1">
               <input type="hidden" name="return_to" value="{{ routes.cart_url }}">
               <button class="zpair__btn" type="submit">Add {{ offer_p.vendor | upcase | escape }}</button>
             </form>
+            <p class="zpair__err" role="alert" data-cart-pair-err hidden></p>
           </div>
+        {%- elsif pair_note -%}
+          <p class="zpair-note"><strong>Pair saving not applied.</strong> It comes off once per order, and not while the bag has three or more {{ pb.vendor | upcase | escape }} with fewer {{ pa.vendor | upcase | escape }}.</p>
         {%- endif -%}
         </div>
 
         <aside class="zcart__sum" aria-label="Order summary">
           {%- if pair_hit -%}
-            <p class="zpair-ok">
+            <p class="zpair-ok" tabindex="-1" data-cart-pair-focus>
               <span class="zpair-ok__ic" aria-hidden="true">{% render 'zicon', name: 'check' %}</span>
               <span><strong>{{ settings.pair_name | escape }}</strong> &middot; You&rsquo;re saving {{ pair_amt | money_without_trailing_zeros }}</span>
             </p>
@@ -230,35 +276,57 @@
     .zcart [hidden]{display:none !important}
     .zcart.band{padding-top:clamp(24px,4vw,48px)}
     .zcart__head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--zv-4);
-      padding-bottom:var(--zv-5);border-bottom:1px solid var(--zv-line);margin-bottom:var(--zv-2)}
-    .zcart__head h1{margin:0}
+      padding-bottom:var(--zv-5);border-bottom:1px solid var(--zv-hairline);margin-bottom:var(--zv-2)}
+    .zcart__head h1{margin:0;outline:none}
     .zcart__count{margin:0;color:var(--zv-text-2);font-size:var(--zv-t-sm)}
-    .zcart__empty{padding-block:var(--zv-7)}
-    .zcart__emptyact{display:flex;flex-wrap:wrap;gap:var(--zv-3)}
+
+    /* ---- empty bag: a short way back in, the two products and the pair ---- */
+    .zcart__empty{padding-block:var(--zv-7);display:grid;gap:var(--zv-4);justify-items:start}
+    .zcart__emptyh{margin:0;font-family:var(--zv-serif);font-size:var(--zv-t-h3);line-height:var(--zv-lh-snug);
+      color:var(--zv-text);outline:none}
+    .zcart__emptyp{margin:0;max-width:52ch;font-size:var(--zv-t-body);line-height:var(--zv-lh-body);color:var(--zv-text-2)}
+    .zempty{list-style:none;margin:var(--zv-2) 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,180px));
+      gap:var(--zv-4)}
+    .zempty__p{display:grid;gap:var(--zv-1);color:var(--zv-text);text-decoration:none}
+    .zempty__plate{display:block;aspect-ratio:1/1;margin-bottom:var(--zv-2);--zv-studio-pad:8%;
+      box-shadow:inset 0 0 0 1px var(--zv-hairline)}
+    .zempty__n{font-family:var(--zv-serif);font-size:var(--zv-t-sm);line-height:var(--zv-lh-snug);text-wrap:balance}
+    .zempty__pr{font-size:var(--zv-t-sm);color:var(--zv-text-2);font-variant-numeric:tabular-nums}
+    @media (hover:hover) and (pointer:fine){
+      .zempty__p:hover .zempty__n{text-decoration:underline;text-underline-offset:3px}
+      .zempty__plate img{transition:transform var(--zv-d-zoom) var(--zv-ease-reveal)}
+      .zempty__p:hover .zempty__plate img{transform:scale(var(--zv-zoom))}
+    }
+    .zcart__emptyact{display:flex;flex-wrap:wrap;gap:var(--zv-3);margin-top:var(--zv-2)}
+
     .zcart__grid{display:grid;gap:var(--zv-7)}
     @media(min-width:900px){.zcart__grid{grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr);gap:clamp(40px,5vw,72px);align-items:start}
       .zcart__sum{position:sticky;top:88px}}
     /* While a change is in flight the lines dim rather than vanish, so the
        page keeps its shape and the swap reads as an update, not a reload. */
+    .zcart__lines{list-style:none;margin:0;padding:0}
     .zcart__lines[aria-busy="true"]{opacity:.55;pointer-events:none;transition:opacity var(--zv-d-hover) var(--zv-ease)}
+    .zcart__err{margin:var(--zv-3) 0 0;padding:var(--zv-2) var(--zv-3);max-width:none;border-radius:var(--zv-r-sm);
+      background:var(--zv-bg-sunken);color:var(--zv-text);font-size:var(--zv-t-sm);box-shadow:inset 3px 0 0 var(--zv-accent)}
 
     .zline{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:var(--zv-4);
-      padding:var(--zv-5) 0;border-bottom:1px solid var(--zv-line);align-items:start}
-    .zline__fig{display:grid;place-items:center;width:96px;height:96px;border-radius:var(--zv-r-md);overflow:hidden;
-      background:var(--zv-white);box-shadow:inset 0 0 0 1px rgba(16,19,16,.22)}
-    .zline__fig .zv-cut{width:100%;height:100%;object-fit:contain;filter:none}
-    .zline__fig--stage{background:var(--zv-bg-sunken);box-shadow:inset 0 0 0 1px rgba(16,19,16,.08);padding:6px}
+      padding:var(--zv-5) 0;border-bottom:1px solid var(--zv-hairline);align-items:start}
+    /* The picture stands on the studio plate (.zv-studio): a maker's
+       packshot when Theme settings > Studio images has one for the option. */
+    .zline__fig{display:block;width:96px;height:96px;border-radius:var(--zv-r-md);
+      box-shadow:inset 0 0 0 1px var(--zv-hairline);--zv-studio-pad:7%}
+    .zcart .zline__fig.zv-studio img{object-fit:contain;filter:none}
     .zline__info{display:grid;gap:4px;min-width:0}
     .zline__name{font-family:var(--zv-serif);font-size:var(--zv-t-h4);line-height:var(--zv-lh-snug);
-      color:var(--zv-ink);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;text-wrap:balance}
+      color:var(--zv-text);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;text-wrap:balance}
     @media (hover:hover) and (pointer:fine){ .zline__name:hover{text-decoration:underline;text-underline-offset:3px} }
     .zline__var{margin:0;font-size:var(--zv-t-sm);color:var(--zv-text-2)}
     .zline__disc{display:flex;align-items:center;gap:6px;margin:2px 0 0;font-size:var(--zv-t-fine);
-      font-weight:600;color:var(--zv-forest);max-width:none}
+      font-weight:600;color:var(--zv-accent);max-width:none}
     .zline__disc .zicon{width:16px;height:16px}
     .zline__price{display:grid;justify-items:end;gap:2px;font-variant-numeric:tabular-nums}
     .zline__price s{font-size:var(--zv-t-fine);color:var(--zv-text-2)}
-    .zline__now{font-weight:600;color:var(--zv-ink)}
+    .zline__now{font-weight:600;color:var(--zv-text)}
     @media(max-width:560px){
       .zline{grid-template-columns:72px minmax(0,1fr)}
       .zline__fig{width:72px;height:72px}
@@ -269,99 +337,150 @@
     .qty__f{display:contents}
     .qty__b{min-width:44px;min-height:44px;border-radius:var(--zv-r-sm);
       border:1px solid var(--zv-line-input);background:transparent;
-      color:var(--zv-ink);cursor:pointer;font-size:1.05rem;line-height:1}
+      color:var(--zv-text);cursor:pointer;font-size:1.05rem;line-height:1}
     @media (hover:hover) and (pointer:fine){
       .qty__b:hover{background:var(--zv-bg-sunken);border-color:var(--zv-accent)}
     }
-    .qty__n{min-width:2.2ch;text-align:center;font-variant-numeric:tabular-nums;color:var(--zv-ink)}
+    .qty__n{min-width:2.2ch;text-align:center;font-variant-numeric:tabular-nums;color:var(--zv-text)}
     .qty__x{min-height:44px;padding:0 .8rem;border-radius:var(--zv-r-sm);
-      border:1px solid transparent;background:none;color:var(--zv-muted);
+      border:1px solid transparent;background:none;color:var(--zv-text-3);
       cursor:pointer;font-size:var(--zv-t-fine);text-decoration:underline;text-underline-offset:3px}
-    @media (hover:hover) and (pointer:fine){ .qty__x:hover{color:var(--zv-ink)} }
+    @media (hover:hover) and (pointer:fine){ .qty__x:hover{color:var(--zv-text)} }
     .qty__b[disabled],.qty__x[disabled]{cursor:progress;color:var(--zv-moss-strong);
       background:var(--zv-bg-sunken);border-color:var(--zv-line-input)}
 
     .zcart__sum{padding:var(--zv-5);border-radius:var(--zv-r-lg);background:var(--zv-bg-raised);
-      box-shadow:inset 0 0 0 1px var(--zv-line)}
+      box-shadow:inset 0 0 0 1px var(--zv-hairline)}
     .zsum{margin:0 0 var(--zv-3);display:grid;gap:var(--zv-2)}
     .zsum__row{display:flex;justify-content:space-between;gap:var(--zv-4);font-variant-numeric:tabular-nums}
     .zsum__row dt{color:var(--zv-text-2);font-size:var(--zv-t-sm);min-width:0}
-    .zsum__row dd{margin:0;color:var(--zv-ink);font-size:var(--zv-t-sm);white-space:nowrap}
-    .zsum__row--disc dt,.zsum__row--disc dd{color:var(--zv-forest);font-weight:600}
-    .zsum__row--total{padding-top:var(--zv-3);margin-top:var(--zv-1);border-top:1px solid var(--zv-line)}
-    .zsum__row--total dt{color:var(--zv-ink);font-weight:600;font-size:var(--zv-t-body)}
+    .zsum__row dd{margin:0;color:var(--zv-text);font-size:var(--zv-t-sm);white-space:nowrap}
+    .zsum__row--disc dt,.zsum__row--disc dd{color:var(--zv-accent);font-weight:600}
+    .zsum__row--total{padding-top:var(--zv-3);margin-top:var(--zv-1);border-top:1px solid var(--zv-hairline)}
+    .zsum__row--total dt{color:var(--zv-text);font-weight:600;font-size:var(--zv-t-body)}
     .zsum__row--total dd{font-weight:600;font-size:var(--zv-t-h4)}
-    .zsum__saved{margin:0 0 var(--zv-1);color:var(--zv-forest);font-weight:600;font-size:var(--zv-t-sm)}
+    .zsum__saved{margin:0 0 var(--zv-1);color:var(--zv-accent);font-weight:600;font-size:var(--zv-t-sm)}
     .zsum__note{margin:0 0 var(--zv-4)}
     .zsum__go{min-height:54px}
     .zsum__trust{list-style:none;margin:var(--zv-4) 0 0;padding:0;display:grid;gap:var(--zv-2)}
     .zsum__trust li{display:flex;align-items:center;gap:8px;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
-    .zsum__trust .zicon{color:var(--zv-forest);flex:0 0 auto}
+    .zsum__trust .zicon{color:var(--zv-accent);flex:0 0 auto}
 
     .zpair{display:grid;grid-template-columns:64px minmax(0,1fr);gap:var(--zv-3) var(--zv-4);align-items:center;
       margin:var(--zv-5) 0 0;padding:var(--zv-4);border-radius:var(--zv-r-md);
-      background:var(--zv-bg-raised);box-shadow:0 0 0 1px rgba(16,19,16,.08)}
+      background:var(--zv-bg-raised);box-shadow:inset 0 0 0 1px var(--zv-hairline)}
     @media(min-width:700px){
       .zpair{grid-template-columns:64px minmax(0,1fr) minmax(0,1.1fr)}
       .zpair__form{grid-column:auto !important}
     }
-    .zpair__img{width:64px;height:64px;display:grid;place-items:center;border-radius:var(--zv-r-sm);background:var(--zv-white);
-      box-shadow:inset 0 0 0 1px rgba(16,19,16,.22);overflow:hidden}
-    .zpair__img .zv-cut{width:100%;height:100%;object-fit:contain;filter:none}
-    .zpair__img--stage{background:var(--zv-bg-sunken);box-shadow:inset 0 0 0 1px rgba(16,19,16,.08);padding:4px}
+    .zpair__img{display:block;width:64px;height:64px;border-radius:var(--zv-r-sm);
+      box-shadow:inset 0 0 0 1px var(--zv-hairline);--zv-studio-pad:6%}
     .zpair__k{margin:0;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
-      text-transform:uppercase;color:var(--zv-forest)}
-    .zpair__h{margin:2px 0 0;font-family:var(--zv-serif);font-size:var(--zv-t-body);color:var(--zv-ink)}
+      text-transform:uppercase;color:var(--zv-accent)}
+    .zpair__h{margin:2px 0 0;font-family:var(--zv-serif);font-size:var(--zv-t-body);color:var(--zv-text)}
     .zpair__l{margin:2px 0 0;font-size:var(--zv-t-fine);color:var(--zv-moss-strong);font-variant-numeric:tabular-nums}
     .zpair__form{grid-column:1 / -1;display:flex;gap:var(--zv-2);flex-wrap:wrap;align-items:flex-end}
     .zpair__pick{flex:1 1 140px;display:grid;gap:4px}
     .zpair__picklabel{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
       text-transform:uppercase;color:var(--zv-moss-strong)}
     .zpair__pick select{width:100%;min-height:44px;padding:0 var(--zv-3);border-radius:var(--zv-r-pill);
-      border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-sm)}
+      border:1px solid var(--zv-line-input);background:var(--zv-bg-raised);color:var(--zv-text);font:inherit;font-size:var(--zv-t-sm)}
     /* Outline: Checkout is the page's one primary action. */
     .zpair__btn{flex:1 0 auto;min-height:44px;padding:0 var(--zv-5);border-radius:var(--zv-r-pill);cursor:pointer;
-      border:1px solid var(--zv-forest);background:transparent;color:var(--zv-forest);
+      border:1px solid var(--zv-accent);background:transparent;color:var(--zv-accent);
       transition:background var(--zv-d-hover) var(--zv-ease),color var(--zv-d-hover) var(--zv-ease);
       font-family:var(--zv-sans);font-size:var(--zv-t-fine);font-weight:600;letter-spacing:var(--zv-tr-wide);text-transform:uppercase}
-    @media (hover:hover) and (pointer:fine){ .zpair__btn:hover{background:var(--zv-forest);color:var(--zv-warm)} }
+    @media (hover:hover) and (pointer:fine){ .zpair__btn:hover{background:var(--zv-accent);color:var(--zv-on-accent)} }
     .zpair__btn[aria-busy="true"]{cursor:progress;opacity:.8}
     .zpair__btn:focus-visible,.zpair__pick select:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
+    .zpair__err{grid-column:1 / -1;margin:0;max-width:none;font-size:var(--zv-t-fine);color:var(--zv-text)}
     .zpair-ok{display:flex;align-items:center;gap:var(--zv-2);margin:0 0 var(--zv-4);padding:0 0 var(--zv-4);
-      border-bottom:1px solid var(--zv-line);color:var(--zv-forest);font-size:var(--zv-t-sm);max-width:none}
+      border-bottom:1px solid var(--zv-hairline);color:var(--zv-accent);font-size:var(--zv-t-sm);max-width:none;outline:none}
     .zpair-ok__ic{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;
-      background:var(--zv-forest);color:var(--zv-warm);flex:0 0 auto}
+      background:var(--zv-accent);color:var(--zv-on-accent);flex:0 0 auto}
     .zpair-ok__ic .zicon{width:14px;height:14px}
+    /* Not applied: plain information, no alarm colour and no offer. */
+    .zpair-note{margin:var(--zv-5) 0 0;max-width:none;padding:var(--zv-3) var(--zv-4);border-radius:var(--zv-r-md);
+      background:var(--zv-bg-sunken);font-size:var(--zv-t-sm);line-height:var(--zv-lh-body);color:var(--zv-text-2)}
+    .zpair-note strong{color:var(--zv-text);font-weight:600}
   </style>
   <script>
   (function(){
     'use strict';
     /* Delegated from document, so the handlers survive every swap of the
-       section's markup. One section on the page: the first match wins. */
+       section's markup. The theme editor re-runs this script when it
+       re-renders the section; the flag keeps the handlers single, or one
+       click would post twice. */
+    if (window.__zvCartPage) return;
+    window.__zvCartPage = true;
+
+    var busy = false;
     function section(){ return document.querySelector('[data-cart-section]'); }
     function sectionId(){ var s = section(); return s ? s.getAttribute('data-section-id') : null; }
-    function say(msg){ var l = document.querySelector('[data-cart-live]'); if (l) l.textContent = msg; }
+    function say(msg){
+      var l = document.querySelector('[data-cart-live]');
+      if (!l) return;
+      l.textContent = '';
+      setTimeout(function(){ l.textContent = msg; }, 30);
+    }
+    function showErr(sel, msg){
+      var s = section(); var el = s && s.querySelector(sel);
+      if (!el) { say(msg); return; }
+      el.textContent = msg || '';
+      el.hidden = !msg;
+    }
+    function items(n){ n = Number(n) || 0; return n + (n === 1 ? ' item' : ' items'); }
 
-    /* Swap in the section Shopify rendered for the new cart. The response
-       is the whole section including its wrapper, so take the wrapper's
-       children. Focus is restored to the control that was pressed, found
-       again by line and target quantity. */
-    function swap(html, refocus){
+    /* Swap in the section Shopify rendered for the new cart. The response is
+       the whole section including its wrapper, so take the wrapper's
+       children. The live region is carried over, not replaced: a region
+       that is inserted together with its message is often not announced. */
+    function swap(html){
       var wrap = document.getElementById('shopify-section-' + sectionId());
-      if (!wrap) { window.location.reload(); return; }
+      if (!wrap) { window.location.reload(); return null; }
       var doc = new DOMParser().parseFromString(html, 'text/html');
       var fresh = doc.getElementById('shopify-section-' + sectionId()) || doc.body;
+      var oldLive = wrap.querySelector('[data-cart-live]');
       wrap.innerHTML = fresh.innerHTML;
-      if (refocus) {
-        var again = wrap.querySelector('[data-qty="' + refocus.line + '"][data-to="' + refocus.to + '"]');
-        if (again) again.focus();
+      var nl = wrap.querySelector('[data-cart-live]');
+      if (oldLive && nl && nl.parentNode) nl.parentNode.replaceChild(oldLive, nl);
+      return wrap;
+    }
+
+    /* Focus goes back to the same control (data-dir) of the same line,
+       found by the line's key, then by its position. After a removal it
+       moves to the name of the line that took its place (never to another
+       Remove), and in an empty bag to the message. */
+    function refocus(wrap, want){
+      if (!wrap || !want) return;
+      var rows = [].slice.call(wrap.querySelectorAll('.zline'));
+      var t = null;
+      if (!rows.length) {
+        t = wrap.querySelector('[data-cart-empty-focus]');
+      } else if (want.dir !== 'rm' && want.to > 0) {
+        var same = rows.filter(function(r){ return want.key && r.getAttribute('data-key') === want.key; });
+        var row = same.filter(function(r){ return r.getAttribute('data-line') === String(want.line); })[0] ||
+                  same[0] || rows[Math.min(want.line, rows.length) - 1];
+        t = row && (row.querySelector('[data-dir="' + want.dir + '"]') || row.querySelector('.zline__name'));
+      } else {
+        var next = rows[Math.min(want.line, rows.length) - 1];
+        t = next && next.querySelector('.zline__name');
       }
+      if (!t) t = wrap.querySelector('[data-cart-heading]');
+      if (t) t.focus();
     }
 
     function change(line, to, btn){
+      if (busy) return;
+      busy = true;
       var lines = document.querySelector('[data-cart-lines]');
       if (lines) lines.setAttribute('aria-busy', 'true');
-      var wasRemove = to === 0;
+      showErr('[data-cart-err]', '');
+      var row = btn ? btn.closest('.zline') : null;
+      var nameEl = row ? row.querySelector('.zline__name') : null;
+      var title = nameEl ? nameEl.textContent.trim() : 'Item';
+      var want = { line: line, to: to, dir: btn ? btn.getAttribute('data-dir') : null,
+                   key: row ? row.getAttribute('data-key') : null };
       fetch('/cart/change.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -371,14 +490,18 @@
         .then(function(c){
           var html = c.sections && c.sections[sectionId()];
           if (!html) { window.location.reload(); return; }
-          swap(html, wasRemove ? null : { line: line, to: btn ? btn.getAttribute('data-to') : to });
-          say(wasRemove ? 'Item removed. ' + c.item_count + ' in bag.' : c.item_count + ' in bag.');
+          var wrap = swap(html);
+          refocus(wrap, want);
+          say(to === 0
+            ? title + ' removed. ' + items(c.item_count) + ' in your bag.'
+            : title + ', quantity ' + to + '. ' + items(c.item_count) + ' in your bag.');
           document.dispatchEvent(new CustomEvent('cart:updated', { detail: c }));
         })
         .catch(function(){
           if (lines) lines.setAttribute('aria-busy', 'false');
-          say('The bag could not be updated. Please try again.');
-        });
+          showErr('[data-cart-err]', 'The bag could not be updated. Please try again.');
+        })
+        .then(function(){ busy = false; });
     }
 
     document.addEventListener('click', function(e){
@@ -386,34 +509,57 @@
       if (!b || !window.fetch) return;
       e.preventDefault();
       var line = Number(b.getAttribute('data-qty')), to = Number(b.getAttribute('data-to'));
-      if (to < 0) return;
+      if (to < 0 || busy) return;
       change(line, to, b);
     });
 
-    /* The pair offer on this page: add, then re-render the section, with
-       the same fallback to a plain post if fetch is missing. */
+    /* The pair offer on this page: one add per click, then re-render the
+       section. Its form is data-no-ajax, so this is its only owner; with
+       fetch missing it posts natively and comes back here. */
     document.addEventListener('submit', function(e){
-      var f = e.target.closest('[data-cart-pair-form]');
+      var f = e.target.closest && e.target.closest('[data-cart-pair-form]');
       if (!f || !window.fetch) return;
       e.preventDefault();
+      if (busy) return;
+      busy = true;
       var btn = f.querySelector('button[type="submit"]');
-      if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+      if (btn) { btn.setAttribute('aria-busy', 'true'); btn.setAttribute('aria-disabled', 'true'); }
+      showErr('[data-cart-pair-err]', '');
       var fd = new FormData(f);
       fd.delete('return_to');
       fd.append('sections', sectionId());
       fetch('/cart/add.js', { method: 'POST', headers: { Accept: 'application/json' }, body: fd })
-        .then(function(r){ if (!r.ok) throw new Error('add failed'); return r.json(); })
+        .then(function(r){
+          if (r.ok) return r.json();
+          return r.json().catch(function(){ return null; }).then(function(j){
+            throw new Error((j && (j.description || j.message)) || '');
+          });
+        })
         .then(function(j){
           var html = j.sections && j.sections[sectionId()];
           if (!html) { window.location.reload(); return; }
-          swap(html, null);
+          var wrap = swap(html);
+          var t = wrap && (wrap.querySelector('[data-cart-pair-focus]') || wrap.querySelector('[data-cart-heading]'));
+          if (t) t.focus();
           say('Added to your bag.');
           document.dispatchEvent(new CustomEvent('cart:updated'));
         })
-        .catch(function(){
-          if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); }
-          say('That could not be added. Please try again.');
-        });
+        .catch(function(err){
+          if (btn) { btn.removeAttribute('aria-busy'); btn.removeAttribute('aria-disabled'); }
+          showErr('[data-cart-pair-err]', (err && err.message) || 'That could not be added. Please try again.');
+        })
+        .then(function(){ busy = false; });
+    });
+
+    /* The chooser swaps the offer's picture to the chosen option's own
+       (studio) photograph, from the page's map (snippets/cutout-data). */
+    document.addEventListener('change', function(e){
+      var sel = e.target.closest && e.target.closest('[data-cart-pair-form] select[name="id"]');
+      if (!sel) return;
+      var s = section();
+      var img = s && s.querySelector('[data-cart-pair-img] img');
+      var m = window.ZorevCart && window.ZorevCart.media ? window.ZorevCart.media(sel.value) : null;
+      if (img && m && m.src) { img.removeAttribute('srcset'); img.removeAttribute('sizes'); img.src = m.src; }
     });
   })();
   </script>
