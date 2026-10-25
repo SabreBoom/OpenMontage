@@ -1,31 +1,37 @@
 {%- comment -%}
-  Product page.
+  Product page (V15).
 
-  Order of the buy box follows the questions a first-time customer asks,
-  in the order they ask them: what is it, what does it cost, which one,
-  how many, add it — then why trust us, then the detail.
+  The buy box answers a first-time customer's questions in the order they
+  ask them: what is it, what does it cost, which one, how many, add it.
+  Below it, the product's story — what it is, how to use it, what's
+  included, good to know — set as short headed blocks beside one quiet,
+  product-free landscape.
 
   Prices on this page are never invented here. The quantity offer reads
   the product's "Quantity offer" metafield (zorev.offer), whose savings
   mirror the automatic discounts in Discounts; the pair card reads theme
-  settings that mirror the pair discount. Every total was checked against
-  Shopify's own discount engine before it was written here.
+  settings that mirror the pair discount (snippets/pair-price). Every total
+  was checked against Shopify's own discount engine before it was written.
 
-  The quantity choice is a set of real radio inputs named "quantity"
-  INSIDE the product form. zorev.js posts the form with FormData, and with
-  JavaScript off the browser posts it natively — either way the selected
-  quantity is what reaches the cart.
+  The product form posts natively: a hidden "id" and real radios named
+  "quantity" sit INSIDE it. zorev.js posts the same form with FormData;
+  with JavaScript off the browser posts it, and the option picker (a small
+  GET form of its own) reloads the page on the chosen option, so the id in
+  the form is always the option on screen.
+
+  Photographs: with Theme settings > Studio images on, the gallery shows
+  the makers' own packshots assigned there to this product's options (slot
+  order), the selected option's first; otherwise the product's media from
+  Shopify. Choosing an option shows the photograph assigned to THAT option
+  (by variant id, never by position).
 {%- endcomment -%}
 {%- liquid
+  assign v = product.selected_or_first_available_variant
+  assign multi = false
+  if product.variants.size > 1
+    assign multi = true
+  endif
   assign shots = product.media | where: 'media_type', 'image'
-  comment
-    V14: the gallery leads with the product's own photographs (Products >
-    Media in Shopify, featured image first). The generated cutouts on the
-    drawn stage are retired; the zorev.cutouts metafield stays on the
-    product but this section no longer reads it.
-  endcomment
-  assign cuts = blank
-  assign has_cuts = false
   assign media_ids = product.media | map: 'id' | join: ','
   assign media_ids = ',' | append: media_ids | append: ','
   assign gallery = product.metafields.zorev.gallery.value
@@ -33,7 +39,6 @@
   if gallery.size > 0
     assign has_gallery = true
   endif
-  assign v = product.selected_or_first_available_variant
   assign offer = product.metafields.zorev.offer.value
   assign unit_one = offer.unit | default: 'item'
   assign unit_many = offer.units | default: 'items'
@@ -54,123 +59,191 @@
       assign max_tier = t.qty
     endif
   endfor
+
+  comment
+    Studio images (Theme settings > Studio images): slot N pairs a numeric
+    variant id (studio_N_variant) with a packshot (studio_N_image). The
+    slots that belong to this product's options become the gallery, in
+    slot order, with the selected option's slots first so its picture is
+    the first one painted (the LCP) and a ?variant= link never sweeps past
+    other bottles on load.
+  endcomment
+  assign studio_on = false
+  if settings.studio_mode == 'on' or settings.studio_mode == true
+    assign studio_on = true
+  endif
+  assign sel_keys = ''
+  assign other_keys = ''
+  if studio_on
+    for n in (1..10)
+      assign kv = 'studio_' | append: n | append: '_variant'
+      assign ki = 'studio_' | append: n | append: '_image'
+      assign sv = settings[kv] | strip
+      if sv == blank or settings[ki] == blank
+        continue
+      endif
+      for var in product.variants
+        assign vid = var.id | append: ''
+        if vid == sv
+          if var.id == v.id
+            assign sel_keys = sel_keys | append: 's' | append: n | append: ','
+          else
+            assign other_keys = other_keys | append: 's' | append: n | append: ','
+          endif
+          break
+        endif
+      endfor
+    endfor
+  endif
+  assign slide_keys = sel_keys | append: other_keys
+  assign use_studio = false
+  if slide_keys != blank
+    assign use_studio = true
+  else
+    comment
+      No studio slots for this product: its own media from Shopify, in
+      their order, except that the selected option's own photograph leads.
+    endcomment
+    assign first_mid = v.featured_media.id | default: 0
+    assign first_key = ''
+    assign rest_keys = ''
+    for m in shots limit: 10
+      if m.id == first_mid and first_key == blank
+        assign first_key = 'm' | append: forloop.index0 | append: ','
+      else
+        assign rest_keys = rest_keys | append: 'm' | append: forloop.index0 | append: ','
+      endif
+    endfor
+    assign slide_keys = first_key | append: rest_keys
+  endif
+  assign keys = slide_keys | split: ','
+  assign n_slides = keys.size
+  assign ladder = '480,640,800,1000,1200,1400' | split: ','
+  assign gal_sizes = '(min-width: 1240px) 590px, (min-width: 900px) 48vw, calc(100vw - 40px)'
 -%}
+<div class="zpdp-root" data-zpdp>
 <section class="band zpdp">
   <div class="wrap pdp" data-variants data-money-format="{{ shop.money_format | strip_html | escape }}">
 
     {%- comment -%}
-      One scroll-snap track at every size: swiping is the native gesture on a
-      phone, and keeping every frame in the DOM means no re-decode on a tap.
-      On desktop the gallery is the sticky column — it is the shorter one, so
-      it can actually stick while the longer information column scrolls.
-    {%- endcomment -%}
-    {%- comment -%}
-      Slides, in order (V14):
-        1  the product's own photographs (Products > the product > Media in
-           Shopify), in the order they are listed there. The first is the
-           LCP and carries the page-to-page name. Choosing an option
-           scrolls to the photograph assigned to it (the variant's image).
-        2  in-use photographs from the "Scene" blocks, if any are enabled.
-        3  the curated gallery (product.metafields.zorev.gallery): real
-           photographs and short silent films of this product. Anything
-           already shown from the product's own media is skipped, so no
-           photograph appears twice. Films play only while their slide is
-           on screen, with a pause button, and never under reduced motion.
-      The generated cutouts on the drawn stage (zorev.cutouts) are retired;
-      the has_cuts branch below is inert and kept only so it can be
-      restored.
+      One scroll-snap track at every size: swiping is the native gesture on
+      a phone, and every frame stays in the DOM, so nothing re-decodes on a
+      tap. On desktop the gallery is the sticky column. Thumbnails (desktop)
+      and dots (phones) are drawn by the script below; each slide says which
+      option it shows (data-variant, data-label), so both can name it.
     {%- endcomment -%}
     <div class="pdp__media gal" data-gal>
       <div class="gal__track" data-gal-track tabindex="0" role="group"
-           aria-label="{{ product.title | strip_html | escape }} images">
-        {%- comment -%}
-          The product's own photographs first, in the order they are listed
-          on the product in Shopify; the first is the LCP and carries the
-          page-to-page name. Each slide carries its media id, so choosing an
-          option scrolls to the photograph assigned to that option
-          (Products > the product > the variant's image).
-        {%- endcomment -%}
-        {%- for m in shots limit: 10 -%}
-          <div class="gal__slide gal__slide--shot" data-thumb="{{ m | image_url: width: 160 }}" data-media-id="{{ m.id }}">
-            <img src="{{ m | image_url: width: 1400 }}"
-                 srcset="{{ m | image_url: width: 700 }} 700w, {{ m | image_url: width: 1000 }} 1000w, {{ m | image_url: width: 1400 }} 1400w"
-                 sizes="(min-width: 900px) 52vw, 100vw"
-                 alt="{{ m.alt | default: product.title | strip_html | escape }}"
-                 width="{{ m.width | default: 1400 }}" height="{{ m.height | default: 1400 }}"
-                 {% if forloop.first %}fetchpriority="high" data-vt-static data-vt-product="{{ product.handle | escape }}"{% else %}loading="lazy"{% endif %}
-                 decoding="async">
-          </div>
-        {%- endfor -%}
-        {%- if has_cuts -%}
-          {%- for c in cuts -%}
-            {%- liquid
-              assign cv = product.variants[forloop.index0]
-              assign cut_alt = product.title
-              if product.variants.size > 1 and cv != blank
-                capture cut_alt
-                  echo product.title
-                  echo ' — '
-                  render 'zvlabel', t: cv.title
-                endcapture
+           aria-label="{{ product.title | strip_html | escape }} photographs">
+        {%- for key in keys -%}
+          {%- liquid
+            assign kind = key | slice: 0
+            assign ref = key | slice: 1, 9
+            assign img = nil
+            assign s_vars = ''
+            assign s_label = ''
+            assign s_mid = ''
+            assign s_alt = ''
+            if kind == 's'
+              assign ki = 'studio_' | append: ref | append: '_image'
+              assign kv = 'studio_' | append: ref | append: '_variant'
+              assign img = settings[ki]
+              assign s_vars = settings[kv] | strip
+            else
+              assign mi = ref | plus: 0
+              assign m = shots[mi]
+              assign img = m.preview_image
+              assign s_mid = m.id
+              assign s_alt = m.alt
+              for var in product.variants
+                if var.featured_media.id == m.id
+                  assign s_vars = s_vars | append: var.id | append: ' '
+                endif
+              endfor
+              assign s_vars = s_vars | strip
+            endif
+            assign first_var = s_vars | split: ' ' | first
+            if multi and first_var != blank
+              for var in product.variants
+                assign vid = var.id | append: ''
+                if vid == first_var
+                  capture s_label
+                    render 'zvlabel', t: var.title
+                  endcapture
+                  assign s_label = s_label | strip
+                  break
+                endif
+              endfor
+            endif
+            if s_alt == blank
+              if s_label != blank
+                assign s_alt = product.title | append: ', ' | append: s_label
+              elsif n_slides > 1
+                assign s_alt = product.title | append: ', photo ' | append: forloop.index | append: ' of ' | append: n_slides
+              else
+                assign s_alt = product.title
               endif
-            -%}
-            <div class="gal__slide gal__slide--stage zv-stage" data-thumb="{{ c | image_url: width: 160 }}" data-thumb-stage>
-              <div class="gal__obj" data-zv-tilt="4">
-                {% render 'product-cutout', product: product, index: forloop.index0, sizes: '(min-width: 900px) 44vw, 86vw', alt: cut_alt, eager: forloop.first, vt_static: forloop.first %}
-              </div>
-              <span class="zv-stage__shadow gal__shadow" aria-hidden="true"></span>
+            endif
+            assign src_w = img.width | at_most: 1000
+          -%}
+          {%- if img != blank -%}
+            <div class="gal__slide gal__slide--shot zv-studio"
+                 data-thumb="{{ img | image_url: width: 160 }}"
+                 {%- if s_vars != blank %} data-variant="{{ s_vars }}"{% endif -%}
+                 {%- if s_label != blank %} data-label="{{ s_label | escape_once }}"{% endif -%}
+                 {%- if s_mid != blank %} data-media-id="{{ s_mid }}"{% endif %}>
+              <img src="{{ img | image_url: width: src_w }}"
+                   srcset="{%- for w in ladder -%}{%- assign wn = w | plus: 0 -%}{%- if wn < img.width -%}{{ img | image_url: width: wn }} {{ wn }}w, {% endif -%}{%- endfor -%}{{ img | image_url: width: img.width }} {{ img.width }}w"
+                   sizes="{{ gal_sizes }}"
+                   alt="{{ s_alt | strip_html | escape_once }}"
+                   width="{{ img.width }}" height="{{ img.height }}"
+                   {% if forloop.first %}fetchpriority="high" data-vt-static data-vt-product="{{ product.handle | escape }}"{% else %}loading="lazy" decoding="async"{% endif %}>
             </div>
-          {%- endfor -%}
-        {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
         {%- comment -%}
-          In-use photographs from the "Scene" blocks: the real product in a
-          real place, after the product's own photographs and before the
-          curated gallery. A block set
-          to a product shows on that product's page only. Kept in the theme,
-          not in product metafields, so a draft theme can carry them without
-          touching what the published theme shows.
+          In-use photographs from the "Scene" blocks, after the product's own
+          photographs. A block set to a product shows on that product's page
+          only. (Both are disabled: they are composites, and need the owner's
+          approval before they are shown.)
         {%- endcomment -%}
         {%- for block in section.blocks -%}
           {%- if block.type == 'scene' and block.settings.image != blank -%}
             {%- if block.settings.product == blank or block.settings.product.id == product.id -%}
               <div class="gal__slide gal__slide--photo" data-thumb="{{ block.settings.image | image_url: width: 160 }}" {{ block.shopify_attributes }}>
-                {% render 'zv-media', image: block.settings.image, sizes: '(min-width: 900px) 44vw, 92vw', alt: block.settings.image_alt, position: block.settings.position %}
+                {% render 'zv-media', image: block.settings.image, sizes: '(min-width: 1240px) 1060px, (min-width: 900px) 86vw, 180vw', alt: block.settings.image_alt, position: block.settings.position %}
               </div>
             {%- endif -%}
           {%- endif -%}
         {%- endfor -%}
+        {%- comment -%}
+          The curated gallery (zorev.gallery): real photographs and short
+          silent films of this product. Anything that is the product's own
+          media is skipped — shown already, or deliberately replaced by the
+          studio set — so no photograph appears twice.
+        {%- endcomment -%}
         {%- if has_gallery -%}
           {%- for f in gallery -%}
-            {%- comment -%} Skip anything already shown from the product's own media. {%- endcomment -%}
             {%- capture fkey -%},{{ f.id }},{%- endcapture -%}
             {%- if media_ids contains fkey -%}{%- continue -%}{%- endif -%}
-            {%- liquid
-              assign g_alt = f.alt | default: product.title
-              assign g_eager = false
-              if shots.size == 0 and forloop.first
-                assign g_eager = true
-              endif
-            -%}
+            {%- assign g_alt = f.alt | default: product.title -%}
             {%- if f.media_type == 'video' -%}
-              <div class="gal__slide gal__slide--photo" data-thumb="{{ f.preview_image | image_url: width: 160 }}" data-thumb-film>
-                {% render 'zv-media', media: f, sizes: '(min-width: 900px) 44vw, 92vw', alt: g_alt %}
+              <div class="gal__slide gal__slide--photo" data-thumb="{{ f.preview_image | image_url: width: 160 }}">
+                {% render 'zv-media', media: f, sizes: gal_sizes, alt: g_alt %}
               </div>
             {%- elsif f.media_type == 'image' -%}
               <div class="gal__slide gal__slide--photo" data-thumb="{{ f | image_url: width: 160 }}">
-                {% render 'zv-media', image: f, sizes: '(min-width: 900px) 44vw, 92vw', alt: g_alt, eager: g_eager %}
+                {% render 'zv-media', image: f, sizes: gal_sizes, alt: g_alt %}
               </div>
             {%- endif -%}
           {%- endfor -%}
         {%- endif -%}
       </div>
-      <div class="gal__dots" role="tablist" aria-label="Choose image" data-gal-dots></div>
+      <div class="gal__dots" data-gal-dots></div>
       <div class="gal__thumbs" data-gal-thumbs></div>
     </div>
 
     <div class="pdp__info">
-      {%- if product.type != blank -%}
-        <span class="eyebrow pdp__kicker">{{ product.type | escape }}</span>
-      {%- endif -%}
       <h1 class="pdp__title">{{ product.title | escape }}</h1>
 
       {%- if rcount > 0 -%}
@@ -185,29 +258,61 @@
         <p class="pdp__ship">{% render 'zicon', name: 'truck' %}<span>Free shipping, worldwide</span></p>
       </div>
 
-      {%- if parts[0] != blank -%}
-        <div class="pdp__lede">{{ parts[0] }}</div>
+      {%- if multi -%}
+        {%- comment -%}
+          The option picker: native radios in a fieldset, so arrow keys move
+          and select as a radio group should, and the selected one is
+          rendered by the server. Each carries data-variant-id, which
+          zorev.js listens to (click and change) to set the id in both
+          product forms. Its own GET form is the no-script path: "Show this
+          option" reloads the page on ?variant=, and the product form then
+          carries that id. With scripts on, that button is hidden and the
+          form never submits.
+
+          class "opt" stays on the radio for older selectors and the
+          storefront tests; the chip styling it once carried is inert on a
+          transparent input.
+        {%- endcomment -%}
+        <form class="vpick" action="{{ product.url }}" method="get" data-vpick>
+          <fieldset class="vpick__set">
+            <legend class="pdp__label">Option</legend>
+            <div class="vpick__grid">
+              {%- for var in product.variants -%}
+                {%- liquid
+                  assign sw = nil
+                  if use_studio
+                    assign xid = var.id | append: ''
+                    for n in (1..10)
+                      assign kv = 'studio_' | append: n | append: '_variant'
+                      assign sv = settings[kv] | strip
+                      if sv == xid
+                        assign ki = 'studio_' | append: n | append: '_image'
+                        if settings[ki] != blank
+                          assign sw = settings[ki]
+                          break
+                        endif
+                      endif
+                    endfor
+                  else
+                    assign sw = var.featured_image
+                  endif
+                -%}
+                <label class="vopt{% if var.id == v.id %} is-on{% endif %}{% unless var.available %} is-sold{% endunless %}">
+                  <input class="opt vopt__in" type="radio" name="variant" value="{{ var.id }}"
+                         data-variant-id="{{ var.id }}"{% if var.id == v.id %} checked{% endif %}>
+                  {%- if sw != blank -%}
+                    <span class="vopt__sw zv-studio" aria-hidden="true"><img src="{{ sw | image_url: width: 120 }}" alt="" width="{{ sw.width }}" height="{{ sw.height }}" decoding="async"></span>
+                  {%- endif -%}
+                  <span class="vopt__t">{% render 'zvlabel', t: var.title %}{% unless var.available %}<span class="vopt__sold">Sold out</span>{% endunless %}</span>
+                </label>
+              {%- endfor -%}
+            </div>
+            <button class="btn btn--ghost vpick__go" type="submit">Show this option</button>
+          </fieldset>
+        </form>
       {%- endif -%}
 
-      {%- if product.variants.size > 1 -%}
-        <div class="pdp__field">
-          <p class="pdp__label" id="opt-label-{{ section.id }}">Option</p>
-          <div class="opts" role="radiogroup" aria-labelledby="opt-label-{{ section.id }}">
-            {%- for var in product.variants -%}
-              {%- comment -%}
-                A sold-out option stays selectable — choosing it shows "Sold
-                out" on the button — so it is not aria-disabled, which would
-                tell a screen reader it cannot be operated. It says so in words.
-              {%- endcomment -%}
-              <button class="opt" type="button" role="radio"
-                      data-variant-id="{{ var.id }}" aria-checked="false"
-                      {% unless var.available %}data-sold{% endunless %}>{% render 'zvlabel', t: var.title %}{% unless var.available %}<span class="visually-hidden"> (sold out)</span>{% endunless %}</button>
-            {%- endfor -%}
-          </div>
-        </div>
-      {%- endif -%}
-
-      <div data-zatc-anchor>
+      <div class="pdp__buy" data-zatc-anchor>
         {%- form 'product', product, id: 'zpf-main', class: 'pdp__form' -%}
           <input type="hidden" name="id" value="{{ v.id }}">
 
@@ -252,17 +357,18 @@
             </fieldset>
           {%- endif -%}
 
-          {%- if offer.breaks.size > 0 and product.variants.size > 1 -%}
+          {%- if offer.breaks.size > 0 and multi -%}
             {%- comment -%}
               Mix and match. With two or more chosen, one select per unit,
               each starting on the option picked above, so the default is
               what it always was and a customer can make it "one Black, one
-              White". The multi-buy discounts count the product, not the
-              option (tests/pricing-curl.sh: Black + White = $70), so the
+              White". A select follows the option above until the customer
+              changes that select; after that it keeps their choice. The
+              multi-buy discounts count the product, not the option, so the
               saving holds for any mix. The selects have no name, so they
               never reach the cart as fields: the script posts the mix as
               line items. Hidden until the script runs; without JavaScript
-              the form posts the chosen option times the quantity, as before.
+              the form posts the chosen option times the quantity.
             {%- endcomment -%}
             <div class="qmix" data-qmix hidden>
               <p class="pdp__label qmix__h" id="qmix-h-{{ section.id }}">Choose each {{ unit_one | escape }}</p>
@@ -270,11 +376,13 @@
                 {%- for n in (1..max_tier) -%}
                   <li class="qmix__row" data-qmix-row="{{ n }}">
                     <label class="qmix__k" for="qmix-{{ section.id }}-{{ n }}">{{ unit_one | capitalize | escape }} {{ n }}</label>
-                    <select class="qmix__sel" id="qmix-{{ section.id }}-{{ n }}" data-qmix-sel>
-                      {%- for var in product.variants -%}
-                        <option value="{{ var.id }}"{% if var.id == v.id %} selected{% endif %}{% unless var.available %} disabled{% endunless %}>{% render 'zvlabel', t: var.title %}{% unless var.available %} (sold out){% endunless %}</option>
-                      {%- endfor -%}
-                    </select>
+                    <span class="qmix__selw">
+                      <select class="qmix__sel" id="qmix-{{ section.id }}-{{ n }}" data-qmix-sel>
+                        {%- for var in product.variants -%}
+                          <option value="{{ var.id }}"{% if var.id == v.id %} selected{% endif %}{% unless var.available %} disabled{% endunless %}>{% render 'zvlabel', t: var.title %}{% unless var.available %} (sold out){% endunless %}</option>
+                        {%- endfor -%}
+                      </select>
+                    </span>
                   </li>
                 {%- endfor -%}
               </ol>
@@ -288,31 +396,10 @@
           </button>
           <p class="atc__err" role="alert" data-atc-error hidden></p>
         {%- endform -%}
-      </div>
-
-      {%- comment -%}
-        Reassurance, set as part of the buy box rather than as badges: a few
-        short lines directly under Add to bag, each one a claim the store's
-        own settings and policies support today. Next-business-day dispatch
-        and tracking are the fulfilment facts the rest of the site states;
-        "we'll make it right" is the refund policy's own wording for damaged,
-        defective or wrong items; checkout security is Shopify's. No
-        "30-day returns" by default — the refund policy lists personal care
-        goods as non-returnable, which is every product here. Theme settings
-        > Trust has the switch for when that changes.
-      {%- endcomment -%}
-      <ul class="trust2" role="list">
         {%- if offer.breaks.size > 0 or show_pair -%}
-          <li>{% render 'zicon', name: 'check' %}<span><strong>Savings apply in your bag</strong>, no code needed</span></li>
+          <p class="pdp__note">{% render 'zicon', name: 'check' %}<span>Savings are applied automatically in your bag. No code.</span></p>
         {%- endif -%}
-        <li>{% render 'zicon', name: 'box' %}<span><strong>Ships the next business day</strong>, tracked</span></li>
-        <li>{% render 'zicon', name: 'lock' %}<span><strong>Secure checkout</strong>, encrypted by Shopify</span></li>
-        {%- if settings.returns_claim -%}
-          <li>{% render 'zicon', name: 'return' %}<span><strong>30-day returns</strong> on unopened, sealed items</span></li>
-        {%- endif -%}
-        <li>{% render 'zicon', name: 'shield' %}<span><strong>Damaged or wrong on arrival?</strong> We&rsquo;ll make it right</span></li>
-        <li>{% render 'zicon', name: 'chat' %}<span><strong>Questions?</strong> <a class="trust2__mail" href="mailto:{{ settings.support_email | escape }}">{{ settings.support_email | escape }}</a> &mdash; a person answers</span></li>
-      </ul>
+      </div>
 
       {%- if show_pair -%}
         {%- liquid
@@ -321,74 +408,164 @@
             assign pva = v
           endif
           assign pvb = pb.selected_or_first_available_variant
+          capture pp
+            render 'pair-price'
+          endcapture
+          assign pp = pp | strip
           assign pair_full = pa.price | plus: pb.price
-          assign pair_price = pair_full | minus: settings.pair_save_cents
+
+          comment
+            The two small pictures: each option's studio packshot when the
+            studio set has one, else that option's own photograph, else the
+            product's.
+          endcomment
+          assign ia = nil
+          assign ib = nil
+          if studio_on
+            assign xa = pva.id | append: ''
+            assign xb = pvb.id | append: ''
+            for n in (1..10)
+              assign kv = 'studio_' | append: n | append: '_variant'
+              assign ki = 'studio_' | append: n | append: '_image'
+              assign sv = settings[kv] | strip
+              if settings[ki] == blank
+                continue
+              endif
+              if sv == xa and ia == blank
+                assign ia = settings[ki]
+              endif
+              if sv == xb and ib == blank
+                assign ib = settings[ki]
+              endif
+            endfor
+          endif
+          if ia == blank
+            assign ia = pva.featured_image | default: pa.featured_image
+          endif
+          if ib == blank
+            assign ib = pvb.featured_image | default: pb.featured_image
+          endif
+          assign save_txt = settings.pair_save_cents | money_without_trailing_zeros
         -%}
+        {%- comment -%}
+          The pair card. "Add the pair" posts one of each (the GODA option
+          selected on this page, or chosen in the card on the HOYGI page).
+          It reads the real cart (zorev.js fires cart:painted after every
+          repaint) and has three states:
+            in-bag   Shopify's own discounts for this cart include the pair
+            blocked  after adding one of each the bag would hold 3+ of B with
+                     only 1-2 of A — Shopify then applies B's multi-buy
+                     instead of the pair (verified: 1 GODA + 3 HOYGI pays
+                     $93, 2 + 3 pays $117), so the card stops promising it
+            offer    anything else (1 GODA + 2 HOYGI does get the pair: $66)
+          The pair applies once per order, so in-bag hides the button.
+        {%- endcomment -%}
         <div class="pairc" data-pairc
              data-a-product="{{ pa.id }}" data-b-product="{{ pb.id }}"
-             data-follow="{% if product.id == pa.id %}a{% endif %}">
+             data-follow="{% if product.id == pa.id %}a{% endif %}"
+             data-title="{{ settings.pair_discount_title | escape }}"
+             data-name="{{ settings.pair_name | escape }}"
+             data-a-short="{{ pa.vendor | upcase | escape }}" data-b-short="{{ pb.vendor | upcase | escape }}">
           <div class="pairc__figs" aria-hidden="true">
-            <span class="pairc__fig">{% render 'product-cutout', product: pa, sizes: '64px', alt: '' %}</span>
+            <span class="pairc__plate zv-studio">{%- if ia != blank -%}<img data-pairc-aimg src="{{ ia | image_url: width: 160 }}" alt="" width="{{ ia.width }}" height="{{ ia.height }}" loading="lazy" decoding="async">{%- endif -%}</span>
             <span class="pairc__plus">{% render 'zicon', name: 'plus' %}</span>
-            <span class="pairc__fig">{% render 'product-cutout', product: pb, sizes: '64px', alt: '' %}</span>
+            <span class="pairc__plate zv-studio">{%- if ib != blank -%}<img src="{{ ib | image_url: width: 160 }}" alt="" width="{{ ib.width }}" height="{{ ib.height }}" loading="lazy" decoding="async">{%- endif -%}</span>
           </div>
           <div class="pairc__txt">
-            <p class="pairc__k">{{ settings.pair_name | escape }}</p>
+            <h2 class="pairc__k">{{ settings.pair_name | escape }}</h2>
             <p class="pairc__h">{{ pa.vendor | upcase | escape }} + {{ pb.vendor | upcase | escape }}</p>
-            <p class="pairc__p" data-pairc-price>
-              <strong>{{ pair_price | money_without_trailing_zeros }}</strong>
-              <s><span class="visually-hidden">Regular price </span>{{ pair_full | money_without_trailing_zeros }}</s>
-              <span class="pairc__save">Save {{ settings.pair_save_cents | money_without_trailing_zeros }}</span>
-            </p>
-            <p class="pairc__tag">{{ settings.pair_tagline | escape }}</p>
+            {%- if pp != blank -%}
+              <p class="pairc__p" data-pairc-price>
+                <strong>{{ pp }}</strong>
+                <s><span class="visually-hidden">Regular price </span>{{ pair_full | money_without_trailing_zeros }}</s>
+                <span class="pairc__save">Save {{ save_txt }}</span>
+              </p>
+              <p class="pairc__tag" data-pairc-tag>One of each. The {{ save_txt }} comes off automatically in your bag, once per order.</p>
+            {%- else -%}
+              <p class="pairc__tag" data-pairc-tag>One of each. The pair saving comes off automatically in your bag, once per order.</p>
+            {%- endif -%}
           </div>
           <div class="pairc__act" data-pairc-act>
             {%- if product.id != pa.id and pa.variants.size > 1 -%}
               <label class="pairc__pick">
                 <span class="pairc__picklabel">{{ pa.vendor | upcase | escape }} option</span>
-                <select data-pairc-avar>
-                  {%- for pv in pa.variants -%}
-                    {%- if pv.available -%}<option value="{{ pv.id }}">{% render 'zvlabel', t: pv.title %}</option>{%- endif -%}
-                  {%- endfor -%}
-                </select>
+                <span class="pairc__selw">
+                  <select data-pairc-avar>
+                    {%- for pv in pa.variants -%}
+                      {%- if pv.available -%}<option value="{{ pv.id }}"{% if pv.id == pva.id %} selected{% endif %}>{% render 'zvlabel', t: pv.title %}</option>{%- endif -%}
+                    {%- endfor -%}
+                  </select>
+                </span>
               </label>
             {%- endif -%}
-            <button type="button" class="pairc__btn" data-pairc-add
-                    data-a="{{ pva.id }}" data-b="{{ pvb.id }}">Add the pair &middot; {{ pair_price | money_without_trailing_zeros }}</button>
+            {%- capture offer_label -%}Add the pair{% if pp != blank %} &middot; {{ pp }}{% endif %}{%- endcapture -%}
+            <button type="button" class="pairc__add" data-pairc-add
+                    data-a="{{ pva.id }}" data-b="{{ pvb.id }}"
+                    data-label-offer="{{ offer_label | escape_once }}" data-label-plain="Add one of each">{{ offer_label }}</button>
           </div>
           <p class="pairc__state" data-pairc-state hidden></p>
+          <p class="pairc__err" role="alert" data-pairc-err hidden></p>
           <p class="visually-hidden" role="status" aria-live="polite" data-pairc-live></p>
+          {%- if pa.variants.size > 1 -%}
+            <script type="application/json" data-pairc-thumbs>{
+              {%- for pv in pa.variants -%}
+                {%- liquid
+                  assign pimg = nil
+                  if studio_on
+                    assign xid = pv.id | append: ''
+                    for n in (1..10)
+                      assign kv = 'studio_' | append: n | append: '_variant'
+                      assign sv = settings[kv] | strip
+                      if sv == xid
+                        assign ki = 'studio_' | append: n | append: '_image'
+                        if settings[ki] != blank
+                          assign pimg = settings[ki]
+                          break
+                        endif
+                      endif
+                    endfor
+                  endif
+                  if pimg == blank
+                    assign pimg = pv.featured_image | default: pa.featured_image
+                  endif
+                -%}
+                "{{ pv.id }}":{% if pimg != blank %}{{ pimg | image_url: width: 160 | json }}{% else %}null{% endif %}{% unless forloop.last %},{% endunless %}
+              {%- endfor -%}
+            }</script>
+          {%- endif -%}
         </div>
       {%- endif -%}
 
-      <div class="accs">
-        {%- for part in parts offset: 1 -%}
-          {%- liquid
-            assign bits = part | split: '</h3>'
-            assign acc_title = bits[0] | strip_html | strip
-            assign acc_body = part | remove_first: bits[0] | remove_first: '</h3>'
-          -%}
-          <details class="acc"{% if forloop.first %} open{% endif %}>
-            <summary class="acc__sum">{{ acc_title | escape }}<span class="acc__ic" aria-hidden="true"></span></summary>
-            <div class="acc__body rte">{{ acc_body }}</div>
-          </details>
-        {%- endfor -%}
-        {%- for block in section.blocks -%}
-          {%- if block.type == 'accordion' and block.settings.title != blank -%}
-            <details class="acc" {{ block.shopify_attributes }}>
-              <summary class="acc__sum">{{ block.settings.title | escape }}<span class="acc__ic" aria-hidden="true"></span></summary>
-              <div class="acc__body rte">{{ block.settings.content }}</div>
-            </details>
-          {%- endif -%}
-        {%- endfor -%}
-      </div>
+      {%- comment -%}
+        Reassurance, set as part of the buy box rather than as badges: each
+        line is a claim the store's own pages and policies support. The
+        fulfilment line uses the Shipping page's own wording (to the
+        fulfilment network within one business day; tracking by email once
+        the carrier scans the parcel). "Make it right" is the refund
+        policy's wording for damaged, defective or wrong items; checkout
+        security is Shopify's. No "30-day returns": the refund policy lists
+        personal care goods as non-returnable, which is every product here.
+      {%- endcomment -%}
+      <ul class="trust2" role="list">
+        <li>{% render 'zicon', name: 'box' %}<span><strong>To fulfilment within one business day</strong>, tracking by email</span></li>
+        <li>{% render 'zicon', name: 'lock' %}<span><strong>Secure checkout</strong>, encrypted by Shopify</span></li>
+        <li>{% render 'zicon', name: 'shield' %}<span><strong>Damaged or wrong on arrival?</strong> We&rsquo;ll make it right</span></li>
+        <li>{% render 'zicon', name: 'chat' %}<span><strong>Questions?</strong> <a class="trust2__mail" href="mailto:{{ settings.support_email | escape }}">{{ settings.support_email | escape }}</a> &mdash; a person answers</span></li>
+      </ul>
     </div>
 
     {%- if section.settings.sticky_atc -%}
+      {%- comment -%}
+        Phones only. It appears once the real form has scrolled off the top
+        of the screen, says what it will add ("GODA · Black", "2 bottles ·
+        $54") and posts its own copy of the form, which the script keeps on
+        the same id, quantity and mix as the real one.
+      {%- endcomment -%}
+      {%- capture v_label -%}{%- if multi -%}{% render 'zvlabel', t: v.title %}{%- endif -%}{%- endcapture -%}
       <div class="satc" data-zsatc aria-hidden="true">
         <div class="satc__in">
           <div class="satc__meta">
-            <p class="satc__t">{{ product.title | escape }}</p>
+            <p class="satc__t"><span class="satc__name">{{ product.vendor | upcase | escape }}</span>{% if multi %}<span class="satc__opt"> &middot; <span data-satc-opt>{{ v_label | strip }}</span></span>{% endif %}</p>
             <p class="satc__p"><span data-satc-sum>{{ v.price | money_without_trailing_zeros }}</span></p>
           </div>
           {%- form 'product', product, id: 'zpf-sticky' -%}
@@ -405,159 +582,284 @@
     {%- endif -%}
 
     <script type="application/json" data-variant-json>
-      [{% for var in product.variants %}{"id":{{ var.id }},"price":{{ var.price }},"available":{{ var.available }},"index":{{ forloop.index0 }},"media":{{ var.featured_media.id | default: 0 }}}{% unless forloop.last %},{% endunless %}{% endfor %}]
+      [{%- for var in product.variants -%}
+        {%- capture lbl -%}{%- if multi -%}{% render 'zvlabel', t: var.title %}{%- endif -%}{%- endcapture -%}
+        {"id":{{ var.id }},"price":{{ var.price }},"available":{{ var.available }},"index":{{ forloop.index0 }},"media":{{ var.featured_media.id | default: 0 }},"label":{{ lbl | strip | json }}}{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}]
     </script>
   </div>
+</section>
 
-  {% render 'pair-data' %}
+{%- comment -%}
+  The product's story. Built from the product description's own sections
+  (Shopify > the product > Description: a lede, then <h3> Details, How to
+  use, What's included), so it says only what the listing says: "Details"
+  is shown as "What it is", led by the description's first paragraph. The
+  store-wide accordion blocks (shipping and returns, FAQ) close it as
+  "Good to know" and stay <details>, so they work without JavaScript.
+  Beside it on wide screens, one product-free landscape from the "Story
+  photograph" block set to this product (none: the copy runs alone).
+{%- endcomment -%}
+{%- liquid
+  assign story_pick = nil
+  for block in section.blocks
+    if block.type == 'story_photo' and block.settings.image != blank
+      if block.settings.product == blank or block.settings.product.id == product.id
+        assign story_pick = block
+        break
+      endif
+    endif
+  endfor
+  assign acc_blocks = section.blocks | where: 'type', 'accordion'
+  assign has_details = false
+  for part in parts offset: 1
+    assign bits = part | split: '</h3>'
+    assign t_down = bits[0] | strip_html | strip | downcase
+    if t_down == 'details'
+      assign has_details = true
+    endif
+  endfor
+  assign has_story = false
+  if parts.size > 1 or parts[0] != blank or acc_blocks.size > 0
+    assign has_story = true
+  endif
+-%}
+{%- if has_story -%}
+<div class="pstory">
+  <div class="wrap pstory__in{% unless story_pick %} pstory__in--solo{% endunless %}">
+    {%- if story_pick -%}
+      {%- liquid
+        assign ph = story_pick.settings.image
+        assign pos = story_pick.settings.position | default: '50% 50%' | split: ' '
+        assign px = pos[0] | remove: '%' | strip | plus: 0
+        assign py = pos[1] | default: '50%' | remove: '%' | strip | plus: 0
+        assign ph_ratio = ph.width | times: 1.0 | divided_by: ph.height
+
+        comment
+          Two region crops of the original, so the delivered pixels are the
+          frame's shape (no cover-crop over-fetch): 4:5 beside the copy on
+          wide screens, 3:2 above it on phones, both centred on the crop
+          point set in the block.
+        endcomment
+        if ph_ratio > 0.8
+          assign d_h = ph.height
+          assign d_w = ph.height | times: 0.8 | round
+          assign d_l = ph.width | minus: d_w | times: px | divided_by: 100 | round
+          assign d_t = 0
+        else
+          assign d_w = ph.width
+          assign d_h = ph.width | times: 1.25 | round
+          assign d_l = 0
+          assign d_t = ph.height | minus: d_h | times: py | divided_by: 100 | round
+        endif
+        if ph_ratio > 1.5
+          assign m_h = ph.height
+          assign m_w = ph.height | times: 1.5 | round
+          assign m_l = ph.width | minus: m_w | times: px | divided_by: 100 | round
+          assign m_t = 0
+        else
+          assign m_w = ph.width
+          assign m_h = ph.width | divided_by: 1.5 | round
+          assign m_l = 0
+          assign m_t = ph.height | minus: m_h | times: py | divided_by: 100 | round
+        endif
+        assign d_ladder = '440,660,880,1100' | split: ','
+        assign m_ladder = '480,720,960,1200' | split: ','
+      -%}
+      <figure class="pstory__fig" {{ story_pick.shopify_attributes }}>
+        <picture>
+          <source media="(min-width: 900px)" sizes="(min-width: 1240px) 440px, 36vw"
+                  srcset="{%- for w in d_ladder -%}{%- assign wn = w | plus: 0 -%}{%- if wn <= d_w -%}{%- assign hn = wn | times: 1.25 | round -%}{%- unless forloop.first %}, {% endunless -%}{{ ph | image_url: width: wn, height: hn, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} {{ wn }}w{%- endif -%}{%- endfor -%}">
+          {%- assign m_src_h = 720 | divided_by: 1.5 | round -%}
+          <img src="{{ ph | image_url: width: 720, height: m_src_h, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }}"
+               srcset="{%- for w in m_ladder -%}{%- assign wn = w | plus: 0 -%}{%- if wn <= m_w -%}{%- assign hn = wn | divided_by: 1.5 | round -%}{%- unless forloop.first %}, {% endunless -%}{{ ph | image_url: width: wn, height: hn, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} {{ wn }}w{%- endif -%}{%- endfor -%}"
+               sizes="calc(100vw - 40px)"
+               width="720" height="{{ m_src_h }}"
+               alt="{{ story_pick.settings.image_alt | default: ph.alt | escape }}"
+               loading="lazy" decoding="async">
+        </picture>
+      </figure>
+    {%- endif -%}
+
+    <div class="pstory__list">
+      {%- unless has_details -%}
+        {%- if parts[0] != blank -%}
+          <div class="pstory__blk" data-zv-reveal>
+            <h2 class="pstory__h">What it is</h2>
+            <div class="pstory__b rte">{{ parts[0] }}</div>
+          </div>
+        {%- endif -%}
+      {%- endunless -%}
+      {%- for part in parts offset: 1 -%}
+        {%- liquid
+          assign bits = part | split: '</h3>'
+          assign t_raw = bits[0] | strip_html | strip
+          assign t_down = t_raw | downcase
+          assign body = part | remove_first: bits[0] | remove_first: '</h3>'
+          assign t_show = t_raw
+          if t_down == 'details'
+            assign t_show = 'What it is'
+          endif
+        -%}
+        <div class="pstory__blk" data-zv-reveal>
+          <h2 class="pstory__h">{{ t_show | escape_once }}</h2>
+          <div class="pstory__b rte">
+            {%- if t_down == 'details' and parts[0] != blank -%}{{ parts[0] }}{%- endif -%}
+            {{ body }}
+          </div>
+        </div>
+      {%- endfor -%}
+      {%- if acc_blocks.size > 0 -%}
+        <div class="pstory__blk" data-zv-reveal>
+          <h2 class="pstory__h">Good to know</h2>
+          <div class="accs">
+            {%- for block in acc_blocks -%}
+              {%- if block.settings.title != blank -%}
+                <details class="acc" {{ block.shopify_attributes }}>
+                  <summary class="acc__sum"><h3 class="acc__h">{{ block.settings.title | escape }}</h3><span class="acc__ic" aria-hidden="true"></span></summary>
+                  <div class="acc__body rte">{{ block.settings.content }}</div>
+                </details>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+{%- endif -%}
 
   <style>
-    .zpdp{padding-top:clamp(16px,2.4vw,32px)}
+    .zpdp{padding-top:clamp(12px,1.6vw,24px)}
     /* A class that sets display beats the UA's [hidden] rule, so without
        this a hidden state line would still show. */
-    .zpdp [hidden]{display:none !important}
-    .pdp{display:grid;gap:var(--zv-7);grid-template-columns:minmax(0,1fr)}
+    .zpdp-root [hidden]{display:none !important}
+    .pdp{display:grid;gap:var(--zv-6);grid-template-columns:minmax(0,1fr)}
     @media(min-width:900px){
-      .pdp{grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:clamp(40px,5vw,80px);align-items:start}
-      /* The gallery is the shorter column, so it is the one that sticks.
-         A sticky column taller than the viewport never moves at all. */
+      .pdp{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(40px,5vw,80px);align-items:start}
+      /* The gallery is the shorter column, so it is the one that sticks. */
       .pdp__media{position:sticky;top:88px}
       .pdp__info{position:static}
     }
 
-    /* ---- swipe gallery ---- */
-    /* min-width:0 on the column's items: without it, a long row of dots
-       (a product with six or more slides) set the column's minimum width
-       and pushed the whole page sideways on a 320px phone. */
-    .gal{display:grid;gap:.75rem;grid-template-columns:minmax(0,1fr)}
+    /* ---- gallery: studio plates on one scroll-snap track ---- */
+    /* min-width:0 on the column's items, so a long row of dots can never
+       set the column's minimum width and push the page sideways. */
+    .gal{display:grid;gap:var(--zv-3);grid-template-columns:minmax(0,1fr)}
     .gal__track{
-      display:grid;grid-auto-flow:column;grid-auto-columns:100%;
-      gap:.6rem;overflow-x:auto;scroll-snap-type:x mandatory;
-      scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:var(--r-lg);
+      display:grid;grid-auto-flow:column;grid-auto-columns:100%;gap:var(--zv-2);
+      overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-behavior:auto;
+      scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:var(--zv-r-lg);
     }
     .gal__track::-webkit-scrollbar{display:none}
     .gal__track:focus-visible{outline:2px solid var(--zv-focus);outline-offset:3px}
+    /* One flick, one photograph: scroll-snap-stop keeps a fast swipe from
+       skipping past the next bottle. */
     .gal__slide{
-      scroll-snap-align:center;background:var(--plate);border-radius:var(--r-lg);
+      position:relative;scroll-snap-align:center;scroll-snap-stop:always;
       aspect-ratio:1/1;display:grid;place-items:center;overflow:hidden;
-      /* inset, because the track clips anything outside the slide */
-      box-shadow:inset 0 0 0 1px rgba(237,239,235,.08);
+      border-radius:var(--zv-r-lg);background:var(--zv-plate);
     }
-    .gal__slide img{width:100%;height:100%;object-fit:contain}
-    /* A cutout slide is the stage from the homepage, not a white plate: the
-       same drawn landscape fading into the page, the same contact shadow. It
-       has no frame of its own, so the product stands on the page itself. */
-    .gal__slide--stage{box-shadow:none;place-items:end center;background:transparent}
-    /* The object box is pinned to the square (absolute, inset 0), so its
-       height is the slide's and never the picture's. While it was an
-       in-flow grid item, a cutout narrower than the box (the old White file
-       was the bottle alone) grew the row to its own natural height and was
-       cut off at the bottom of the square; on a phone even the Black one
-       was. The picture now fits the box whole and stands on its floor. */
-    .gal__obj{position:absolute;inset:0;z-index:1;display:grid;place-items:end center;
-      grid-template:minmax(0,1fr) / minmax(0,1fr);
-      padding:7% 12% 12%;transform-style:preserve-3d;
-      transition:transform 420ms var(--zv-ease)}
-    .gal__obj.is-tilting{transition:transform 140ms var(--zv-ease)}
-    .gal__obj .zv-cut{width:100%;height:100%;max-width:none;max-height:none;
-      object-fit:contain;object-position:50% 100%}
-    .gal__shadow{bottom:8%;width:52%;height:7%;z-index:0}
-    /* A curated photograph or film fills its square edge to edge: it is a
-       composed frame, not a product floating on a plate. */
-    .gal__slide--photo{place-items:stretch;background:var(--zv-bg-sunken);position:relative}
+    .gal__slide--shot img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+    /* A curated photograph or film fills its square edge to edge. */
+    .gal__slide--photo{place-items:stretch;background:var(--zv-bg-sunken)}
     .gal__slide--photo .zv-media{position:absolute;inset:0}
-    .gal__slide--photo img{object-fit:cover}
-    .gal__thumb--stage{background:var(--zv-bg-sunken)}
-    .gal__thumb--stage img{padding:4px}
-    .gal__dots{display:flex;gap:.45rem;justify-content:center;min-width:0}
+    .gal__slide--photo img{width:100%;height:100%;object-fit:cover}
+    /* Dots (phones): plain buttons out of the tab order — the track itself
+       takes the arrow keys. 44px targets while they fit. */
+    .gal__dots{display:flex;gap:var(--zv-1);justify-content:center;min-width:0}
     @media(min-width:600px){.gal__dots{display:none}}
-    /* 44px each while they fit; with many slides they share the row down
-       to 24px each, still above WCAG 2.5.8's minimum target size. */
-    .gal__dot{flex:0 1 var(--tap);min-width:24px;height:var(--tap);padding:0;border:0;background:none;
-      display:grid;place-items:center;cursor:pointer}
-    .gal__dot::after{content:"";width:7px;height:7px;border-radius:50%;
+    .gal__dot{flex:0 1 44px;min-width:24px;height:36px;padding:0;border:0;background:none;
+      display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    .gal__dot::after{content:"";width:6px;height:6px;border-radius:50%;
       background:var(--zv-line-input);transition:background var(--zv-d-hover) var(--zv-ease),transform var(--zv-d-hover) var(--zv-ease)}
-    .gal__dot[aria-current="true"]::after{background:var(--zv-accent);transform:scale(1.5)}
-    .gal__thumbs{display:none;gap:.55rem;flex-wrap:wrap}
+    .gal__dot[aria-current="true"]::after{background:var(--zv-forest);transform:scale(1.4)}
+    /* Thumbnails (600px and up): small studio plates, the chosen one ringed. */
+    .gal__thumbs{display:none;gap:var(--zv-2);flex-wrap:wrap}
     @media(min-width:600px){.gal__thumbs{display:flex}}
-    .gal__thumb{width:66px;height:66px;border-radius:10px;overflow:hidden;
-      background:var(--plate);border:1px solid var(--zv-hairline-2);cursor:pointer;padding:0;
-      transition:border-color var(--zv-d-hover) var(--zv-ease)}
-    .gal__thumb img{width:100%;height:100%;object-fit:contain}
-    .gal__thumb[aria-current="true"]{border-color:var(--zv-accent);border-width:2px}
+    .gal__thumb{position:relative;width:64px;height:64px;padding:0;border:0;cursor:pointer;
+      border-radius:var(--zv-r-md);overflow:hidden;background:var(--zv-plate);
+      -webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+      box-shadow:inset 0 0 0 1px var(--zv-line);transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
+    @media(min-width:1100px){.gal__thumb{width:72px;height:72px}}
+    .gal__thumb img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;pointer-events:none}
+    .gal__thumb--photo img{object-fit:cover;mix-blend-mode:normal}
+    @media (hover:hover) and (pointer:fine){ .gal__thumb:hover{box-shadow:inset 0 0 0 1px var(--zv-line-input)} }
+    .gal__thumb[aria-current="true"]{box-shadow:inset 0 0 0 2px var(--zv-forest)}
+    .gal__thumb:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
 
     /* ---- head ---- */
-    .pdp__kicker{margin-bottom:var(--zv-2);color:var(--zv-forest)}
-    /* Title at 32-46px, not the 56px display size: the full product name is
-       two lines long, and at display size it pushed Add to bag below the fold
-       of a 900px desktop screen. */
-    .pdp__title{font-size:clamp(2rem,1.55rem + 1.5vw,2.875rem);line-height:1.08;margin:0 0 var(--zv-3);max-width:20ch}
+    /* Title at 28-40px, not the display size: the full product name runs
+       to two lines, and Add to bag has to stay above the fold of a
+       1366x768 laptop. */
+    .pdp__title{font-size:clamp(1.75rem,1.3rem + 1.4vw,2.5rem);line-height:1.08;margin:0 0 var(--zv-2);max-width:20ch}
     .pdp__rating{display:inline-flex;align-items:center;gap:6px;min-height:44px;
       font-size:var(--zv-t-sm);color:var(--zv-text-2);text-decoration:underline;text-underline-offset:3px}
     .pdp__rating .zicon{color:var(--zv-forest)}
-    /* What it is -> what it costs -> what it is like: the price sits directly
-       under the name, and the description closes the head with the one rule
-       that separates "about" from "choose". */
     .pdp__pricerow{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--zv-2) var(--zv-5);
-      margin:0 0 var(--zv-4)}
-    .pdp__price{margin:0;font-size:clamp(1.5rem,1.35rem + .5vw,1.75rem);letter-spacing:-0.01em}
-    .pdp__lede{padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--zv-line)}
-    .pdp__lede p{font-size:var(--zv-t-body);line-height:var(--zv-lh-body);color:var(--zv-text-2);margin:0 0 var(--zv-2);max-width:54ch}
-    .pdp__lede p:last-child{margin-bottom:0}
+      margin:0 0 var(--zv-4);padding-bottom:var(--zv-4);border-bottom:1px solid var(--zv-line)}
+    .pdp__price{margin:0;font-size:clamp(1.375rem,1.25rem + .5vw,1.625rem);letter-spacing:-0.01em;color:var(--zv-text)}
     .pdp__ship{display:inline-flex;align-items:center;gap:8px;margin:0;
       font-size:var(--zv-t-sm);color:var(--zv-text-2)}
     .pdp__ship .zicon{color:var(--zv-forest)}
-    .pdp__field{margin-bottom:20px}
     .pdp__label{display:block;margin:0 0 var(--zv-2);padding:0;
       font-family:var(--zv-sans);font-size:var(--zv-t-micro);font-weight:600;
       letter-spacing:var(--zv-tr-caps);text-transform:uppercase;color:var(--zv-text-2)}
-    .opts{margin-bottom:0}
-    .opt[data-sold]{text-decoration:line-through;color:var(--zv-moss-strong)}
+
+    /* ---- option picker: radios with the option's own packshot ---- */
+    .vpick{margin:0 0 var(--zv-4)}
+    .vpick__set{border:0;margin:0;padding:0;min-width:0}
+    .vpick__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--zv-2)}
+    .vopt{position:relative;display:flex;align-items:center;gap:var(--zv-3);min-height:52px;
+      padding:5px var(--zv-3) 5px 5px;border-radius:var(--zv-r-md);background:var(--zv-bg-raised);
+      box-shadow:inset 0 0 0 1px var(--zv-line-input);cursor:pointer;
+      transition:box-shadow var(--zv-d-hover) var(--zv-ease),background-color var(--zv-d-hover) var(--zv-ease),transform var(--zv-d-press) var(--zv-ease)}
+    /* The real radio covers the whole card, transparent: a tap anywhere on
+       it is a tap on the input, and focus outlines the card. */
+    .vopt__in{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;
+      cursor:pointer;z-index:1;border-radius:inherit;min-height:0}
+    @media (hover:hover) and (pointer:fine){ .vopt:hover{box-shadow:inset 0 0 0 1px var(--zv-forest)} }
+    .vopt:active{transform:scale(.985);transition-duration:90ms}
+    .vopt.is-on,.vopt:has(.vopt__in:checked){box-shadow:inset 0 0 0 2px var(--zv-forest);
+      background:color-mix(in srgb, var(--zv-forest) 5%, var(--zv-bg-raised))}
+    .vopt:has(.vopt__in:focus-visible){outline:2px solid var(--zv-focus);outline-offset:2px}
+    .vopt__sw{flex:0 0 auto;width:42px;height:42px;border-radius:var(--zv-r-sm);overflow:hidden;
+      background:var(--zv-plate);display:grid;place-items:center}
+    .vopt__sw img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+    .vopt__t{min-width:0;font-family:var(--zv-sans);font-size:var(--zv-t-sm);font-weight:600;line-height:1.25;color:var(--zv-text)}
+    .vopt__sold{display:block;font-weight:400;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
+    .vopt.is-sold .vopt__sw{opacity:.55}
+    .vpick__go{margin-top:var(--zv-3)}
+    .zv-js .vpick__go{display:none}
 
     /* ---- quantity offer ----
        A radio group, styled. Each option is a <label> around a real radio,
-       so the whole row is the target, arrow keys move between options
-       natively, and a screen reader hears "2 bottles, save $10, $70, 2 of 3".
-       The selected state is carried by three things at once — a 2px forest
-       edge, a filled dot and a tinted ground — never by colour alone. */
-    .qo{border:0;margin:0 0 var(--zv-2);padding:0;min-width:0}
+       so the whole row is the target and arrow keys move natively. The
+       selected state is a 2px forest edge, a filled dot and a tinted
+       ground — never colour alone. */
+    .qo{position:relative;border:0;margin:0 0 var(--zv-2);padding:0;min-width:0}
     .qo__opt{
       position:relative;display:grid;grid-template-columns:20px minmax(0,1fr) auto;
       align-items:center;gap:var(--zv-3);
-      min-height:58px;padding:10px var(--zv-4);margin-bottom:var(--zv-2);
+      min-height:54px;padding:8px var(--zv-4);margin-bottom:var(--zv-2);
       border-radius:var(--zv-r-md);background:var(--zv-bg-raised);
-      /* A soft edge on the resting rows; the radio dot carries the 3:1
-         boundary. With every row outlined at 3:1 the stack read as a form,
-         and the chosen row did not stand apart from the others. */
       box-shadow:inset 0 0 0 1px var(--zv-hairline-2);cursor:pointer;
       transition:box-shadow var(--zv-d-hover) var(--zv-ease),
                  background-color var(--zv-d-hover) var(--zv-ease),
                  transform var(--zv-d-press) var(--zv-ease);
     }
-    /* The real radio covers the whole option, transparent (the GOV.UK
-       pattern): a tap anywhere on the card is a tap on the input itself,
-       and a screen reader's focus box outlines the option rather than a
-       1px point in its corner. */
     .qo__in{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;
       cursor:pointer;z-index:1;border-radius:inherit}
-    @media (hover:hover) and (pointer:fine){
-      .qo__opt:hover{box-shadow:inset 0 0 0 1px var(--zv-forest)}
-    }
-    .qo__opt:active{transform:scale(.995)}
+    @media (hover:hover) and (pointer:fine){ .qo__opt:hover{box-shadow:inset 0 0 0 1px var(--zv-forest)} }
+    .qo__opt:active{transform:scale(.985);transition-duration:90ms}
     .qo__opt.is-on,
     .qo__opt:has(.qo__in:checked){
       box-shadow:inset 0 0 0 2px var(--zv-forest);
-      background:color-mix(in srgb, var(--zv-forest) 5%, var(--zv-white));
+      background:color-mix(in srgb, var(--zv-forest) 5%, var(--zv-bg-raised));
     }
     .qo__opt:has(.qo__in:focus-visible){outline:2px solid var(--zv-focus);outline-offset:3px}
-    /* The chosen row's 2px forest edge is one ring that moves: pick 3 and it
-       glides down from 1 on a spring, the way a segmented control's thumb
-       does, so the eye follows the change instead of hunting for it. The
-       tint and the filled dot still change on the row itself, so the choice
-       is never carried by motion (or colour) alone. Script-drawn: until the
-       script has placed it, and without JavaScript, each row draws its own
-       edge exactly as before. */
-    .qo{position:relative}
+    /* The chosen row's edge is one ring that glides between rows, placed by
+       the script; without it each row draws its own edge. */
     .qo__ring{position:absolute;left:0;right:0;top:0;height:var(--qo-h,0px);z-index:2;pointer-events:none;
       border-radius:var(--zv-r-md);box-shadow:inset 0 0 0 2px var(--zv-forest);opacity:0;
       transform:translate3d(0,var(--qo-y,0px),0);
@@ -566,7 +868,7 @@
     .qo.has-ring .qo__opt.is-on,
     .qo.has-ring .qo__opt:has(.qo__in:checked){box-shadow:inset 0 0 0 1px var(--zv-hairline-2)}
     .qo__dot{width:20px;height:20px;border-radius:50%;
-      box-shadow:inset 0 0 0 1.5px var(--zv-line-input);background:var(--zv-white);
+      box-shadow:inset 0 0 0 1.5px var(--zv-line-input);background:var(--zv-bg-raised);
       display:grid;place-items:center;transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
     .qo__dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--zv-forest);
       opacity:0;transform:scale(.5);transition:transform var(--zv-d-ui) var(--zv-ease),opacity var(--zv-d-press) var(--zv-ease)}
@@ -575,120 +877,183 @@
     .qo__opt.is-on .qo__dot::after,
     .qo__opt:has(.qo__in:checked) .qo__dot::after{opacity:1;transform:scale(1)}
     .qo__main{display:grid;gap:2px;min-width:0}
-    .qo__n{font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-ink);
+    .qo__n{font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-text);
       display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px}
     .qo__tag{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-wide);
       text-transform:uppercase;color:var(--zv-forest);
       padding:2px 7px;border-radius:var(--zv-r-pill);
-      background:color-mix(in srgb, var(--zv-forest) 9%, var(--zv-white))}
+      background:color-mix(in srgb, var(--zv-forest) 9%, var(--zv-bg-raised))}
     .qo__each{font-size:var(--zv-t-fine);color:var(--zv-text-2);font-variant-numeric:tabular-nums}
     .qo__price{display:grid;justify-items:end;gap:2px;text-align:right}
     .qo__save{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-wide);
       text-transform:uppercase;color:var(--zv-forest)}
     .qo__sum{display:flex;align-items:baseline;gap:8px;font-variant-numeric:tabular-nums}
     .qo__was{font-size:var(--zv-t-fine);color:var(--zv-text-2)}
-    .qo__total{font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-ink);
+    .qo__total{font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-text);
       font-variant-numeric:tabular-nums}
-    .qo__note{margin:var(--zv-1) 0 0;font-size:var(--zv-t-fine);color:var(--zv-text-2);max-width:none}
 
     /* ---- mix and match: one select per unit, under the quantity rows ---- */
-    .qmix{display:grid;gap:var(--zv-3);margin-top:var(--zv-3);padding:var(--zv-4);border-radius:var(--zv-r-md);
-      background:var(--zv-bg-raised);box-shadow:inset 0 0 0 1px var(--zv-hairline-2)}
+    .qmix{display:grid;gap:var(--zv-3);margin:var(--zv-1) 0 var(--zv-3);padding:var(--zv-4);border-radius:var(--zv-r-md);
+      background:var(--zv-bg-sunken)}
     .qmix.is-in{animation:qmix-in var(--zv-d-ui) var(--zv-ease) both}
     @keyframes qmix-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
     .qmix__h{margin:0}
     .qmix__list{list-style:none;margin:0;padding:0;display:grid;gap:var(--zv-2)}
     .qmix__row{display:grid;grid-template-columns:5.25rem minmax(0,1fr);align-items:center;gap:var(--zv-3)}
-    .qmix__k{font-size:var(--zv-t-sm);font-weight:600;color:var(--zv-ink)}
-    /* 17px text: an iOS select under 16px zooms the page when tapped */
+    .qmix__k{font-size:var(--zv-t-sm);font-weight:600;color:var(--zv-text)}
+    /* The chevron is drawn in the text colour (a data-URI could not follow
+       the palette). 17px text: an iOS select under 16px zooms the page. */
+    .qmix__selw,.pairc__selw{position:relative;display:block;min-width:0}
+    .qmix__selw::after,.pairc__selw::after{content:"";position:absolute;right:18px;top:50%;width:7px;height:7px;
+      margin-top:-5px;border-right:1.6px solid var(--zv-text);border-bottom:1.6px solid var(--zv-text);
+      transform:rotate(45deg);pointer-events:none}
     .qmix__sel{appearance:none;-webkit-appearance:none;width:100%;min-height:48px;margin:0;
       padding:0 42px 0 var(--zv-4);border:0;border-radius:var(--zv-r-md);
-      box-shadow:inset 0 0 0 1px var(--zv-line-input);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-body);
-      background:var(--zv-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23EDEFEB' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 16px center/12px 8px;
-      cursor:pointer;transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
+      box-shadow:inset 0 0 0 1px var(--zv-line-input);color:var(--zv-text);font:inherit;font-size:var(--zv-t-body);
+      background:var(--zv-bg-raised);cursor:pointer;transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
     @media (hover:hover) and (pointer:fine){ .qmix__sel:hover{box-shadow:inset 0 0 0 1px var(--zv-forest)} }
     .qmix__sel:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
     .qmix__note{margin:0;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
     @media(prefers-reduced-motion:reduce){ .qmix.is-in{animation:none} }
-    .pdp__atc{min-height:54px;font-size:var(--zv-t-sm)}
+
+    .pdp__atc{min-height:54px;margin-top:var(--zv-2)}
     /* the label is re-set when the total changes; it rises into place */
     .atc__lbl,.satc__p [data-satc-sum]{display:inline-block}
-    .atc__err{margin:var(--zv-2) 0 0;padding:var(--zv-2) var(--zv-3);border-radius:var(--zv-r-sm);
-      border:1px solid #8C2F2F;background:color-mix(in srgb,#8C2F2F 6%,transparent);
-      color:var(--zv-ink);font-size:var(--zv-t-sm);max-width:none}
+    .atc__err,.pairc__err{margin:var(--zv-2) 0 0;padding:var(--zv-2) var(--zv-3);border-radius:var(--zv-r-sm);
+      border:1px solid var(--zv-error, #8C2F2F);background:color-mix(in srgb, var(--zv-error, #8C2F2F) 6%, transparent);
+      color:var(--zv-text);font-size:var(--zv-t-sm);max-width:none}
+    .pdp__note{display:flex;align-items:center;gap:8px;margin:var(--zv-3) 0 0;
+      font-size:var(--zv-t-sm);color:var(--zv-text-2);max-width:none}
+    .pdp__note .zicon{flex:0 0 auto;width:18px;height:18px;color:var(--zv-forest)}
 
     /* ---- the pair ---- */
     .pairc{
       display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--zv-3) var(--zv-4);align-items:center;
       margin:var(--zv-6) 0 0;padding:var(--zv-4);
       border-radius:var(--zv-r-lg);background:var(--zv-bg-sunken);
-      box-shadow:inset 0 0 0 1px var(--zv-line);
-      --zv-text-3:var(--zv-moss-strong);
     }
     .pairc__figs{display:flex;align-items:center;gap:4px}
-    .pairc__fig{width:56px;height:56px;border-radius:var(--zv-r-sm);background:var(--zv-white);
-      box-shadow:inset 0 0 0 1px rgba(16,19,16,.22);overflow:hidden;display:grid;place-items:center}
-    .pairc__fig img{width:100%;height:100%;object-fit:contain}
-    .pairc__plus{color:var(--zv-moss-strong);display:grid;place-items:center}
+    .pairc__plate{width:60px;height:60px;border-radius:var(--zv-r-sm);overflow:hidden;
+      background:var(--zv-plate);display:grid;place-items:center}
+    .pairc__plate img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+    .pairc__plus{color:var(--zv-text-2);display:grid;place-items:center}
     .pairc__plus .zicon{width:16px;height:16px}
     .pairc__txt{min-width:0}
-    .pairc__k{margin:0;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
-      text-transform:uppercase;color:var(--zv-forest)}
-    .pairc__h{margin:2px 0 0;font-family:var(--zv-serif);font-size:var(--zv-t-h4);line-height:var(--zv-lh-snug);color:var(--zv-ink)}
+    .pairc__k{margin:0;font-family:var(--zv-sans);font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
+      line-height:1.4;text-transform:uppercase;color:var(--zv-forest)}
+    .pairc__h{margin:2px 0 0;font-family:var(--zv-serif);font-size:var(--zv-t-h4);line-height:var(--zv-lh-snug);color:var(--zv-text)}
     .pairc__p{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:4px 0 0;
       font-variant-numeric:tabular-nums;max-width:none}
-    .pairc__p strong{font-size:var(--zv-t-body);font-weight:600;color:var(--zv-ink)}
-    .pairc__p s{font-size:var(--zv-t-fine);color:var(--zv-moss-strong)}
+    .pairc__p strong{font-size:var(--zv-t-body);font-weight:600;color:var(--zv-text)}
+    .pairc__p s{font-size:var(--zv-t-fine);color:var(--zv-text-2)}
     .pairc__save{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-wide);
       text-transform:uppercase;color:var(--zv-forest)}
-    .pairc__tag{margin:4px 0 0;font-size:var(--zv-t-fine);color:var(--zv-moss-strong);max-width:none}
+    .pairc__tag{margin:4px 0 0;font-size:var(--zv-t-fine);color:var(--zv-text-2);max-width:none}
     .pairc__act{grid-column:1 / -1;display:flex;gap:var(--zv-2);flex-wrap:wrap;align-items:flex-end}
     .pairc__pick{flex:1 1 150px;display:grid;gap:4px}
     .pairc__picklabel{font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
-      text-transform:uppercase;color:var(--zv-moss-strong)}
-    .pairc__pick select{width:100%;min-height:48px;padding:0 var(--zv-4);border-radius:var(--zv-r-pill);
-      border:1px solid var(--zv-line-input);background:var(--zv-white);color:var(--zv-ink);font:inherit;font-size:var(--zv-t-sm)}
-    .pairc__btn{flex:1 1 180px;min-height:48px;padding:0 var(--zv-5);border-radius:var(--zv-r-pill);cursor:pointer;
+      text-transform:uppercase;color:var(--zv-text-2)}
+    .pairc__pick select{appearance:none;-webkit-appearance:none;width:100%;min-height:48px;padding:0 42px 0 var(--zv-4);
+      border-radius:var(--zv-r-pill);border:1px solid var(--zv-line-input);background:var(--zv-bg-raised);
+      color:var(--zv-text);font:inherit;font-size:var(--zv-t-body);cursor:pointer}
+    .pairc__add{flex:1 1 180px;min-height:48px;padding:0 var(--zv-5);border-radius:var(--zv-r-pill);cursor:pointer;
       border:1px solid var(--zv-forest);background:transparent;color:var(--zv-forest);
       font-family:var(--zv-sans);font-size:var(--zv-t-fine);font-weight:600;letter-spacing:var(--zv-tr-wide);text-transform:uppercase;
       transition:background var(--zv-d-hover) var(--zv-ease),color var(--zv-d-hover) var(--zv-ease),transform var(--zv-d-press) var(--zv-ease)}
-    @media (hover:hover) and (pointer:fine){ .pairc__btn:hover{background:var(--zv-forest);color:var(--zv-warm)} }
-    .pairc__btn:active{transform:scale(.97)}
-    .pairc__btn[aria-busy="true"]{cursor:progress;opacity:.8}
-    .pairc__btn:focus-visible,.pairc__pick select:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
-    /* On a phone the two thumbnails sit above the copy instead of beside
-       it — side by side they left the text a 170px column. */
+    @media (hover:hover) and (pointer:fine){ .pairc__add:hover{background:var(--zv-forest);color:var(--zv-on-accent)} }
+    .pairc__add:active{transform:scale(.985);transition-duration:90ms}
+    .pairc__add[aria-busy="true"]{cursor:progress;opacity:.8}
+    .pairc__add:focus-visible,.pairc__pick select:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
+    @media(max-width:479px){ .pairc__pick,.pairc__add{flex-basis:100%} }
+    /* On a phone the two pictures sit above the copy instead of beside it. */
     @media(max-width:440px){
       .pairc{grid-template-columns:minmax(0,1fr)}
       .pairc__figs{order:-1}
     }
-    .pairc__state{grid-column:1 / -1;display:flex;align-items:center;gap:8px;margin:0;max-width:none;
-      font-size:var(--zv-t-sm);color:var(--zv-forest)}
+    .pairc__state{grid-column:1 / -1;margin:0;max-width:none;
+      font-size:var(--zv-t-sm);line-height:1.45;color:var(--zv-text)}
     .pairc__state a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+    .pairc__err{grid-column:1 / -1}
     .pairc[data-state="in-bag"] .pairc__act{display:none}
+    .pairc[data-state="in-bag"] .pairc__state{color:var(--zv-forest);font-weight:600}
 
     /* ---- trust ----
-       Part of the buy box, not a badge grid: four short lines right under
-       Add to bag, a small forest icon each, the fact in ink and the detail
-       in body grey. Reads like the note under a price, not an ad. */
-    .trust2{list-style:none;margin:var(--zv-4) 0 0;padding:0;display:grid;gap:10px}
+       Part of the buy box, not a badge grid: short lines, a small forest
+       icon each, the fact in ink and the detail in body grey. */
+    .trust2{list-style:none;margin:var(--zv-5) 0 0;padding:0;display:grid;gap:10px}
     .trust2 li{display:flex;gap:10px;align-items:flex-start;margin:0;
       font-size:var(--zv-t-sm);line-height:1.45;color:var(--zv-text-2)}
     .trust2 .zicon{flex:0 0 auto;width:18px;height:18px;color:var(--zv-forest);margin-top:1px}
-    .trust2 strong{font-weight:600;color:var(--zv-ink)}
-    .trust2__mail{color:var(--zv-ink);text-decoration:underline;text-underline-offset:3px;
-      text-decoration-color:var(--zv-hairline-2);overflow-wrap:anywhere}
+    .trust2 strong{font-weight:600;color:var(--zv-text)}
+    .trust2__mail{display:inline-block;padding-block:2px;color:var(--zv-text);text-decoration:underline;text-underline-offset:3px;
+      text-decoration-color:var(--zv-line-input);overflow-wrap:anywhere}
     @media (hover:hover) and (pointer:fine){ .trust2__mail:hover{text-decoration-color:currentColor} }
     .trust2__mail:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
 
-    /* ---- accordions ----
-       Rendered by Liquid as <details>, so they work with JavaScript off and
-       nothing restructures the page after load. The open motion is opacity
-       and a 4px drop on the content only — no height animation. */
-    .accs{margin-top:var(--zv-6);border-bottom:1px solid var(--zv-line)}
+    /* ---- sticky add-to-bag (phones) ---- */
+    .satc{position:fixed;left:0;right:0;bottom:0;z-index:var(--zv-z-sticky);
+      border-top:1px solid var(--zv-line);background:var(--zv-bg);
+      padding:.6rem var(--zv-gutter) calc(.6rem + env(safe-area-inset-bottom));
+      transform:translateY(110%);transition:transform var(--zv-d-drawer) var(--zv-ease-drawer);
+      visibility:hidden}
+    .satc.is-on{transform:none;visibility:visible}
+    @media(min-width:900px){.satc{display:none}}
+    /* A fixed bar must never sit on top of the last thing on the page or on
+       whatever has keyboard focus, so while it shows the page gets a
+       matching strip of space and the scroll padding to match. */
+    @media(max-width:899px){
+      html.satc-on body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+      html.satc-on{scroll-padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+    }
+    .satc__in{width:min(100%,var(--zv-container));margin-inline:auto;
+      display:flex;align-items:center;gap:var(--zv-3);justify-content:space-between}
+    .satc__meta{min-width:0;display:grid;gap:1px}
+    .satc__t{font-size:var(--zv-t-sm);font-weight:600;margin:0;color:var(--zv-text);line-height:1.3;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .satc__p{margin:0;color:var(--zv-text-2);font-size:var(--zv-t-sm);line-height:1.3;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .satc__btn{flex:0 0 auto;padding-inline:22px;white-space:nowrap}
+    .satc__in form{display:flex;flex:0 0 auto}
+
+    .pdp .btn[disabled], .satc .btn[disabled]{
+      opacity:1;background:var(--zv-bg-sunken);border-color:var(--zv-line-input);
+      color:var(--zv-text-2);box-shadow:none;transform:none;cursor:not-allowed;
+    }
+    @media(max-width:380px){
+      .qo__opt{grid-template-columns:20px minmax(0,1fr);row-gap:6px}
+      .qo__price{grid-column:2;justify-items:start;text-align:left;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+      .vpick__grid{grid-template-columns:minmax(0,1fr)}
+    }
+
+    /* ---- the story ---- */
+    .pstory{background:var(--zv-bg-sunken);padding-block:var(--zv-section)}
+    .pstory__in{display:grid;gap:var(--zv-6);grid-template-columns:minmax(0,1fr)}
+    .pstory__in--solo{max-width:calc(var(--zv-container-narrow) + 2 * var(--zv-gutter))}
+    @media(min-width:900px){
+      .pstory__in:not(.pstory__in--solo){grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(40px,5vw,80px);align-items:start}
+      .pstory__fig{position:sticky;top:96px}
+    }
+    .pstory__fig{margin:0;border-radius:var(--zv-r-lg);overflow:hidden;aspect-ratio:3/2;background:var(--zv-bg)}
+    @media(min-width:900px){ .pstory__fig{aspect-ratio:4/5} }
+    .pstory__fig picture,.pstory__fig img{display:block;width:100%;height:100%}
+    .pstory__fig img{object-fit:cover}
+    .pstory__list{display:grid;gap:var(--zv-6);min-width:0}
+    .pstory__blk{padding-top:var(--zv-5);border-top:1px solid var(--zv-line)}
+    .pstory__blk:first-child{padding-top:0;border-top:0}
+    .pstory__h{margin:0 0 var(--zv-3);font-family:var(--zv-serif);font-weight:400;font-size:var(--zv-t-h3);
+      line-height:var(--zv-lh-snug);letter-spacing:var(--zv-tr-tight);color:var(--zv-text)}
+    .pstory__b{color:var(--zv-text-2);max-width:var(--zv-measure)}
+    .pstory__b > :first-child{margin-top:0}
+    .pstory__b > :last-child{margin-bottom:0}
+    .pstory__b p,.pstory__b li{font-size:var(--zv-t-body);line-height:var(--zv-lh-body)}
+
+    /* ---- accordions (Good to know) ----
+       <details>, so they work with JavaScript off and nothing restructures
+       the page after load. */
+    .accs{border-bottom:1px solid var(--zv-line)}
     .acc{border-top:1px solid var(--zv-line)}
     .acc__sum{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;
-      gap:1rem;min-height:56px;font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-ink)}
+      gap:1rem;min-height:56px}
+    .acc__h{margin:0;font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;line-height:1.35;color:var(--zv-text)}
     .acc__sum::-webkit-details-marker{display:none}
     .acc__sum:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
     .acc__ic{position:relative;width:14px;height:14px;flex:0 0 auto}
@@ -696,12 +1061,9 @@
       background:var(--zv-forest);transition:transform var(--zv-d-ui) var(--zv-ease)}
     .acc__ic::after{transform:rotate(90deg)}
     .acc[open] .acc__ic::after{transform:rotate(0deg)}
-    .acc__body{padding:0 0 var(--zv-5)}
+    .acc__body{padding:0 0 var(--zv-5);color:var(--zv-text-2)}
     .acc[open] .acc__body{animation:acc-in var(--zv-d-ui) var(--zv-ease) both}
     @keyframes acc-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-    /* Where the browser can animate to height:auto (Chrome and Edge today),
-       the panel also opens and closes smoothly instead of jumping; the
-       page below it moves with it. Elsewhere it opens as before. */
     @supports (interpolate-size: allow-keywords){
       .accs{interpolate-size:allow-keywords}
       .acc::details-content{block-size:0;overflow-y:clip;
@@ -710,50 +1072,11 @@
     }
     .acc__body > :first-child{margin-top:0}
     .acc__body > :last-child{margin-bottom:0}
-    .acc__body ol{padding-left:1.2rem;color:var(--zv-text-2)}
-    .acc__body li{margin:.3rem 0}
 
-    /* ---- sticky add-to-cart (phones) ---- */
-    .satc{position:fixed;left:0;right:0;bottom:0;z-index:var(--zv-z-sticky);
-      border-top:1px solid var(--zv-line);background:var(--zv-bg);
-      padding:.7rem var(--pad) calc(.7rem + env(safe-area-inset-bottom));
-      transform:translateY(110%);transition:transform var(--zv-d-drawer) var(--zv-ease-drawer);
-      visibility:hidden;box-shadow:0 -8px 24px rgba(0,0,0,.4)}
-    @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-      .satc{background:color-mix(in srgb, var(--zv-bg) 92%, transparent);
-        backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
-    }
-    .satc.is-on{transform:none;visibility:visible}
-    @media(min-width:900px){.satc{display:none}}
-    /* A fixed bar must never sit on top of the last thing on the page, so
-       while it is showing the page gets a matching strip of space. */
-    @media(max-width:899px){ html.satc-on body{padding-bottom:calc(76px + env(safe-area-inset-bottom))} }
-    .satc__in{width:min(100%,var(--wrap));margin-inline:auto;
-      display:flex;align-items:center;gap:1rem;justify-content:space-between}
-    .satc__meta{min-width:0;display:grid}
-    .satc__t{font-size:var(--zv-t-sm);font-weight:600;margin:0;color:var(--zv-text);
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .satc__p{margin:0;color:var(--zv-text-2);font-size:var(--zv-t-sm);font-variant-numeric:tabular-nums}
-    .satc__btn{flex:0 0 auto;padding-inline:26px;white-space:nowrap}
-    .satc__in form{display:flex;min-width:0}
-
-    .pdp .btn[disabled], .satc .btn[disabled]{
-      opacity:1;background:var(--zv-bg-sunken);border-color:var(--zv-line-input);
-      color:var(--zv-moss-strong);box-shadow:none;transform:none;cursor:not-allowed;
-    }
-    @media(max-width:520px){
-      .satc__meta{display:none}
-      .satc__in form{flex:1 1 auto}
-      .satc__btn{width:100%}
-    }
-    @media(max-width:380px){
-      .qo__opt{grid-template-columns:20px minmax(0,1fr);row-gap:6px}
-      .qo__price{grid-column:2;justify-items:start;text-align:left;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
-    }
     @media(prefers-reduced-motion:reduce){
       .satc{transition-duration:120ms}
       .acc[open] .acc__body{animation:none}
-      .qo__opt,.qo__dot::after,.acc__ic::before,.acc__ic::after,.qo__ring{transition-duration:0ms}
+      .qo__opt,.vopt,.qo__dot::after,.acc__ic::before,.acc__ic::after,.qo__ring{transition-duration:0ms}
       .acc::details-content{transition:none}
     }
   </style>
@@ -761,378 +1084,522 @@
   <script>
   (function () {
     'use strict';
-    var money = function (c) {
-      var fmt = document.querySelector('[data-variants]');
-      fmt = fmt ? fmt.getAttribute('data-money-format') : null;
-      if (fmt && fmt.indexOf('&') > -1) { var t = document.createElement('textarea'); t.innerHTML = fmt; fmt = t.value; }
-      return window.ZorevMoney ? window.ZorevMoney(c, fmt) : '$' + (c / 100).toFixed(2);
-    };
-    /* Whole-dollar amounts read as "$70", not "$70.00", on the product page
-       (the bag and checkout keep cents, because that is the charge). */
-    var short = function (c) {
-      var s = money(c);
-      return Math.round(c) % 100 === 0 ? s.replace(/[.,]00(?=\D*$)/, '') : s;
-    };
+    var Z = window.ZorevPDP = window.ZorevPDP || {};
 
-    /* ---- quantity offer ----
-       The radios are the state. Everything here only mirrors them — into
-       the button label, the sticky bar's hidden quantity field and the
-       per-option totals — and it does so synchronously on change, so a fast
-       double-tap can never leave the label disagreeing with the selection. */
-    var qo = document.querySelector('[data-qo]');
-    var price = {{ v.price | json }};
-    var available = {{ v.available | json }};
-    var save = {};
-    try { save = JSON.parse(qo ? qo.getAttribute('data-save') : '{}') || {}; } catch (e) { save = {}; }
-
-    function currentQty() {
-      var c = qo && qo.querySelector('.qo__in:checked');
-      return c ? Number(c.value) : 1;
-    }
-    function totalFor(q) { return price * q - (Number(save[String(q)]) || 0); }
-
-    /* ---- mix and match ----
-       The selects hold which option each unit is. They show once two or
-       more are chosen; each starts on the option picked above and follows
-       it until the customer changes one of them. The mix is written to both
-       product forms as data-items, which zorev.js posts as line items in
-       place of the form's single id times quantity. */
-    var mix = document.querySelector('[data-qmix]');
-    var mixSels = mix ? [].slice.call(mix.querySelectorAll('[data-qmix-sel]')) : [];
-    var mixTouched = false;
-    var mixForms = ['zpf-main', 'zpf-sticky'].map(function (id) { return document.getElementById(id); }).filter(Boolean);
-    var vPrice = {}, vAvail = {}, vMedia = {};
-    try {
-      JSON.parse(document.querySelector('[data-variant-json]').textContent)
-        .forEach(function (x) { vPrice[String(x.id)] = x.price; vAvail[String(x.id)] = x.available; vMedia[String(x.id)] = String(x.media || ''); });
-    } catch (e) { vPrice = {}; vAvail = {}; vMedia = {}; }
-
-    function mixOn(q) { return !!mix && q > 1; }
-    function mixSum(q) {
-      return mixSels.slice(0, q).reduce(function (s, el) {
-        var p = vPrice[el.value]; return s + (typeof p === 'number' ? p : price);
-      }, 0);
-    }
-    function mixPaint() {
-      if (!mix) return;
-      var q = currentQty(), on = mixOn(q), was = !mix.hidden;
-      mix.hidden = !on;
-      if (on && !was) { mix.classList.remove('is-in'); void mix.offsetWidth; mix.classList.add('is-in'); }
-      mixSels.forEach(function (el, i) { el.closest('[data-qmix-row]').hidden = i >= q; });
-      var items = null;
-      if (on) {
-        var by = {}, order = [];
-        mixSels.slice(0, q).forEach(function (el) {
-          if (!by[el.value]) { by[el.value] = 0; order.push(el.value); }
-          by[el.value] += 1;
-        });
-        items = order.map(function (id) { return { id: Number(id), quantity: by[id] }; });
+    /* Everything is set up per section element, so the theme editor can
+       re-render the section (shopify:section:load) and get a working page
+       back, and an unloaded section leaves no listeners behind. */
+    Z.init = function (sec) {
+      if (!sec || sec.__zpdp) return;
+      sec.__zpdp = true;
+      var ac = ('AbortController' in window) ? new AbortController() : null;
+      function on(t, ev, fn, opt) {
+        if (!t) return;
+        var o = opt || {};
+        if (ac) o.signal = ac.signal;
+        t.addEventListener(ev, fn, o);
       }
-      mixForms.forEach(function (f) {
-        if (items) f.setAttribute('data-items', JSON.stringify(items)); else f.removeAttribute('data-items');
-      });
-    }
-    mixSels.forEach(function (el) {
-      el.addEventListener('change', function () { mixTouched = true; paint(); });
-    });
-    /* Registered before the price listener below, so the selects have
-       followed the new option by the time the totals repaint. */
-    document.addEventListener('variant:change', function (e) {
-      if (!e.detail || !e.detail.id) return;
-      mixSels.forEach(function (el) { el.value = String(e.detail.id); });
-    });
+      sec.__zpdpStop = function () { if (ac) ac.abort(); sec.__zpdp = false; };
 
-    /* A changed total rises into place (brief, precise feedback on the one
-       number that matters). Only a change from one priced label to another
-       moves; the first paint, "Adding…" and "Sold out" just appear. */
-    var still = window.matchMedia('(prefers-reduced-motion: reduce)');
-    function roll(el) {
-      if (still.matches || !el.animate) return;
-      el.animate([{ opacity: 0, transform: 'translateY(.55em)' }, { opacity: 1, transform: 'none' }],
-                 { duration: 300, easing: 'cubic-bezier(.23, 1, .32, 1)' });
-    }
-    function label(b, text) {
-      var prev = b.textContent;
-      if (prev === text) return;
-      var lbl = document.createElement('span');
-      lbl.className = 'atc__lbl';
-      lbl.textContent = text;
-      b.replaceChildren(lbl);
-      if (prev.indexOf('·') > -1 && text.indexOf('·') > -1) roll(lbl);
-    }
-    function paint() {
-      mixPaint();
-      var q = currentQty();
-      var ok = mixOn(q) ? mixSels.slice(0, q).every(function (el) { return vAvail[el.value] !== false; }) : available;
-      var tot = mixOn(q) ? mixSum(q) - (Number(save[String(q)]) || 0) : totalFor(q);
-      document.querySelectorAll('[data-add]').forEach(function (b) {
-        if (b.getAttribute('aria-busy') === 'true') return;
-        b.disabled = !ok;
-        label(b, ok ? (q > 1 ? 'Add ' + q + ' to bag · ' : 'Add to bag · ') + short(tot) : 'Sold out');
-      });
-      document.querySelectorAll('[data-price]').forEach(function (el) { el.textContent = short(price); });
-      document.querySelectorAll('[data-qo-mirror]').forEach(function (i) { i.value = q; });
-      var s = document.querySelector('[data-satc-sum]');
-      if (s) {
-        var sum = (q > 1 ? q + ' ' + (qo ? qo.getAttribute('data-units') : '') + ' · ' : '') + short(tot);
-        if (s.textContent !== sum) { var had = s.textContent; s.textContent = sum; if (had) roll(s); }
-      }
-      if (!qo) return;
-      qo.querySelectorAll('.qo__opt').forEach(function (l) {
-        var i = l.querySelector('.qo__in');
-        l.classList.toggle('is-on', !!(i && i.checked));
-      });
-      ring(true);
-      Object.keys(save).forEach(function (k) {
-        var n = Number(k), t = totalFor(n);
-        var tEl = qo.querySelector('[data-qo-total="' + n + '"]');
-        var wEl = qo.querySelector('[data-qo-was="' + n + '"]');
-        var eEl = qo.querySelector('[data-qo-each="' + n + '"]');
-        if (tEl) tEl.textContent = short(t);
-        if (wEl) wEl.lastChild.textContent = short(price * n);
-        if (eEl) eEl.textContent = short(Math.round(t / n)) + ' each';
-      });
-    }
-
-    /* The moving ring: measured from the chosen row, so it follows rows of
-       any height (the "Best value" row wraps on small phones). Placed without
-       motion on load and on resize; with motion only on a real change. */
-    var ringEl = qo ? qo.querySelector('.qo__ring') : null, ringAt = null;
-    function ring(animate) {
-      if (!ringEl) return;
-      var on = qo.querySelector('.qo__in:checked');
-      var row = on ? on.closest('.qo__opt') : null;
-      if (!row || !row.offsetHeight) return;
-      /* Measured on screen, not with offsetTop: a fieldset lays its legend
-         out in its own way, so its rows and the ring count offsets from
-         different edges. The ring's untransformed top is its box minus the
-         translation it currently shows (mid-glide included). */
-      var cur = window.getComputedStyle(ringEl).transform;
-      var shown = cur && cur !== 'none' ? new DOMMatrixReadOnly(cur).m42 : 0;
-      var base = ringEl.getBoundingClientRect().top - shown;
-      var y = Math.round(row.getBoundingClientRect().top - base), h = row.offsetHeight;
-      var jump = !animate || ringAt === null;
-      if (jump) ringEl.style.transition = 'none';
-      qo.style.setProperty('--qo-y', y + 'px');
-      qo.style.setProperty('--qo-h', h + 'px');
-      if (jump) { void ringEl.offsetWidth; ringEl.style.transition = ''; }
-      ringAt = y;
-      qo.classList.add('has-ring');
-    }
-    if (qo && ringEl && 'ResizeObserver' in window) {
-      new ResizeObserver(function () { ring(false); }).observe(qo);
-    }
-    if (qo) qo.addEventListener('change', paint);
-    document.addEventListener('variant:change', function (e) {
-      if (e.detail) {
-        if (typeof e.detail.price === 'number') price = e.detail.price;
-        if (typeof e.detail.available === 'boolean') available = e.detail.available;
-      }
-      paint();
-    });
-    document.addEventListener('atc:done', paint);
-    paint();
-
-    /* ---- the pair card ----
-       Reads the real cart (zorev.js fires cart:painted after every
-       repaint). Three states:
-         in-bag   Shopify's own discounts for this cart include the pair
-         blocked  the bag already holds more of B than of A, so adding one
-                  of each would still leave B ahead — Shopify would not
-                  apply the pair, so the card stops promising it
-         offer    anything else */
-    var pc = document.querySelector('[data-pairc]');
-    var cfgEl = document.querySelector('[data-pair-config]');
-    var cfg = null;
-    try { cfg = cfgEl ? JSON.parse(cfgEl.textContent) : null; } catch (e) { cfg = null; }
-
-    if (pc && cfg) {
-      var btn = pc.querySelector('[data-pairc-add]');
-      var stateEl = pc.querySelector('[data-pairc-state]');
-      var priceEl = pc.querySelector('[data-pairc-price]');
-      var live = pc.querySelector('[data-pairc-live]');
-      var pick = pc.querySelector('[data-pairc-avar]');
-      var aId = Number(pc.getAttribute('data-a-product')), bId = Number(pc.getAttribute('data-b-product'));
-
-      if (pick) pick.addEventListener('change', function () { btn.setAttribute('data-a', pick.value); });
-      if (pc.getAttribute('data-follow') === 'a') {
-        document.addEventListener('variant:change', function (e) {
-          if (e.detail && e.detail.id) btn.setAttribute('data-a', e.detail.id);
-        });
-      }
-
-      var qtyOf = function (c, pid) {
-        return (c.items || []).reduce(function (n, i) { return n + (i.product_id === pid ? i.quantity : 0); }, 0);
+      var root = sec.querySelector('[data-variants]');
+      if (!root) return;
+      var rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+      var fmt = root.getAttribute('data-money-format');
+      if (fmt && fmt.indexOf('&') > -1) { var ta = document.createElement('textarea'); ta.innerHTML = fmt; fmt = ta.value; }
+      var money = function (c) { return window.ZorevMoney ? window.ZorevMoney(c, fmt) : '$' + (c / 100).toFixed(2); };
+      /* Whole-dollar amounts read as "$54", not "$54.00", on the product
+         page (the bag and checkout keep cents, because that is the charge). */
+      var short = function (c) {
+        var s = money(c);
+        return Math.round(c) % 100 === 0 ? s.replace(/[.,]00(?=\D*$)/, '') : s;
       };
 
-      document.addEventListener('cart:painted', function (e) {
-        var c = e.detail || {};
-        var list = window.ZorevDiscountsOf ? window.ZorevDiscountsOf(c) : [];
-        var hit = list.filter(function (d) { return d.title === cfg.title; })[0];
-        var a = qtyOf(c, aId), b = qtyOf(c, bId);
-        if (hit) {
-          pc.setAttribute('data-state', 'in-bag');
-          stateEl.hidden = false;
-          stateEl.innerHTML = '✓ ' + cfg.name + ' is in your bag — saving ' + money(hit.amount).replace(/[.,]00(?=\D*$)/, '') +
-            '. <a href="/cart">View bag</a>';
-          if (priceEl) priceEl.hidden = false;
-        } else if (b > a) {
-          pc.setAttribute('data-state', 'blocked');
-          stateEl.hidden = false;
-          stateEl.textContent = 'The pair saving applies when your bag has at least as many ' +
-            cfg.a.short + ' as ' + cfg.b.short + '.';
-          if (priceEl) priceEl.hidden = true;
-        } else {
-          pc.removeAttribute('data-state');
-          stateEl.hidden = true;
-          stateEl.textContent = '';
-          if (priceEl) priceEl.hidden = false;
+      /* ---- variants ---- */
+      var byId = {}, list = [];
+      try {
+        list = JSON.parse(root.querySelector('[data-variant-json]').textContent) || [];
+        list.forEach(function (x) { byId[String(x.id)] = x; });
+      } catch (e) { list = []; }
+      var mainForm = sec.querySelector('#zpf-main');
+      var stickyForm = sec.querySelector('#zpf-sticky');
+      var idInput = mainForm ? mainForm.querySelector('[name="id"]') : null;
+      var curId = idInput ? String(idInput.value) : (list[0] ? String(list[0].id) : '');
+      var startId = curId;
+      var cur = byId[curId] || list[0] || { price: 0, available: true, label: '' };
+      var price = cur.price, available = cur.available;
+      var seenFirst = false;
+
+      /* ---- option radios ----
+         zorev.js turns a choice into the selected variant (ids in both
+         forms, prices, buttons, then 'variant:change'). The ids are also
+         written here, so the form can never post an option other than the
+         one shown even if that script has not run. */
+      var picker = sec.querySelector('[data-vpick]');
+      var radios = picker ? [].slice.call(picker.querySelectorAll('input[name="variant"]')) : [];
+      function markRadios(id) {
+        radios.forEach(function (r) {
+          var hit = r.value === String(id);
+          if (hit && !r.checked) r.checked = true;
+          var card = r.closest('.vopt');
+          if (card) card.classList.toggle('is-on', hit);
+        });
+      }
+      if (picker) {
+        on(picker, 'submit', function (e) { e.preventDefault(); });
+        radios.forEach(function (r) {
+          on(r, 'change', function () {
+            if (!r.checked) return;
+            [mainForm, stickyForm].forEach(function (f) {
+              var i = f && f.querySelector('[name="id"]');
+              if (i) i.value = r.value;
+            });
+            markRadios(r.value);
+          });
+        });
+      }
+
+      /* ---- quantity offer ----
+         The radios are the state. Everything here only mirrors them — into
+         the button labels, the sticky bar and the per-row totals — and does
+         so synchronously, so a fast double tap can never leave the label
+         disagreeing with the selection. */
+      var qo = sec.querySelector('[data-qo]');
+      var save = {};
+      try { save = JSON.parse(qo ? qo.getAttribute('data-save') : '{}') || {}; } catch (e) { save = {}; }
+      function currentQty() {
+        var c = qo && qo.querySelector('.qo__in:checked');
+        return c ? Number(c.value) : 1;
+      }
+      function totalFor(q) { return price * q - (Number(save[String(q)]) || 0); }
+
+      /* ---- mix and match ----
+         Each select follows the option above until the customer changes
+         that select; from then on it keeps their choice. The mix is written
+         to both product forms as data-items, which zorev.js posts as line
+         items in place of the form's single id times quantity. */
+      var mix = sec.querySelector('[data-qmix]');
+      var mixSels = mix ? [].slice.call(mix.querySelectorAll('[data-qmix-sel]')) : [];
+      var mixForms = [mainForm, stickyForm].filter(Boolean);
+      function mixOn(q) { return !!mix && q > 1; }
+      function mixIds(q) { return mixSels.slice(0, q).map(function (el) { return el.value; }); }
+      function mixSum(q) {
+        return mixIds(q).reduce(function (s, id) {
+          var x = byId[id]; return s + (x && typeof x.price === 'number' ? x.price : price);
+        }, 0);
+      }
+      function mixPaint() {
+        if (!mix) return;
+        var q = currentQty(), onNow = mixOn(q), was = !mix.hidden;
+        mix.hidden = !onNow;
+        if (onNow && !was) { mix.classList.remove('is-in'); void mix.offsetWidth; mix.classList.add('is-in'); }
+        mixSels.forEach(function (el, i) { el.closest('[data-qmix-row]').hidden = i >= q; });
+        var items = null;
+        if (onNow) {
+          var by = {}, order = [];
+          mixIds(q).forEach(function (id) {
+            if (!by[id]) { by[id] = 0; order.push(id); }
+            by[id] += 1;
+          });
+          items = order.map(function (id) { return { id: Number(id), quantity: by[id] }; });
         }
+        mixForms.forEach(function (f) {
+          if (items) f.setAttribute('data-items', JSON.stringify(items)); else f.removeAttribute('data-items');
+        });
+      }
+      mixSels.forEach(function (el) {
+        on(el, 'change', function () { el.__touched = true; paint(); });
       });
 
-      btn.addEventListener('click', function () {
-        if (btn.getAttribute('aria-busy') === 'true') return;
-        var label = btn.textContent;
-        btn.setAttribute('aria-busy', 'true');
-        btn.disabled = true;
-        btn.textContent = 'Adding…';
-        fetch('/cart/add.js', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ items: [
-            { id: Number(btn.getAttribute('data-a')), quantity: 1 },
-            { id: Number(btn.getAttribute('data-b')), quantity: 1 }
-          ] })
-        })
-          .then(function (r) { return r.ok ? r.json() : r.json().then(function (j) { throw new Error(j && j.description); }); })
-          .then(function () {
-            if (window.ZorevCart) { window.ZorevCart.show(); return window.ZorevCart.fetch(); }
-            window.location.href = '/cart';
-          })
-          .catch(function (err) {
-            if (live) live.textContent = (err && err.message) || 'The pair could not be added. Please try again.';
-          })
-          .then(function () {
-            btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = label;
+      /* A changed total rises into place; the first paint, "Adding…" and
+         "Sold out" just appear. */
+      function roll(el) {
+        if (rm.matches || !el.animate) return;
+        el.animate([{ opacity: 0, transform: 'translateY(.55em)' }, { opacity: 1, transform: 'none' }],
+                   { duration: 300, easing: 'cubic-bezier(.23, 1, .32, 1)' });
+      }
+      function label(b, text) {
+        var prev = b.textContent.trim();
+        if (prev === text) return;
+        var lbl = document.createElement('span');
+        lbl.className = 'atc__lbl';
+        lbl.textContent = text;
+        b.replaceChildren(lbl);
+        if (prev.indexOf('·') > -1 && text.indexOf('·') > -1) roll(lbl);
+      }
+      var satcOpt = sec.querySelector('[data-satc-opt]');
+      var satcSum = sec.querySelector('[data-satc-sum]');
+      function paint() {
+        mixPaint();
+        var q = currentQty(), m = mixOn(q);
+        var ok = m ? mixIds(q).every(function (id) { return !byId[id] || byId[id].available !== false; }) : available;
+        var tot = m ? mixSum(q) - (Number(save[String(q)]) || 0) : totalFor(q);
+        sec.querySelectorAll('[data-add]').forEach(function (b) {
+          if (b.getAttribute('aria-busy') === 'true') return;
+          b.disabled = !ok;
+          var sticky = !!(stickyForm && stickyForm.contains(b));
+          label(b, !ok ? 'Sold out' : sticky ? 'Add to bag' : (q > 1 ? 'Add ' + q + ' to bag · ' : 'Add to bag · ') + short(tot));
+        });
+        sec.querySelectorAll('[data-price]').forEach(function (el) { el.textContent = short(price); });
+        sec.querySelectorAll('[data-qo-mirror]').forEach(function (i) { i.value = q; });
+        if (satcOpt) {
+          var ids = m ? mixIds(q) : [curId];
+          var uniq = ids.filter(function (id, i) { return ids.indexOf(id) === i; });
+          var lbl = uniq.length > 1 ? 'Mixed' : ((byId[uniq[0]] || {}).label || '');
+          if (satcOpt.textContent !== lbl) satcOpt.textContent = lbl;
+        }
+        if (satcSum) {
+          var sum = (q > 1 ? q + ' ' + (qo ? qo.getAttribute('data-units') : '') + ' · ' : '') + short(tot);
+          if (satcSum.textContent !== sum) { var had = satcSum.textContent; satcSum.textContent = sum; if (had) roll(satcSum); }
+        }
+        if (!qo) return;
+        qo.querySelectorAll('.qo__opt').forEach(function (l) {
+          var i = l.querySelector('.qo__in');
+          l.classList.toggle('is-on', !!(i && i.checked));
+        });
+        ring(true);
+        Object.keys(save).forEach(function (k) {
+          var n = Number(k), t = totalFor(n);
+          var tEl = qo.querySelector('[data-qo-total="' + n + '"]');
+          var wEl = qo.querySelector('[data-qo-was="' + n + '"]');
+          var eEl = qo.querySelector('[data-qo-each="' + n + '"]');
+          if (tEl) tEl.textContent = short(t);
+          if (wEl) wEl.lastChild.textContent = short(price * n);
+          if (eEl) eEl.textContent = short(Math.round(t / n)) + ' each';
+        });
+      }
+
+      /* The moving ring: measured from the chosen row, placed without
+         motion on load and on resize, with motion only on a real change. */
+      var ringEl = qo ? qo.querySelector('.qo__ring') : null, ringAt = null;
+      function ring(animate) {
+        if (!ringEl) return;
+        var c = qo.querySelector('.qo__in:checked');
+        var row = c ? c.closest('.qo__opt') : null;
+        if (!row || !row.offsetHeight) return;
+        var tr = window.getComputedStyle(ringEl).transform;
+        var shown = tr && tr !== 'none' ? new DOMMatrixReadOnly(tr).m42 : 0;
+        var base = ringEl.getBoundingClientRect().top - shown;
+        var y = Math.round(row.getBoundingClientRect().top - base), h = row.offsetHeight;
+        var jump = !animate || ringAt === null || rm.matches;
+        if (jump) ringEl.style.transition = 'none';
+        qo.style.setProperty('--qo-y', y + 'px');
+        qo.style.setProperty('--qo-h', h + 'px');
+        if (jump) { void ringEl.offsetWidth; ringEl.style.transition = ''; }
+        ringAt = y;
+        qo.classList.add('has-ring');
+      }
+      if (qo && ringEl && 'ResizeObserver' in window) {
+        var ro = new ResizeObserver(function () { ring(false); });
+        ro.observe(qo);
+        if (ac) ac.signal.addEventListener('abort', function () { ro.disconnect(); });
+      }
+      on(qo, 'change', paint);
+
+      /* One listener for the selected option. The first event zorev.js
+         fires on load is the server's own selection (detail.initial): it
+         changes nothing that moves. */
+      on(document, 'variant:change', function (e) {
+        var d = e.detail || {};
+        if (!d.id || !byId[String(d.id)]) return;
+        var id = String(d.id);
+        var initial = !!d.initial || (!seenFirst && id === startId);
+        seenFirst = true;
+        var prev = curId;
+        curId = id;
+        if (typeof d.price === 'number') price = d.price;
+        if (typeof d.available === 'boolean') available = d.available;
+        markRadios(id);
+        mixSels.forEach(function (el) {
+          if (!el.__touched || el.value === prev) el.value = id;
+        });
+        paint();
+        gallery.show(id, initial);
+        if (!initial && !(window.Shopify && window.Shopify.designMode) && window.history && history.replaceState) {
+          try {
+            var u = new URL(window.location.href);
+            u.searchParams.set('variant', id);
+            history.replaceState(history.state, '', u.toString());
+          } catch (x) {}
+        }
+      });
+      on(document, 'atc:done', paint);
+
+      /* ---- gallery ----
+         Thumbnails, dots and a programmatic move are a quick fade on the
+         target photograph (180ms) after an instant jump, so a long move
+         never sweeps through the other bottles; a swipe stays native. */
+      var gallery = (function () {
+        var gal = sec.querySelector('[data-gal]');
+        var api = { show: function () {} };
+        if (!gal) return api;
+        var track = gal.querySelector('[data-gal-track]');
+        var dots = gal.querySelector('[data-gal-dots]');
+        var thumbs = gal.querySelector('[data-gal-thumbs]');
+        var slides = [].slice.call(track.querySelectorAll('.gal__slide'));
+        var at = 0;
+        function slideFor(id) {
+          for (var k = 0; k < slides.length; k++) {
+            var vs = (slides[k].getAttribute('data-variant') || '').split(' ');
+            if (vs.indexOf(String(id)) > -1) return k;
+          }
+          return -1;
+        }
+        if (slides.length < 2) {
+          if (dots) dots.hidden = true;
+          if (thumbs) thumbs.hidden = true;
+          return api;
+        }
+        function leftOf(i) {
+          return track.scrollLeft + slides[i].getBoundingClientRect().left - track.getBoundingClientRect().left;
+        }
+        function sync(i) {
+          at = i;
+          [dots, thumbs].forEach(function (box) {
+            if (box) [].forEach.call(box.children, function (b, k) { b.setAttribute('aria-current', String(k === i)); });
           });
+        }
+        function go(i, how) {
+          if (i < 0 || i >= slides.length) return;
+          var left = leftOf(i);
+          if (Math.abs(track.scrollLeft - left) < 2) { sync(i); return; }
+          if (how === 'smooth' && !rm.matches) {
+            track.scrollTo({ left: left, behavior: 'smooth' });
+          } else {
+            track.scrollTo({ left: left, behavior: 'auto' });
+            var im = slides[i].querySelector('img');
+            if (how === 'fade' && !rm.matches && im && im.animate) {
+              im.animate([{ opacity: 0.25 }, { opacity: 1 }], { duration: 180, easing: 'cubic-bezier(.2,.7,.2,1)' });
+            }
+          }
+          sync(i);
+        }
+        var n = slides.length;
+        slides.forEach(function (s, i) {
+          var lab = s.getAttribute('data-label');
+          var name = (lab ? 'Show ' + lab + ' photo, ' : 'Show photo ') + (i + 1) + ' of ' + n;
+          if (dots) {
+            var d = document.createElement('button');
+            d.type = 'button'; d.className = 'gal__dot'; d.tabIndex = -1;
+            d.setAttribute('aria-label', name);
+            d.setAttribute('aria-current', String(i === 0));
+            d.addEventListener('click', function () { go(i, 'fade'); });
+            dots.appendChild(d);
+          }
+          if (thumbs) {
+            var t = document.createElement('button');
+            t.type = 'button';
+            t.className = 'gal__thumb' + (s.classList.contains('gal__slide--photo') ? ' gal__thumb--photo' : ' zv-studio');
+            t.setAttribute('aria-label', name);
+            t.setAttribute('aria-current', String(i === 0));
+            var src = s.getAttribute('data-thumb');
+            if (src) {
+              var ti = document.createElement('img');
+              ti.src = src; ti.alt = ''; ti.width = 72; ti.height = 72; ti.loading = 'lazy'; ti.decoding = 'async';
+              t.appendChild(ti);
+            }
+            /* mousedown default would move focus and, on a double click,
+               select text nearby; the click itself only moves the track. */
+            t.addEventListener('mousedown', function (e) { if (e.detail > 1) e.preventDefault(); });
+            t.addEventListener('click', function (e) { e.preventDefault(); go(i, 'fade'); });
+            thumbs.appendChild(t);
+          }
+        });
+        on(track, 'keydown', function (e) {
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+          var next = e.key === 'ArrowRight' ? at + 1 : at - 1;
+          if (next < 0 || next >= slides.length) return;
+          e.preventDefault();
+          go(next, 'smooth');
+        });
+        if ('IntersectionObserver' in window) {
+          var io = new IntersectionObserver(function (es) {
+            es.forEach(function (x) { if (x.isIntersecting) sync(slides.indexOf(x.target)); });
+          }, { root: track, threshold: 0.6 });
+          slides.forEach(function (s) { io.observe(s); });
+          if (ac) ac.signal.addEventListener('abort', function () { io.disconnect(); });
+        }
+        /* An option shows the photograph assigned to it (studio slot or the
+           variant's own image in Shopify). An option with none leaves the
+           gallery where it is, rather than guessing by position. */
+        api.show = function (id, initial) {
+          var k = slideFor(id);
+          if (k < 0) return;
+          go(k, initial ? 'jump' : 'fade');
+        };
+        return api;
+      })();
+
+      paint();
+      markRadios(curId);
+
+      /* ---- the pair card ---- */
+      var pc = sec.querySelector('[data-pairc]');
+      if (pc) {
+        var add = pc.querySelector('[data-pairc-add]');
+        var stEl = pc.querySelector('[data-pairc-state]');
+        var priceEl = pc.querySelector('[data-pairc-price]');
+        var tagEl = pc.querySelector('[data-pairc-tag]');
+        var errEl = pc.querySelector('[data-pairc-err]');
+        var live = pc.querySelector('[data-pairc-live]');
+        var pick = pc.querySelector('[data-pairc-avar]');
+        var aImg = pc.querySelector('[data-pairc-aimg]');
+        var thumbsA = {};
+        try { var tj = pc.querySelector('[data-pairc-thumbs]'); thumbsA = tj ? (JSON.parse(tj.textContent) || {}) : {}; } catch (e) { thumbsA = {}; }
+        var aId = Number(pc.getAttribute('data-a-product')), bId = Number(pc.getAttribute('data-b-product'));
+        var title = pc.getAttribute('data-title') || '';
+        var name = pc.getAttribute('data-name') || 'The pair';
+        var aShort = pc.getAttribute('data-a-short') || '', bShort = pc.getAttribute('data-b-short') || '';
+        var labelOffer = add.getAttribute('data-label-offer') || add.textContent;
+        var labelPlain = add.getAttribute('data-label-plain') || labelOffer;
+        var blocked = false;
+
+        var setA = function (id) {
+          add.setAttribute('data-a', id);
+          if (aImg && thumbsA[String(id)]) aImg.src = thumbsA[String(id)];
+        };
+        if (pick) on(pick, 'change', function () { setA(pick.value); });
+        if (pc.getAttribute('data-follow') === 'a') {
+          on(document, 'variant:change', function (e) { if (e.detail && e.detail.id) setA(String(e.detail.id)); });
+        }
+        var qtyOf = function (c, pid) {
+          return (c.items || []).reduce(function (s, i) { return s + (i.product_id === pid ? i.quantity : 0); }, 0);
+        };
+        /* Shopify's own discount titles and amounts for this cart (zorev.js
+           exposes the same reader the drawer uses). */
+        var discountsOf = function (c) {
+          if (window.ZorevDiscountsOf) return window.ZorevDiscountsOf(c);
+          var out = [];
+          (c.items || []).forEach(function (i) {
+            (i.line_level_discount_allocations || []).forEach(function (a) {
+              out.push({ title: a.discount_application && a.discount_application.title, amount: Number(a.amount) || 0 });
+            });
+          });
+          return out;
+        };
+        on(document, 'cart:painted', function (e) {
+          var c = e.detail || {};
+          var hit = discountsOf(c).filter(function (d) { return d.title === title && d.amount > 0; })[0];
+          var a = qtyOf(c, aId), b = qtyOf(c, bId);
+          blocked = false;
+          stEl.textContent = '';
+          if (hit) {
+            pc.setAttribute('data-state', 'in-bag');
+            stEl.appendChild(document.createTextNode('✓ ' + name + ' is in your bag, saving ' + short(hit.amount) + '. '));
+            var link = document.createElement('a');
+            link.href = '/cart'; link.textContent = 'View bag';
+            stEl.appendChild(link);
+            stEl.hidden = false;
+            if (priceEl) priceEl.hidden = false;
+            if (tagEl) tagEl.hidden = true;
+          } else if (b + 1 >= 3 && a + 1 <= 2) {
+            blocked = true;
+            pc.setAttribute('data-state', 'blocked');
+            stEl.textContent = 'Your bag already has ' + b + ' ' + bShort + '. With 3 or more ' + bShort +
+              ' and only 1–2 ' + aShort + ', Shopify applies the ' + bShort +
+              ' multi-buy saving instead of the pair saving. Every saving shows in your bag before checkout.';
+            stEl.hidden = false;
+            if (priceEl) priceEl.hidden = true;
+            if (tagEl) tagEl.hidden = true;
+          } else {
+            pc.removeAttribute('data-state');
+            stEl.hidden = true;
+            if (priceEl) priceEl.hidden = false;
+            if (tagEl) tagEl.hidden = false;
+          }
+          if (add.getAttribute('aria-busy') !== 'true') add.textContent = blocked ? labelPlain : labelOffer;
+        });
+
+        on(add, 'click', function () {
+          if (add.getAttribute('aria-busy') === 'true') return;
+          add.setAttribute('aria-busy', 'true');
+          add.setAttribute('aria-disabled', 'true');
+          add.textContent = 'Adding…';
+          errEl.hidden = true; errEl.textContent = '';
+          fetch('/cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items: [
+              { id: Number(add.getAttribute('data-a')), quantity: 1 },
+              { id: Number(add.getAttribute('data-b')), quantity: 1 }
+            ] })
+          })
+            .then(function (r) {
+              if (r.ok) return r.json();
+              return r.json().then(function (j) { throw new Error((j && (j.description || j.message)) || ''); },
+                                   function () { throw new Error(''); });
+            })
+            .then(function () {
+              if (live) live.textContent = name + ' added to your bag.';
+              if (window.ZorevCart) { window.ZorevCart.show(add); return window.ZorevCart.fetch(); }
+              window.location.href = '/cart';
+            })
+            .catch(function (err) {
+              errEl.textContent = (err && err.message) || 'The pair could not be added. Please try again.';
+              errEl.hidden = false;
+            })
+            .then(function () {
+              add.removeAttribute('aria-busy');
+              add.removeAttribute('aria-disabled');
+              add.textContent = blocked ? labelPlain : labelOffer;
+            });
+        });
+      }
+
+      /* ---- sticky bar (phones) ----
+         A fresh geometric test — has the real form left the top of the
+         screen — on load, on intersection changes and on scroll. */
+      (function () {
+        var bar = sec.querySelector('[data-zsatc]');
+        var anchor = sec.querySelector('[data-zatc-anchor]');
+        if (!bar || !anchor) return;
+        var state = null;
+        function evaluate() {
+          var next = anchor.getBoundingClientRect().bottom < 0;
+          if (next === state) return;
+          state = next;
+          bar.classList.toggle('is-on', next);
+          bar.setAttribute('aria-hidden', String(!next));
+          document.documentElement.classList.toggle('satc-on', next);
+        }
+        evaluate();
+        if ('IntersectionObserver' in window) {
+          var io = new IntersectionObserver(evaluate, { threshold: 0 });
+          io.observe(anchor);
+          if (ac) ac.signal.addEventListener('abort', function () { io.disconnect(); document.documentElement.classList.remove('satc-on'); });
+        }
+        var queued = false;
+        on(window, 'scroll', function () {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(function () { queued = false; evaluate(); });
+        }, { passive: true });
+      })();
+    };
+
+    var me = document.currentScript;
+    Z.init(me && me.closest ? me.closest('[data-zpdp]') : document.querySelector('[data-zpdp]'));
+    if (!Z.bound) {
+      Z.bound = true;
+      document.addEventListener('shopify:section:load', function (e) {
+        var s = e.target && e.target.querySelector ? e.target.querySelector('[data-zpdp]') : null;
+        if (s) window.ZorevPDP.init(s);
+      });
+      document.addEventListener('shopify:section:unload', function (e) {
+        var s = e.target && e.target.querySelector ? e.target.querySelector('[data-zpdp]') : null;
+        if (s && s.__zpdpStop) s.__zpdpStop();
       });
     }
-
-    /* ---- sticky bar (phones) ----
-       A fresh geometric test — has the real button left the top of the
-       screen — on load, on intersection changes and on scroll end. An
-       IntersectionObserver alone misses a flick straight past the anchor. */
-    (function stickyBar() {
-      var bar = document.querySelector('[data-zsatc]');
-      var anchor = document.querySelector('[data-zatc-anchor]');
-      if (!bar || !anchor) { return; }
-      var on = null;
-      function evaluate() {
-        var next = anchor.getBoundingClientRect().bottom < 0;
-        if (next === on) { return; }
-        on = next;
-        bar.classList.toggle('is-on', next);
-        bar.setAttribute('aria-hidden', String(!next));
-        document.documentElement.classList.toggle('satc-on', next);
-      }
-      evaluate();
-      if ('IntersectionObserver' in window) {
-        new IntersectionObserver(evaluate, { threshold: 0 }).observe(anchor);
-      }
-      if ('onscrollend' in window) {
-        window.addEventListener('scrollend', evaluate, { passive: true });
-      }
-      var queued = false;
-      window.addEventListener('scroll', function () {
-        if (queued) { return; }
-        queued = true;
-        requestAnimationFrame(function () { queued = false; evaluate(); });
-      }, { passive: true });
-    })();
-
-    /* ---- gallery ---- */
-    document.querySelectorAll('[data-gal]').forEach(function (gal) {
-      var track  = gal.querySelector('[data-gal-track]');
-      var dots   = gal.querySelector('[data-gal-dots]');
-      var thumbs = gal.querySelector('[data-gal-thumbs]');
-      var slides = [].slice.call(track.querySelectorAll('.gal__slide'));
-      if (slides.length < 2) {
-        if (dots) dots.style.display = 'none';
-        if (thumbs) thumbs.style.display = 'none';
-        return;
-      }
-      function go(i) {
-        track.scrollTo({
-          left: slides[i].offsetLeft - track.offsetLeft,
-          behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
-        });
-      }
-      function sync(i) {
-        if (dots) [].forEach.call(dots.children, function (d, k) { d.setAttribute('aria-current', String(k === i)); });
-        if (thumbs) [].forEach.call(thumbs.children, function (t, k) { t.setAttribute('aria-current', String(k === i)); });
-      }
-      slides.forEach(function (s, i) {
-        if (dots) {
-          var d = document.createElement('button');
-          d.type = 'button'; d.className = 'gal__dot'; d.setAttribute('role', 'tab');
-          d.setAttribute('aria-label', 'Image ' + (i + 1));
-          d.setAttribute('aria-current', String(i === 0));
-          d.addEventListener('click', function () { go(i); });
-          dots.appendChild(d);
-        }
-        if (thumbs) {
-          var im = s.querySelector('img');
-          var t = document.createElement('button');
-          t.type = 'button'; t.className = 'gal__thumb' + (s.hasAttribute('data-thumb-stage') ? ' gal__thumb--stage' : '');
-          t.setAttribute('aria-label', 'View image ' + (i + 1));
-          t.setAttribute('aria-current', String(i === 0));
-          /* data-thumb is a 160px render of the same image; the slide's own
-             src is the 900-1400px file and would be a waste as a 66px tile. */
-          t.innerHTML = '<img src="' + (s.getAttribute('data-thumb') || (im ? im.getAttribute('src') : '')) + '" alt="" loading="lazy" width="66" height="66">';
-          t.addEventListener('click', function () { go(i); });
-          thumbs.appendChild(t);
-        }
-      });
-      track.addEventListener('keydown', function (e) {
-        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') { return; }
-        var cur = 0, best = Infinity;
-        slides.forEach(function (s, i) {
-          var d = Math.abs(s.getBoundingClientRect().left - track.getBoundingClientRect().left);
-          if (d < best) { best = d; cur = i; }
-        });
-        var next = e.key === 'ArrowRight' ? cur + 1 : cur - 1;
-        if (next < 0 || next >= slides.length) { return; }
-        e.preventDefault();
-        go(next);
-      });
-      if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (es) {
-          es.forEach(function (e) { if (e.isIntersecting) sync(slides.indexOf(e.target)); });
-        }, { root: track, threshold: 0.6 });
-        slides.forEach(function (s) { io.observe(s); });
-      }
-      /* An option scrolls to the photograph assigned to it in Shopify (the
-         variant's image). An option with no photograph of its own leaves
-         the gallery where it is, rather than guessing by position. */
-      document.addEventListener('variant:change', function (e) {
-        var mid = e && e.detail ? vMedia[String(e.detail.id)] : '';
-        if (!mid || mid === '0') { return; }
-        for (var k = 0; k < slides.length; k++) {
-          if (slides[k].getAttribute('data-media-id') === mid) { go(k); return; }
-        }
-      });
-    });
   })();
   </script>
-</section>
+</div>
 {% schema %}
 {
   "name": "Product",
   "settings": [
     { "type": "checkbox", "id": "sticky_atc", "label": "Sticky add-to-cart bar", "default": true,
-      "info": "Phones and small tablets only. It appears once the real button scrolls off screen, and the page reserves space for it so it never covers content." },
-    { "type": "paragraph", "content": "The gallery shows the product's own photographs from Products > Media, in that order. Set each option's photograph on the product (Edit variant > image) and choosing that option scrolls to it." },
-    { "type": "paragraph", "content": "The quantity offer reads each product's 'Quantity offer' metafield. The pair card and the trust row read Theme settings > Offers and > Trust. Product-specific accordions come from the description's own headings (Details, How to use, What's included); the store-wide ones are the blocks below." }
+      "info": "Phones and small tablets only. It appears once the real button scrolls off screen, shows the option, quantity and price it will add, and the page reserves space for it so it never covers content." },
+    { "type": "paragraph", "content": "Photographs: with Theme settings > Studio images on, the gallery shows the packshots set there for this product's options; otherwise the product's own photographs from Products > Media. Either way, choosing an option shows the photograph assigned to that option." },
+    { "type": "paragraph", "content": "The quantity offer reads each product's 'Quantity offer' metafield. The pair card reads Theme settings > Offers. The story under the buy box comes from the description's own headings (Details, How to use, What's included); the accordion blocks below close it as 'Good to know'." }
   ],
   "blocks": [
     { "type": "scene", "name": "In-use photograph",
@@ -1142,6 +1609,14 @@
         { "type": "image_picker", "id": "image", "label": "Photograph", "info": "Square frame; at least 1600 px on the short side." },
         { "type": "text", "id": "image_alt", "label": "Description", "info": "What is in the picture, for screen readers." },
         { "type": "text", "id": "position", "label": "Crop", "default": "50% 50%", "info": "Where the square centres on the photograph, as x% y%." }
+      ] },
+    { "type": "story_photo", "name": "Story photograph",
+      "settings": [
+        { "type": "paragraph", "content": "A landscape beside the product's story (What it is, How to use…). Keep it product-free: no picture of a different product, and no product composited into a scene." },
+        { "type": "product", "id": "product", "label": "Product", "info": "The page this photograph belongs to. Empty: every product page." },
+        { "type": "image_picker", "id": "image", "label": "Photograph", "info": "Wide, at least 2000 px across. Cropped 4:5 on wide screens, 3:2 on phones." },
+        { "type": "text", "id": "image_alt", "label": "Description", "info": "What is in the picture, for screen readers." },
+        { "type": "text", "id": "position", "label": "Crop point", "default": "50% 50%", "info": "Where both crops centre on the photograph, as x% y%." }
       ] },
     { "type": "accordion", "name": "Accordion",
       "settings": [
