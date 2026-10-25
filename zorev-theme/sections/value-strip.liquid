@@ -21,7 +21,7 @@
 
     <div class="zvs__row">
       {%- for b in section.blocks -%}
-        <div class="zvs__cell" data-zv-reveal {{ b.shopify_attributes }}>
+        <div class="zvs__cell" {{ b.shopify_attributes }}>
           {%- if b.settings.num != blank -%}
             <span class="zvs__n zv-num">{{ b.settings.num | escape }}</span>
           {%- endif -%}

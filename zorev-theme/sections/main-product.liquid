@@ -61,6 +61,30 @@
   endfor
 
   comment
+    What the bag already holds (the cart this page was rendered with; the
+    script re-reads it on every cart repaint). This product's units decide
+    whether the quantity rows may promise a tier saving; the pair products'
+    units decide whether the pair card may promise the pair saving.
+  endcomment
+  assign in_bag_qty = 0
+  assign bag_a = 0
+  assign bag_b = 0
+  for item in cart.items
+    if item.product_id == product.id
+      assign in_bag_qty = in_bag_qty | plus: item.quantity
+    endif
+    if pa != blank and item.product_id == pa.id
+      assign bag_a = bag_a | plus: item.quantity
+    elsif pb != blank and item.product_id == pb.id
+      assign bag_b = bag_b | plus: item.quantity
+    endif
+  endfor
+  assign tiers_plain = false
+  if in_bag_qty > 0
+    assign tiers_plain = true
+  endif
+
+  comment
     Studio images (Theme settings > Studio images): slot N pairs a numeric
     variant id (studio_N_variant) with a packshot (studio_N_image). The
     slots that belong to this product's options become the gallery, in
@@ -68,13 +92,9 @@
     the first one painted (the LCP) and a ?variant= link never sweeps past
     other bottles on load.
   endcomment
-  assign studio_on = false
-  if settings.studio_mode == 'on' or settings.studio_mode == true
-    assign studio_on = true
-  endif
   assign sel_keys = ''
   assign other_keys = ''
-  if studio_on
+  if settings.studio_mode == 'on'
     for n in (1..10)
       assign kv = 'studio_' | append: n | append: '_variant'
       assign ki = 'studio_' | append: n | append: '_image'
@@ -96,10 +116,7 @@
     endfor
   endif
   assign slide_keys = sel_keys | append: other_keys
-  assign use_studio = false
-  if slide_keys != blank
-    assign use_studio = true
-  else
+  if slide_keys == blank
     comment
       No studio slots for this product: its own media from Shopify, in
       their order, except that the selected option's own photograph leads.
@@ -123,7 +140,7 @@
 -%}
 <div class="zpdp-root" data-zpdp>
 <section class="band zpdp">
-  <div class="wrap pdp" data-variants data-money-format="{{ shop.money_format | strip_html | escape }}">
+  <div class="wrap pdp" data-variants data-product-id="{{ product.id }}" data-money-format="{{ shop.money_format | strip_html | escape }}">
 
     {%- comment -%}
       One scroll-snap track at every size: swiping is the native gesture on
@@ -278,30 +295,12 @@
             <legend class="pdp__label">Option</legend>
             <div class="vpick__grid">
               {%- for var in product.variants -%}
-                {%- liquid
-                  assign sw = nil
-                  if use_studio
-                    assign xid = var.id | append: ''
-                    for n in (1..10)
-                      assign kv = 'studio_' | append: n | append: '_variant'
-                      assign sv = settings[kv] | strip
-                      if sv == xid
-                        assign ki = 'studio_' | append: n | append: '_image'
-                        if settings[ki] != blank
-                          assign sw = settings[ki]
-                          break
-                        endif
-                      endif
-                    endfor
-                  else
-                    assign sw = var.featured_image
-                  endif
-                -%}
+                {%- capture sw -%}{% render 'studio-image', variant: var, product: product, widths: '120', sizes: '42px', loading: 'eager', alt: product.title %}{%- endcapture -%}
                 <label class="vopt{% if var.id == v.id %} is-on{% endif %}{% unless var.available %} is-sold{% endunless %}">
                   <input class="opt vopt__in" type="radio" name="variant" value="{{ var.id }}"
                          data-variant-id="{{ var.id }}"{% if var.id == v.id %} checked{% endif %}>
                   {%- if sw != blank -%}
-                    <span class="vopt__sw zv-studio" aria-hidden="true"><img src="{{ sw | image_url: width: 120 }}" alt="" width="{{ sw.width }}" height="{{ sw.height }}" decoding="async"></span>
+                    <span class="vopt__sw zv-studio" aria-hidden="true">{{ sw }}</span>
                   {%- endif -%}
                   <span class="vopt__t">{% render 'zvlabel', t: var.title %}{% unless var.available %}<span class="vopt__sold">Sold out</span>{% endunless %}</span>
                 </label>
@@ -317,7 +316,17 @@
           <input type="hidden" name="id" value="{{ v.id }}">
 
           {%- if offer.breaks.size > 0 -%}
-            <fieldset class="qo" data-qo
+            {%- comment -%}
+              The multi-buy discounts apply once per order. When the bag
+              already holds this product, a row here cannot know what an
+              extra 2 or 3 will save on top, so the rows turn plain (count
+              and regular price, no saving) and the note under the button
+              says the bag works the savings out. Set here from the cart
+              Shopify rendered the page with; the script re-checks it on
+              every cart repaint (cart:painted). Nothing is computed here
+              beyond the metafield's own tier savings.
+            {%- endcomment -%}
+            <fieldset class="qo{% if tiers_plain %} is-plain{% endif %}" data-qo
                       data-save='{"1":0{% for t in offer.breaks %},"{{ t.qty }}":{{ t.save }}{% endfor %}}'
                       data-unit="{{ unit_one | escape }}" data-units="{{ unit_many | escape }}">
               <legend class="pdp__label">Quantity</legend>
@@ -335,6 +344,9 @@
                   assign full = v.price | times: t.qty
                   assign tot = full | minus: t.save
                   assign each = tot | times: 1.0 | divided_by: t.qty | round
+                  if tiers_plain
+                    assign tot = full
+                  endif
                 -%}
                 <label class="qo__opt">
                   <input class="qo__in" type="radio" name="quantity" value="{{ t.qty }}">
@@ -386,7 +398,7 @@
                   </li>
                 {%- endfor -%}
               </ol>
-              <p class="qmix__note">Mix any options. The saving still applies.</p>
+              <p class="qmix__note">Mix any options.<span class="qmix__save"> The saving still applies.</span></p>
             </div>
           {%- endif -%}
 
@@ -397,7 +409,10 @@
           <p class="atc__err" role="alert" data-atc-error hidden></p>
         {%- endform -%}
         {%- if offer.breaks.size > 0 or show_pair -%}
-          <p class="pdp__note">{% render 'zicon', name: 'check' %}<span>Savings are applied automatically in your bag. No code.</span></p>
+          <p class="pdp__note" data-note-auto{% if tiers_plain %} hidden{% endif %}>{% render 'zicon', name: 'check' %}<span>Savings are applied automatically in your bag. No code.</span></p>
+        {%- endif -%}
+        {%- if offer.breaks.size > 0 -%}
+          <p class="pdp__note" data-note-bag{% unless tiers_plain %} hidden{% endunless %}>{% render 'zicon', name: 'check' %}<span>Savings are worked out in your bag.</span></p>
         {%- endif -%}
       </div>
 
@@ -413,76 +428,74 @@
           endcapture
           assign pp = pp | strip
           assign pair_full = pa.price | plus: pb.price
+          assign save_txt = settings.pair_save_cents | money_without_trailing_zeros
 
           comment
-            The two small pictures: each option's studio packshot when the
-            studio set has one, else that option's own photograph, else the
-            product's.
+            The pair rule (one definition site-wide; zorev.js has it as
+            ZorevPair.applies): with G units of A and H units of B in the bag
+            AFTER the add, Shopify applies the pair once per order iff
+            G >= 1 and H >= 1 and (H <= 2 or G >= H). Verified: 1+1, 2+1,
+            1+2, 2+2, 3+1, 3+3, 4+2 apply; 1+3, 2+3, 1+4 do not.
           endcomment
-          assign ia = nil
-          assign ib = nil
-          if studio_on
-            assign xa = pva.id | append: ''
-            assign xb = pvb.id | append: ''
-            for n in (1..10)
-              assign kv = 'studio_' | append: n | append: '_variant'
-              assign ki = 'studio_' | append: n | append: '_image'
-              assign sv = settings[kv] | strip
-              if settings[ki] == blank
-                continue
-              endif
-              if sv == xa and ia == blank
-                assign ia = settings[ki]
-              endif
-              if sv == xb and ib == blank
-                assign ib = settings[ki]
-              endif
-            endfor
+          assign g_after = bag_a | plus: 1
+          assign h_after = bag_b | plus: 1
+          assign pair_ok = false
+          if h_after <= 2 or g_after >= h_after
+            assign pair_ok = true
           endif
-          if ia == blank
-            assign ia = pva.featured_image | default: pa.featured_image
+          assign pair_in_bag = false
+          for app in cart.discount_applications
+            if app.title == settings.pair_discount_title
+              assign pair_in_bag = true
+            endif
+          endfor
+          assign pair_state = ''
+          if pair_in_bag
+            assign pair_state = 'in-bag'
+          elsif pair_ok == false
+            assign pair_state = 'blocked'
           endif
-          if ib == blank
-            assign ib = pvb.featured_image | default: pb.featured_image
-          endif
-          assign save_txt = settings.pair_save_cents | money_without_trailing_zeros
         -%}
         {%- comment -%}
           The pair card. "Add the pair" posts one of each (the GODA option
           selected on this page, or chosen in the card on the HOYGI page).
-          It reads the real cart (zorev.js fires cart:painted after every
-          repaint) and has three states:
-            in-bag   Shopify's own discounts for this cart include the pair
-            blocked  after adding one of each the bag would hold 3+ of B with
-                     only 1-2 of A — Shopify then applies B's multi-buy
-                     instead of the pair (verified: 1 GODA + 3 HOYGI pays
-                     $93, 2 + 3 pays $117), so the card stops promising it
-            offer    anything else (1 GODA + 2 HOYGI does get the pair: $66)
-          The pair applies once per order, so in-bag hides the button.
+          Rendered in the state of the cart the page was built with, then
+          kept in step with the real cart (zorev.js fires cart:painted after
+          every repaint). Three states:
+            in-bag   Shopify's own discounts for this cart include the pair;
+                     it applies once per order, so the button goes
+            blocked  the rule above says one more of each would NOT get the
+                     pair: no price, no saving, a plain "Add one of each"
+            offer    anything else
         {%- endcomment -%}
-        <div class="pairc" data-pairc
+        <div class="pairc" data-pairc{% if pair_state != blank %} data-state="{{ pair_state }}"{% endif %}
              data-a-product="{{ pa.id }}" data-b-product="{{ pb.id }}"
              data-follow="{% if product.id == pa.id %}a{% endif %}"
              data-title="{{ settings.pair_discount_title | escape }}"
              data-name="{{ settings.pair_name | escape }}"
              data-a-short="{{ pa.vendor | upcase | escape }}" data-b-short="{{ pb.vendor | upcase | escape }}">
+          {%- comment -%}
+            The two small pictures (snippets/studio-image): each option's
+            studio packshot when the studio set has one, else that option's
+            own photograph, else the product's.
+          {%- endcomment -%}
           <div class="pairc__figs" aria-hidden="true">
-            <span class="pairc__plate zv-studio">{%- if ia != blank -%}<img data-pairc-aimg src="{{ ia | image_url: width: 160 }}" alt="" width="{{ ia.width }}" height="{{ ia.height }}" loading="lazy" decoding="async">{%- endif -%}</span>
+            <span class="pairc__plate zv-studio">{% render 'studio-image', variant: pva, product: pa, widths: '160', sizes: '60px', alt: pa.title, attrs: 'data-pairc-aimg' %}</span>
             <span class="pairc__plus">{% render 'zicon', name: 'plus' %}</span>
-            <span class="pairc__plate zv-studio">{%- if ib != blank -%}<img src="{{ ib | image_url: width: 160 }}" alt="" width="{{ ib.width }}" height="{{ ib.height }}" loading="lazy" decoding="async">{%- endif -%}</span>
+            <span class="pairc__plate zv-studio">{% render 'studio-image', variant: pvb, product: pb, widths: '160', sizes: '60px', alt: pb.title %}</span>
           </div>
           <div class="pairc__txt">
             <h2 class="pairc__k">{{ settings.pair_name | escape }}</h2>
             <p class="pairc__h">{{ pa.vendor | upcase | escape }} + {{ pb.vendor | upcase | escape }}</p>
             {%- if pp != blank -%}
-              <p class="pairc__p" data-pairc-price>
+              <p class="pairc__p" data-pairc-price{% if pair_state == 'blocked' %} hidden{% endif %}>
                 <strong>{{ pp }}</strong>
                 <s><span class="visually-hidden">Regular price </span>{{ pair_full | money_without_trailing_zeros }}</s>
                 <span class="pairc__save">Save {{ save_txt }}</span>
               </p>
-              <p class="pairc__tag" data-pairc-tag>One of each. The {{ save_txt }} comes off automatically in your bag, once per order.</p>
+              <p class="pairc__tag" data-pairc-tag{% if pair_state != blank %} hidden{% endif %}>One of each. The {{ save_txt }} comes off automatically in your bag, once per order.</p>
             {%- else -%}
-              <p class="pairc__tag" data-pairc-tag>One of each. The pair saving comes off automatically in your bag, once per order.</p>
+              <p class="pairc__tag" data-pairc-tag{% if pair_state != blank %} hidden{% endif %}>One of each. The pair saving comes off automatically in your bag, once per order.</p>
             {%- endif -%}
           </div>
           <div class="pairc__act" data-pairc-act>
@@ -501,35 +514,22 @@
             {%- capture offer_label -%}Add the pair{% if pp != blank %} &middot; {{ pp }}{% endif %}{%- endcapture -%}
             <button type="button" class="pairc__add" data-pairc-add
                     data-a="{{ pva.id }}" data-b="{{ pvb.id }}"
-                    data-label-offer="{{ offer_label | escape_once }}" data-label-plain="Add one of each">{{ offer_label }}</button>
+                    data-label-offer="{{ offer_label | escape_once }}" data-label-plain="Add one of each">{% if pair_state == 'blocked' %}Add one of each{% else %}{{ offer_label }}{% endif %}</button>
           </div>
-          <p class="pairc__state" data-pairc-state hidden></p>
+          <p class="pairc__state" data-pairc-state{% if pair_state == blank %} hidden{% endif %}>
+            {%- if pair_state == 'in-bag' -%}
+              &#10003; {{ settings.pair_name | escape }} is in your bag. <a href="{{ routes.cart_url }}">View bag</a>
+            {%- elsif pair_state == 'blocked' -%}
+              Your bag already has more {{ pb.vendor | upcase | escape }} than {{ pa.vendor | upcase | escape }}, so adding one of each would not get the pair saving. Every saving shows in your bag before checkout.
+            {%- endif -%}
+          </p>
           <p class="pairc__err" role="alert" data-pairc-err hidden></p>
           <p class="visually-hidden" role="status" aria-live="polite" data-pairc-live></p>
           {%- if pa.variants.size > 1 -%}
             <script type="application/json" data-pairc-thumbs>{
               {%- for pv in pa.variants -%}
-                {%- liquid
-                  assign pimg = nil
-                  if studio_on
-                    assign xid = pv.id | append: ''
-                    for n in (1..10)
-                      assign kv = 'studio_' | append: n | append: '_variant'
-                      assign sv = settings[kv] | strip
-                      if sv == xid
-                        assign ki = 'studio_' | append: n | append: '_image'
-                        if settings[ki] != blank
-                          assign pimg = settings[ki]
-                          break
-                        endif
-                      endif
-                    endfor
-                  endif
-                  if pimg == blank
-                    assign pimg = pv.featured_image | default: pa.featured_image
-                  endif
-                -%}
-                "{{ pv.id }}":{% if pimg != blank %}{{ pimg | image_url: width: 160 | json }}{% else %}null{% endif %}{% unless forloop.last %},{% endunless %}
+                {%- capture pu -%}{% render 'studio-image', variant: pv, product: pa, output: 'url', url_width: 160 %}{%- endcapture -%}
+                "{{ pv.id }}":{{ pu | strip | json }}{% unless forloop.last %},{% endunless %}
               {%- endfor -%}
             }</script>
           {%- endif -%}
@@ -612,13 +612,9 @@
   endfor
   assign acc_blocks = section.blocks | where: 'type', 'accordion'
   assign has_details = false
-  for part in parts offset: 1
-    assign bits = part | split: '</h3>'
-    assign t_down = bits[0] | strip_html | strip | downcase
-    if t_down == 'details'
-      assign has_details = true
-    endif
-  endfor
+  if product.description contains '<h3>Details</h3>'
+    assign has_details = true
+  endif
   assign has_story = false
   if parts.size > 1 or parts[0] != blank or acc_blocks.size > 0
     assign has_story = true
@@ -633,48 +629,36 @@
         assign pos = story_pick.settings.position | default: '50% 50%' | split: ' '
         assign px = pos[0] | remove: '%' | strip | plus: 0
         assign py = pos[1] | default: '50%' | remove: '%' | strip | plus: 0
-        assign ph_ratio = ph.width | times: 1.0 | divided_by: ph.height
 
         comment
           Two region crops of the original, so the delivered pixels are the
           frame's shape (no cover-crop over-fetch): 4:5 beside the copy on
           wide screens, 3:2 above it on phones, both centred on the crop
-          point set in the block.
+          point set in the block. The widths assume a photograph of at least
+          2000 px across (the block's own instruction); Shopify never
+          enlarges a crop beyond its source.
         endcomment
-        if ph_ratio > 0.8
-          assign d_h = ph.height
-          assign d_w = ph.height | times: 0.8 | round
-          assign d_l = ph.width | minus: d_w | times: px | divided_by: 100 | round
-          assign d_t = 0
-        else
-          assign d_w = ph.width
-          assign d_h = ph.width | times: 1.25 | round
-          assign d_l = 0
-          assign d_t = ph.height | minus: d_h | times: py | divided_by: 100 | round
-        endif
-        if ph_ratio > 1.5
-          assign m_h = ph.height
-          assign m_w = ph.height | times: 1.5 | round
-          assign m_l = ph.width | minus: m_w | times: px | divided_by: 100 | round
-          assign m_t = 0
-        else
-          assign m_w = ph.width
-          assign m_h = ph.width | divided_by: 1.5 | round
-          assign m_l = 0
-          assign m_t = ph.height | minus: m_h | times: py | divided_by: 100 | round
-        endif
-        assign d_ladder = '440,660,880,1100' | split: ','
-        assign m_ladder = '480,720,960,1200' | split: ','
+        assign cap_w = ph.height | times: 0.8 | round
+        assign d_w = ph.width | at_most: cap_w
+        assign cap_h = d_w | times: 1.25 | round
+        assign d_h = ph.height | at_most: cap_h
+        assign d_l = ph.width | minus: d_w | times: px | divided_by: 100 | round
+        assign d_t = ph.height | minus: d_h | times: py | divided_by: 100 | round
+        assign cap_w = ph.height | times: 1.5 | round
+        assign m_w = ph.width | at_most: cap_w
+        assign cap_h = m_w | divided_by: 1.5 | round
+        assign m_h = ph.height | at_most: cap_h
+        assign m_l = ph.width | minus: m_w | times: px | divided_by: 100 | round
+        assign m_t = ph.height | minus: m_h | times: py | divided_by: 100 | round
       -%}
       <figure class="pstory__fig" {{ story_pick.shopify_attributes }}>
         <picture>
           <source media="(min-width: 900px)" sizes="(min-width: 1240px) 440px, 36vw"
-                  srcset="{%- for w in d_ladder -%}{%- assign wn = w | plus: 0 -%}{%- if wn <= d_w -%}{%- assign hn = wn | times: 1.25 | round -%}{%- unless forloop.first %}, {% endunless -%}{{ ph | image_url: width: wn, height: hn, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} {{ wn }}w{%- endif -%}{%- endfor -%}">
-          {%- assign m_src_h = 720 | divided_by: 1.5 | round -%}
-          <img src="{{ ph | image_url: width: 720, height: m_src_h, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }}"
-               srcset="{%- for w in m_ladder -%}{%- assign wn = w | plus: 0 -%}{%- if wn <= m_w -%}{%- assign hn = wn | divided_by: 1.5 | round -%}{%- unless forloop.first %}, {% endunless -%}{{ ph | image_url: width: wn, height: hn, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} {{ wn }}w{%- endif -%}{%- endfor -%}"
+                  srcset="{{ ph | image_url: width: 440, height: 550, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 440w, {{ ph | image_url: width: 660, height: 825, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 660w, {{ ph | image_url: width: 880, height: 1100, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 880w, {{ ph | image_url: width: 1100, height: 1375, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 1100w">
+          <img src="{{ ph | image_url: width: 720, height: 480, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }}"
+               srcset="{{ ph | image_url: width: 480, height: 320, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 480w, {{ ph | image_url: width: 720, height: 480, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 720w, {{ ph | image_url: width: 960, height: 640, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 960w, {{ ph | image_url: width: 1200, height: 800, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 1200w"
                sizes="calc(100vw - 40px)"
-               width="720" height="{{ m_src_h }}"
+               width="720" height="480"
                alt="{{ story_pick.settings.image_alt | default: ph.alt | escape }}"
                loading="lazy" decoding="async">
         </picture>
@@ -891,6 +875,10 @@
     .qo__was{font-size:var(--zv-t-fine);color:var(--zv-text-2)}
     .qo__total{font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;color:var(--zv-text);
       font-variant-numeric:tabular-nums}
+    /* Plain rows (the bag already holds this product): count and regular
+       price only — no saving the bag may not give. */
+    .qo.is-plain .qo__save,.qo.is-plain .qo__was,.qo.is-plain .qo__each,.qo.is-plain .qo__tag,
+    .qo.is-plain ~ .qmix .qmix__save{display:none}
 
     /* ---- mix and match: one select per unit, under the quantity rows ---- */
     .qmix{display:grid;gap:var(--zv-3);margin:var(--zv-1) 0 var(--zv-3);padding:var(--zv-4);border-radius:var(--zv-r-md);
@@ -1170,7 +1158,11 @@
         var c = qo && qo.querySelector('.qo__in:checked');
         return c ? Number(c.value) : 1;
       }
-      function totalFor(q) { return price * q - (Number(save[String(q)]) || 0); }
+      /* plain: the bag already holds this product, so the once-per-order
+         tier savings cannot be promised row by row (see the Liquid note). */
+      var plain = !!(qo && qo.classList.contains('is-plain'));
+      function saveFor(q) { return plain ? 0 : (Number(save[String(q)]) || 0); }
+      function totalFor(q) { return price * q - saveFor(q); }
 
       /* ---- mix and match ----
          Each select follows the option above until the customer changes
@@ -1232,7 +1224,7 @@
         mixPaint();
         var q = currentQty(), m = mixOn(q);
         var ok = m ? mixIds(q).every(function (id) { return !byId[id] || byId[id].available !== false; }) : available;
-        var tot = m ? mixSum(q) - (Number(save[String(q)]) || 0) : totalFor(q);
+        var tot = m ? mixSum(q) - saveFor(q) : totalFor(q);
         sec.querySelectorAll('[data-add]').forEach(function (b) {
           if (b.getAttribute('aria-busy') === 'true') return;
           b.disabled = !ok;
@@ -1323,6 +1315,25 @@
         }
       });
       on(document, 'atc:done', paint);
+
+      /* Re-check the once-per-order tiers against the real bag on every
+         cart repaint (zorev.js fetches /cart.js on load and after every
+         change, then fires cart:painted with it). */
+      var pid = Number(root.getAttribute('data-product-id'));
+      var noteAuto = sec.querySelector('[data-note-auto]');
+      var noteBag = sec.querySelector('[data-note-bag]');
+      on(document, 'cart:painted', function (e) {
+        var c = e.detail;
+        if (!qo || !c || !c.items) return;
+        var held = c.items.reduce(function (s, i) { return s + (i.product_id === pid ? i.quantity : 0); }, 0);
+        var next = held > 0;
+        if (next === plain) return;
+        plain = next;
+        qo.classList.toggle('is-plain', plain);
+        if (noteAuto) noteAuto.hidden = plain;
+        if (noteBag) noteBag.hidden = !plain;
+        paint();
+      });
 
       /* ---- gallery ----
          Thumbnails, dots and a programmatic move are a quick fade on the
@@ -1451,11 +1462,18 @@
         var aShort = pc.getAttribute('data-a-short') || '', bShort = pc.getAttribute('data-b-short') || '';
         var labelOffer = add.getAttribute('data-label-offer') || add.textContent;
         var labelPlain = add.getAttribute('data-label-plain') || labelOffer;
-        var blocked = false;
+        var blocked = pc.getAttribute('data-state') === 'blocked';
+        /* The shared pair rule (zorev.js: ZorevPair.applies), with the same
+           expression as a fallback: G units of A and H units of B in the
+           bag after the add. */
+        var applies = function (g, h) {
+          if (window.ZorevPair && typeof window.ZorevPair.applies === 'function') return !!window.ZorevPair.applies(g, h);
+          return g >= 1 && h >= 1 && (h <= 2 || g >= h);
+        };
 
         var setA = function (id) {
           add.setAttribute('data-a', id);
-          if (aImg && thumbsA[String(id)]) aImg.src = thumbsA[String(id)];
+          if (aImg && thumbsA[String(id)]) { aImg.removeAttribute('srcset'); aImg.src = thumbsA[String(id)]; }
         };
         if (pick) on(pick, 'change', function () { setA(pick.value); });
         if (pc.getAttribute('data-follow') === 'a') {
@@ -1491,12 +1509,11 @@
             stEl.hidden = false;
             if (priceEl) priceEl.hidden = false;
             if (tagEl) tagEl.hidden = true;
-          } else if (b + 1 >= 3 && a + 1 <= 2) {
+          } else if (!applies(a + 1, b + 1)) {
             blocked = true;
             pc.setAttribute('data-state', 'blocked');
-            stEl.textContent = 'Your bag already has ' + b + ' ' + bShort + '. With 3 or more ' + bShort +
-              ' and only 1–2 ' + aShort + ', Shopify applies the ' + bShort +
-              ' multi-buy saving instead of the pair saving. Every saving shows in your bag before checkout.';
+            stEl.textContent = 'Your bag already has more ' + bShort + ' than ' + aShort +
+              ', so adding one of each would not get the pair saving. Every saving shows in your bag before checkout.';
             stEl.hidden = false;
             if (priceEl) priceEl.hidden = true;
             if (tagEl) tagEl.hidden = true;

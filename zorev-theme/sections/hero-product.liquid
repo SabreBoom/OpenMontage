@@ -60,7 +60,10 @@
             <a class="zv-btn" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ s.cta_label | escape }}</a>
           {%- endif -%}
           {%- if s.cta2_label != blank -%}
-            <a class="zv-btn zv-btn--ghost" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">{{ s.cta2_label | escape }}</a>
+            {%- capture pp -%}{% render 'pair-price' %}{%- endcapture -%}
+            {%- unless pp == blank and s.cta2_label contains '[pair_price]' -%}
+              <a class="zv-btn zv-btn--ghost" href="{{ s.cta2_link | default: routes.all_products_collection_url }}">{{ s.cta2_label | replace: '[pair_price]', pp | escape }}</a>
+            {%- endunless -%}
           {%- endif -%}
         </div>
       {%- endif -%}
@@ -228,7 +231,7 @@
     { "type": "header", "content": "Buttons" },
     { "type": "text", "id": "cta_label", "label": "Primary button", "default": "Shop Zorev" },
     { "type": "url", "id": "cta_link", "label": "Primary link" },
-    { "type": "text", "id": "cta2_label", "label": "Secondary button", "default": "The Pair · $59" },
+    { "type": "text", "id": "cta2_label", "label": "Secondary button", "default": "The Pair · [pair_price]", "info": "[pair_price] is replaced by the pair price from Theme settings > Offers." },
     { "type": "url", "id": "cta2_link", "label": "Secondary link" }
   ],
   "presets": [{ "name": "Product hero" }]

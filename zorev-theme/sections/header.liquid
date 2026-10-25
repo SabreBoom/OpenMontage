@@ -18,6 +18,25 @@
   if s.overlay and request.page_type == 'index'
     assign overlay = true
   endif
+  comment
+    Menu titles may carry [pair_price] ("The Pair — [pair_price]"), which
+    prints the Pair's live price (snippets/pair-price). A title typed with
+    a fixed price ("The Pair — $47") is shown as typed.
+  endcomment
+  capture pp
+    render 'pair-price'
+  endcapture
+  comment
+    The second list in the phone menu (FAQ, Shipping, Track order, Contact):
+    the secondary menu minus anything the main menu already shows.
+  endcomment
+  assign main_urls = ''
+  for link in s.menu.links
+    assign main_urls = main_urls | append: '|' | append: link.url | append: '|'
+  endfor
+  if s.show_search
+    assign main_urls = main_urls | append: '|' | append: routes.search_url | append: '|'
+  endif
 -%}
 
 <div data-hdr-sentinel aria-hidden="true"></div>
@@ -40,7 +59,7 @@
              sizes="{{ s.logo_width | default: 104 }}px"
              width="{{ s.logo_width | default: 104 }}"
              height="{{ s.logo_width | default: 104 | divided_by: s.logo.aspect_ratio | round }}"
-             alt="{{ shop.name | escape }}" fetchpriority="high">
+             alt="{{ shop.name | escape }}">
       {%- else -%}
         <span class="zhdr__wordmark">{{ shop.name | escape }}</span>
       {%- endif -%}
@@ -48,8 +67,10 @@
 
     <nav class="zhdr__nav" aria-label="Primary">
       {%- for link in s.menu.links -%}
+        {%- unless pp == blank and link.title contains '[pair_price]' -%}
         <a href="{{ link.url }}"
-           {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+           {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title | replace: '[pair_price]', pp | escape }}</a>
+        {%- endunless -%}
       {%- endfor -%}
     </nav>
 
@@ -60,16 +81,31 @@
         </a>
       {%- endif -%}
 
+      {%- if s.show_search -%}
+        <a class="zhdr__icon" href="{{ routes.search_url }}"
+           {% if request.page_type == 'search' %}aria-current="page"{% endif %}>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/>
+          </svg>
+          <span class="zhdr__sr">Search</span>
+        </a>
+      {%- endif -%}
+
+      {%- comment -%}
+        The link's accessible name is "Bag, N items": the visible badge is
+        aria-hidden, and [data-cart-count-text] holds the whole "N item(s)"
+        phrase. zorev.js (cart.setCount) and the script below both rewrite
+        that phrase, so a screen reader never hears a stale count.
+      {%- endcomment -%}
       <a class="zhdr__bag" href="{{ routes.cart_url }}" data-cart-link>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 8h12l-1 12H7L6 8z"/><path d="M9.5 8V6.2a2.5 2.5 0 0 1 5 0V8"/>
         </svg>
-        <span class="zhdr__count zv-num" data-cart-count
+        <span class="zhdr__count zv-num" data-cart-count aria-hidden="true"
               {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
-        <span class="zhdr__sr">
-          Bag, <span data-cart-count-text>{{ cart.item_count }}</span> item{% unless cart.item_count == 1 %}s{% endunless %}
-        </span>
+        <span class="zhdr__sr">Bag, <span data-cart-count-text>{{ cart.item_count }} item{% unless cart.item_count == 1 %}s{% endunless %}</span></span>
       </a>
 
       <button class="zhdr__burger" type="button" data-nav-toggle
@@ -91,8 +127,10 @@
   <div class="zhdr__drawer" id="zhdr-drawer" data-nav-drawer hidden>
     <nav class="zv-wrap" aria-label="Primary, mobile">
       {%- for link in s.menu.links -%}
+        {%- unless pp == blank and link.title contains '[pair_price]' -%}
         <a href="{{ link.url }}"
-           {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+           {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title | replace: '[pair_price]', pp | escape }}</a>
+        {%- endunless -%}
       {%- endfor -%}
       {%- if s.cta_label != blank -%}
         <a class="zv-btn zhdr__drawer-cta" href="{{ s.cta_link | default: routes.all_products_collection_url }}">
@@ -100,6 +138,24 @@
         </a>
       {%- endif -%}
     </nav>
+    {%- if s.secondary_menu.links.size > 0 -%}
+      {%- capture more_links -%}
+        {%- for link in s.secondary_menu.links -%}
+          {%- assign key = '|' | append: link.url | append: '|' -%}
+          {%- unless main_urls contains key -%}
+            {%- unless pp == blank and link.title contains '[pair_price]' -%}
+            <li><a href="{{ link.url }}"
+                   {% if link.active or link.child_active %}aria-current="page"{% endif %}>{{ link.title | replace: '[pair_price]', pp | escape }}</a></li>
+            {%- endunless -%}
+          {%- endunless -%}
+        {%- endfor -%}
+      {%- endcapture -%}
+      {%- if more_links != blank -%}
+        <nav class="zv-wrap zhdr__more" aria-label="More">
+          <ul role="list">{{ more_links }}</ul>
+        </nav>
+      {%- endif -%}
+    {%- endif -%}
   </div>
 </header>
 
@@ -138,24 +194,22 @@
   }
   .zhdr--overlay .zhdr__wordmark,
   .zhdr--overlay .zhdr__nav a,
-  .zhdr--overlay .zhdr__bag{ text-shadow: 0 1px 12px rgba(0,0,0,.55); }
+  .zhdr--overlay .zhdr__bag,
+  .zhdr--overlay .zhdr__icon{ text-shadow: 0 1px 12px rgba(0,0,0,.55); }
 
-  /* --- scrolled: solid, readable, quiet --- */
+  /* --- scrolled: solid warm paper, readable, quiet. No backdrop blur: it
+     cost frames on phones while scrolling and there is nothing to see
+     through a warm bar anyway. --- */
   .zhdr.is-stuck .zhdr__bar{
-    background: color-mix(in srgb, var(--zv-warm) 88%, transparent);
-    -webkit-backdrop-filter: blur(14px) saturate(1.2);
-    backdrop-filter: blur(14px) saturate(1.2);
+    background: var(--zv-bg);
     border-bottom-color: var(--zv-line);
     box-shadow: var(--zv-sh-1);
-  }
-  /* No backdrop-filter support -> a solid bar, never a see-through one */
-  @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))){
-    .zhdr.is-stuck .zhdr__bar{ background: var(--zv-warm); }
   }
   .zhdr--overlay.is-stuck .zhdr__bar::before{ opacity: 0; }
   .zhdr--overlay.is-stuck .zhdr__wordmark,
   .zhdr--overlay.is-stuck .zhdr__nav a,
-  .zhdr--overlay.is-stuck .zhdr__bag{ text-shadow: none; }
+  .zhdr--overlay.is-stuck .zhdr__bag,
+  .zhdr--overlay.is-stuck .zhdr__icon{ text-shadow: none; }
   /* the dark token scope only holds while the bar is actually over the hero */
   .zhdr--overlay.is-stuck .zhdr__bar{
     --zv-text: var(--zv-ink); --zv-text-3: var(--zv-muted);
@@ -209,12 +263,17 @@
     }
   }
 
-  .zhdr__bag{ position: relative; display: inline-flex; align-items: center; gap: 6px;
+  .zhdr__bag, .zhdr__icon{ position: relative; display: inline-flex; align-items: center; gap: 6px;
     min-width: 48px; min-height: 48px; justify-content: center;
     color: var(--zv-text); text-decoration: none; border-radius: var(--zv-r-pill);
-    transition: background var(--zv-d-hover) var(--zv-ease); }
+    -webkit-tap-highlight-color: transparent;
+    transition: background var(--zv-d-hover) var(--zv-ease), transform var(--zv-d-tap) var(--zv-ease); }
+  .zhdr__icon[aria-current="page"]{ box-shadow: inset 0 0 0 1px var(--zv-hairline-2); }
   @media (hover: hover) and (pointer: fine){
-    .zhdr__bag:hover{ background: color-mix(in srgb, currentColor 8%, transparent); }
+    .zhdr__bag:hover, .zhdr__icon:hover{ background: color-mix(in srgb, currentColor 8%, transparent); }
+  }
+  @media (hover: none){
+    .zhdr__bag:active, .zhdr__icon:active, .zhdr__burger:active{ transform: scale(var(--zv-press)); }
   }
   .zhdr__count{ font-family: var(--zv-sans); font-size: var(--zv-t-micro); font-weight: 600;
     min-width: 1.25em; text-align: left; }
@@ -256,11 +315,20 @@
   .zhdr__drawer a:not(.zv-btn)[aria-current="page"]{ font-weight: 600; }
   .zhdr__drawer a:not(.zv-btn):last-of-type{ border-bottom: 0; }
   .zhdr__drawer-cta{ margin-top: var(--zv-4); justify-content: center; }
+  /* The second list: smaller, quieter, still 44px rows. */
+  .zhdr__drawer .zhdr__more{ padding-block: 0 var(--zv-5); }
+  .zhdr__more ul{ list-style: none; margin: 0; padding: var(--zv-3) 0 0;
+    border-top: 1px solid var(--zv-line);
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--zv-4); }
+  .zhdr__drawer .zhdr__more a{ min-height: 44px; padding-block: var(--zv-2); border-bottom: 0;
+    font-size: var(--zv-t-sm); color: var(--zv-text-2); }
+  .zhdr__drawer .zhdr__more a[aria-current="page"]{ color: var(--zv-ink); }
   @media (min-width: 900px){ .zhdr__drawer{ display: none; } }
 
   @media (prefers-reduced-motion: reduce){
     .zhdr__bar, .zhdr__bar::before, .zhdr__bars i,
-    .zhdr__nav a, .zhdr__bag, .zhdr__cta{ transition-duration: 120ms; }
+    .zhdr__nav a, .zhdr__bag, .zhdr__icon, .zhdr__cta{ transition-duration: 120ms; }
+    .zhdr__bag:active, .zhdr__icon:active, .zhdr__burger:active{ transform: none; }
   }
 </style>
 
@@ -342,8 +410,11 @@
       nodes[i].textContent = n;
       nodes[i].hidden = (n === 0);
     }
-    var t = hdr.querySelector('[data-cart-count-text]');
-    if (t) t.textContent = n;
+    /* the whole phrase, so the plural is right: "Bag, 1 item" */
+    var t = hdr.querySelectorAll('[data-cart-count-text]');
+    for (var j = 0; j < t.length; j++) {
+      t[j].textContent = n + (n === 1 ? ' item' : ' items');
+    }
   }
   function readCount(detail) {
     if (!detail || typeof detail !== 'object') { return null; }
@@ -387,7 +458,11 @@
     { "type": "checkbox", "id": "overlay", "label": "Sit over the hero on the homepage", "default": true,
       "info": "Transparent over the hero, then solid once scrolled. Turn off for a solid bar everywhere." },
     { "type": "text", "id": "cta_label", "label": "Header button" },
-    { "type": "url", "id": "cta_link", "label": "Header button link" }
+    { "type": "url", "id": "cta_link", "label": "Header button link" },
+    { "type": "checkbox", "id": "show_search", "label": "Show a search link", "default": true },
+    { "type": "link_list", "id": "secondary_menu", "label": "Second menu on phones", "default": "footer",
+      "info": "Listed under the main links in the phone menu (FAQ, Shipping, Track order, Contact). Links already in the main menu are left out." },
+    { "type": "paragraph", "content": "Menu titles can show the Pair's live price: write [pair_price], e.g. \"The Pair — [pair_price]\"." }
   ]
 }
 {% endschema %}

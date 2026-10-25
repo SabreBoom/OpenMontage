@@ -2,62 +2,157 @@
   ZOREV — Made to move.
 
   The page's one big look at the world the products are carried into:
-  road, travel, trail, the ordinary day. Photographs only, captions short.
+  road, travel, trail, the ordinary day. Photographs only, captions short,
+  numbered as one story (01 Road · 02 Travel · 03 Trail · 04 Everyday).
 
-  Wide screens: an editorial collage. One tall frame and three smaller ones
-  on a 12-column grid, each set at a slightly different depth, so as the
-  band scrolls past the frames slide against each other a few pixels
-  (zorev-enhance.js [data-zv-scene] / [data-zv-depth]; off under reduced
-  motion). Phones: a horizontal strip that snaps frame by frame, with the
-  next frame always peeking in so the swipe is discoverable, and a thin
-  progress line under it. The strip is a labelled, focusable region, so
-  it scrolls from the keyboard too.
+  One horizontal editorial strip at every width (zorev-film.css): landscape
+  3:2 frames on wide screens, 4:5 frames on phones, each photograph given
+  the same quiet grade. The strip starts at the page's content edge and the
+  next frame always peeks in. Native scrolling stays in charge (touch,
+  trackpad, shift + wheel, the arrow keys on the focusable region); the
+  chapter buttons and the arrows only ask it to scroll, through
+  zorev-enhance.js ([data-zv-strip-go], [data-zv-strip-prev|next]). They
+  are rendered hidden and the script shows them, so nobody without
+  JavaScript meets a dead button; without it a mouse gets the strip's
+  scrollbar instead. A thin progress line sits under the strip.
+
+  Per frame (block): an optional phone crop (image_mobile), an optional crop
+  region for wide screens (Crop region, in the original's pixels, cut on
+  Shopify's CDN: it keeps the composited product out of the Everyday frame
+  at 3:2), an optional link, and an optional product chip (studio
+  packshot, name and price, linking to the product).
 {%- endcomment -%}
-{%- assign s = section.settings -%}
-<section class="zmm" id="{{ s.anchor | default: 'made-to-move' | handleize }}" aria-labelledby="zmm-h-{{ section.id }}">
+{%- liquid
+  assign s = section.settings
+  assign sid = 'zmm-' | append: section.id
+-%}
+<section class="zmm" id="{{ s.anchor | default: 'made-to-move' | handleize }}" aria-labelledby="{{ sid }}-h">
   <div class="zv-wrap">
     <header class="zmm__head" data-zv-reveal>
       {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
-      <h2 class="zmm__h" id="zmm-h-{{ section.id }}">{{ s.heading }}</h2>
+      <h2 class="zmm__h" id="{{ sid }}-h">{{ s.heading }}</h2>
       {%- if s.body != blank -%}<div class="zv-lead zmm__lead">{{ s.body }}</div>{%- endif -%}
     </header>
   </div>
 
   <div class="zmm__strip" data-zv-strip>
-    <div class="zmm__track" data-zv-strip-track role="region" tabindex="0" aria-label="{{ s.heading | strip_html | escape }}: {{ section.blocks.size }} photographs, scroll sideways">
-      <ul class="zmm__grid" role="list" data-zv-scene data-zv-scene-scroll="0.05" data-zv-scene-min="900">
+    {%- if section.blocks.size > 1 -%}
+      <div class="zv-wrap">
+        <div class="zmm__nav" data-zv-strip-controls hidden>
+          <ol class="zmm__chapters" role="list">
+            {%- for block in section.blocks -%}
+              <li>
+                <button type="button" class="zmm__ch" data-zv-strip-go="{{ forloop.index0 }}" aria-controls="{{ sid }}-f{{ forloop.index }}">
+                  <span class="zmm__ch-n">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
+                  <span class="zmm__ch-l">{{ block.settings.label | default: block.settings.title | escape }}</span>
+                </button>
+              </li>
+            {%- endfor -%}
+          </ol>
+          <div class="zmm__arrows">
+            <button type="button" class="zmm__arrow" data-zv-strip-prev aria-controls="{{ sid }}-track" aria-label="Previous photograph">
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3 5 8l5 5"/></svg>
+            </button>
+            <button type="button" class="zmm__arrow" data-zv-strip-next aria-controls="{{ sid }}-track" aria-label="Next photograph">
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m6 3 5 5-5 5"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    <div class="zmm__track" id="{{ sid }}-track" data-zv-strip-track role="region" tabindex="0" aria-label="{{ s.heading | strip_html | escape }}: {{ section.blocks.size }} photographs, scroll sideways">
+      <ul class="zmm__grid" role="list">
         {%- for block in section.blocks -%}
           {%- liquid
             assign b = block.settings
-            assign depth = '0.2'
-            case forloop.index
-              when 2
-                assign depth = '0.75'
-              when 3
-                assign depth = '0.45'
-              when 4
-                assign depth = '1'
-            endcase
+            assign num = forloop.index | prepend: '0'
+            if forloop.index > 9
+              assign num = forloop.index
+            endif
+
+            comment
+              sizes describe the picture, not the frame. A landscape
+              photograph in a 4:5 phone frame is drawn (its ratio / 0.8)
+              times the frame's width; in a 3:2 frame (ratio / 1.5). The
+              phone frame is min(78vw, 400px), the wide one
+              clamp(440px, 46vw, 620px).
+            endcomment
+            assign ar = b.image.aspect_ratio | default: 1.5
+            assign ar_d = ar
+            if b.region != blank and b.image != blank
+              assign rp = b.region | split: ','
+              if rp.size == 4
+                assign rw = rp[2] | strip | times: 1.0
+                assign rh = rp[3] | strip | times: 1.0
+                if rw > 0 and rh > 0
+                  assign ar_d = rw | divided_by: rh
+                endif
+              endif
+            endif
+            assign ar_m = ar
+            if b.image_mobile != blank
+              assign ar_m = b.image_mobile.aspect_ratio
+            endif
+            assign km = ar_m | divided_by: 0.8
+            if km < 1
+              assign km = 1
+            endif
+            assign kd = ar_d | divided_by: 1.5
+            if kd < 1
+              assign kd = 1
+            endif
+            assign m_vw = km | times: 78 | round: 1
+            assign m_px = km | times: 400 | round
+            assign d_vw = kd | times: 46 | round: 1
+            assign d_max = kd | times: 620 | round
+            assign d_min = kd | times: 440 | round
+            capture sz_m
+              echo '(max-width: 512px) ' | append: m_vw | append: 'vw, ' | append: m_px | append: 'px'
+            endcapture
+            capture sz_d
+              echo '(min-width: 1348px) ' | append: d_max | append: 'px, (min-width: 957px) ' | append: d_vw | append: 'vw, ' | append: d_min | append: 'px'
+            endcapture
+            assign has_mob = false
+            if b.image_mobile != blank or b.region != blank
+              assign has_mob = true
+            endif
+            if has_mob
+              assign sz_all = sz_d
+            else
+              assign sz_all = '(max-width: 512px) ' | append: m_vw | append: 'vw, (max-width: 699px) ' | append: m_px | append: 'px, ' | append: sz_d
+            endif
+            assign cp = b.product
           -%}
-          <li class="zmm__item zmm__item--{{ forloop.index }}" {{ block.shopify_attributes }}>
-            <figure class="zmm__fig" data-zv-depth="{{ depth }}" style="--zmm-pos: {{ b.position | default: '50% 50%' }};">
+          <li class="zmm__item" id="{{ sid }}-f{{ forloop.index }}" data-zv-strip-item {{ block.shopify_attributes }}>
+            <figure class="zmm__fig{% if b.link != blank %} zmm__fig--link{% endif %}" style="--zmm-pos: {{ b.position | default: '50% 50%' }};">
               <div class="zmm__frame" data-zv-reveal="media">
-                {% render 'zv-media', media: b.video, image: b.image, sizes: '(min-width: 1500px) 340px, (min-width: 900px) 23vw, 78vw', alt: b.image_alt %}
+                {% render 'zv-media', media: b.video, image: b.image, image_mobile: b.image_mobile, region: b.region, sizes: sz_all, sizes_mobile: sz_m, alt: b.image_alt %}
               </div>
               <figcaption class="zmm__cap">
-                {%- if b.label != blank -%}<span class="zmm__k">{{ b.label | escape }}</span>{%- endif -%}
+                {%- if b.label != blank -%}<span class="zmm__k"><span class="zmm__n">{{ num }}</span> {{ b.label | escape }}</span>{%- endif -%}
                 {%- if b.title != blank -%}<span class="zmm__t">{{ b.title | escape }}</span>{%- endif -%}
                 {%- if b.line != blank -%}<span class="zmm__l">{{ b.line | escape }}</span>{%- endif -%}
               </figcaption>
               {%- if b.link != blank -%}
                 <a class="zmm__cover" href="{{ b.link }}"><span class="visually-hidden">{{ b.label | escape }}: {{ b.title | escape }}</span></a>
               {%- endif -%}
+              {%- if cp != blank and cp.title != blank -%}
+                <a class="zmm__chip" href="{{ cp.url }}">
+                  <span class="zmm__chip-plate zv-studio" aria-hidden="true">{% render 'studio-image', product: cp, variant: cp.selected_or_first_available_variant, index: 0, widths: '120,180', sizes: '40px', class: 'zmm__chip-img', loading: 'lazy', fetchpriority: 'auto', alt: '' %}</span>
+                  <span class="zmm__chip-n">{{ cp.vendor | upcase | escape }}</span>
+                  <span class="zmm__chip-p">{{ cp.price | money_without_trailing_zeros }}</span>
+                  <span class="visually-hidden"> &mdash; {{ cp.title | escape }}</span>
+                </a>
+              {%- endif -%}
             </figure>
           </li>
         {%- endfor -%}
       </ul>
     </div>
-    <div class="zmm__progress" aria-hidden="true"><span data-zv-strip-bar></span></div>
+    <div class="zv-wrap zmm__foot">
+      <div class="zmm__progress" aria-hidden="true"><span data-zv-strip-bar></span></div>
+    </div>
   </div>
 </section>
 
@@ -72,16 +167,19 @@
     { "type": "text", "id": "anchor", "label": "Anchor", "default": "made-to-move" }
   ],
   "blocks": [
-    { "type": "scene", "name": "Scene", "limit": 4,
+    { "type": "scene", "name": "Scene", "limit": 6,
       "settings": [
-        { "type": "text", "id": "label", "label": "Label", "info": "One word: Road, Travel, Trail, Everyday." },
+        { "type": "text", "id": "label", "label": "Label", "info": "One word: Road, Travel, Trail, Everyday. Numbered in order on the page." },
         { "type": "text", "id": "title", "label": "Title" },
         { "type": "text", "id": "line", "label": "One line", "info": "Something true about carrying the products there." },
-        { "type": "image_picker", "id": "image", "label": "Photograph", "info": "The first scene is the tall frame: 4:5 or taller works best. The others take 4:3. At least 1600 px on the long side (briefs M1 to M4)." },
+        { "type": "image_picker", "id": "image", "label": "Photograph", "info": "Landscape 3:2 or wider, at least 1600 px across (briefs M1 to M4). Wide screens show it at 3:2, phones at 4:5." },
+        { "type": "image_picker", "id": "image_mobile", "label": "Photograph for phones (optional)", "info": "A 4:5 crop for phones. Empty: phones get a crop of the photograph above (see Crop)." },
         { "type": "video", "id": "video", "label": "Film (optional)", "info": "Silent, loops cleanly. Uses the photograph as its poster." },
         { "type": "text", "id": "image_alt", "label": "Photograph description" },
-        { "type": "text", "id": "position", "label": "Crop", "default": "50% 50%", "info": "Where the frame centres on the photograph, as x% y%." },
-        { "type": "url", "id": "link", "label": "Link (optional)" }
+        { "type": "text", "id": "position", "label": "Crop", "default": "50% 50%", "info": "Where the frame centres on the photograph, as x% y%. On wide screens the crop region below wins." },
+        { "type": "text", "id": "region", "label": "Crop region on wide screens (optional)", "info": "left, top, width, height in pixels of the original photograph, cut on Shopify's CDN, e.g. 40,180,1935,1290. Use a 3:2 box (width = 1.5 × height) to keep something out of the frame." },
+        { "type": "url", "id": "link", "label": "Link (optional)" },
+        { "type": "product", "id": "product", "label": "Product chip (optional)", "info": "Shows the product's studio packshot, name and price under the caption, linking to it." }
       ] }
   ],
   "presets": [{ "name": "Made to move", "blocks": [{ "type": "scene" }, { "type": "scene" }, { "type": "scene" }, { "type": "scene" }] }]

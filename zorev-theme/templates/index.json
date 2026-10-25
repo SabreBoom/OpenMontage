@@ -18,15 +18,17 @@
         "rays_x": 62,
         "rays_x_mobile": 34,
         "eyebrow": "Perfume oil · Balm stick",
-        "heading": "Made for wherever you're headed.",
-        "body": "<p>A 15 ml perfume oil and a 9 g balm stick. Small enough for a pocket, free to ship anywhere.</p>",
+        "heading": "Made for wherever you’re headed.",
+        "body": "<p>A 15 ml perfume oil and a 9 g balm stick. Small enough for a pocket, and shipping is free to 189 countries.</p>",
         "note": "",
         "cta_label": "Shop Zorev",
         "cta_link": "#line",
         "cta2_label": "The Pair · [pair_price]",
         "cta2_link": "#pair",
         "show_card": true,
-        "card_link": "#line"
+        "card_link": "#line",
+        "drawn_light": false,
+        "card_index_b": 2
       }
     },
     "hero": {
@@ -46,7 +48,7 @@
     "products": {
       "type": "product-showcase",
       "settings": {
-        "eyebrow": "The line",
+        "eyebrow": "",
         "heading": "Two essentials.",
         "body": "<p>One goes on your pulse points, one goes on your skin. Both fit a jacket pocket, and the oil is well inside carry-on liquid limits.</p>",
         "raised": false
@@ -57,7 +59,8 @@
           "settings": {
             "product": "goda-pheromone-perfume-oil",
             "line": "A 15 ml perfume oil, worn from a dropper. Oil rather than alcohol, so it sits close to the skin.",
-            "facts": ""
+            "facts": "",
+            "studio_index": 1
           }
         },
         "p2": {
@@ -65,7 +68,8 @@
           "settings": {
             "product": "hoygi-calcium-multi-balm",
             "line": "A 9 g twist-up balm stick. Goes on dry to the touch and melts on contact with skin.",
-            "facts": ""
+            "facts": "",
+            "studio_index": 2
           }
         }
       },
@@ -78,11 +82,11 @@
       "type": "product-story",
       "settings": {
         "product": "goda-pheromone-perfume-oil",
-        "tone": "dark",
+        "tone": "stone",
         "media_side": "left",
         "anchor": "goda",
-        "photo": "shopify://shop_images/GODA_For_Him__Smoky_Luxury_Fragrance_Duo.png",
-        "photo_alt": "A GODA perfume oil bottle with a grey label beside its black box, on a dark reflective surface in blue-grey smoke",
+        "photo": "shopify://shop_images/3674552c-d57a-42b0-9452-2884eb0e71bb.jpg",
+        "photo_alt": "A GODA perfume oil bottle with its black dropper cap, standing beside its black box",
         "position": "50% 50%",
         "position_mobile": "50% 50%",
         "show_card": false,
@@ -90,11 +94,14 @@
         "eyebrow": "GODA · Perfume oil",
         "heading": "One drop, wherever the day goes.",
         "body": "<p>A 15 ml perfume oil, worn from a glass dropper. Oil sits close to the skin instead of flashing off the way a spray does, so one or two drops at the wrist and the base of the throat is the whole routine.</p>",
-        "show_ladder": true,
+        "show_ladder": false,
         "cta_label": "",
         "link_label": "",
         "link_url": "",
-        "card_corner": "bottom-left"
+        "card_corner": "bottom-left",
+        "picture": "studio",
+        "show_options": true,
+        "cta_style": "link"
       },
       "blocks": {
         "f1": {
@@ -141,11 +148,13 @@
         "eyebrow": "HOYGI · Balm stick",
         "heading": "Skincare that fits a pocket.",
         "body": "<p>A 9 g balm stick that goes on dry and melts on contact with skin. No jar, no lid of cream, nothing to spill: twist it up, glide it on wherever skin runs dry, and put it back in your pocket.</p>",
-        "show_ladder": true,
+        "show_ladder": false,
         "cta_label": "",
         "link_label": "",
         "link_url": "",
-        "card_corner": "top-left"
+        "card_corner": "top-left",
+        "cta_style": "link",
+        "picture": "photo"
       },
       "blocks": {
         "f1": {
@@ -179,7 +188,7 @@
     "move": {
       "type": "made-to-move",
       "settings": {
-        "eyebrow": "Where it goes",
+        "eyebrow": "",
         "heading": "Made to move.",
         "body": "<p>Fifteen millilitres and nine grams. Small enough to come along on whatever the day turns into.</p>",
         "anchor": "made-to-move"
@@ -230,7 +239,8 @@
             "image": "shopify://shop_images/zorev-v12-hoygi-cafe-window.jpg",
             "image_alt": "Sunglasses, an espresso cup and a folded map on a cafe table by a window",
             "position": "41% 55%",
-            "link": ""
+            "link": "",
+            "region": "40,180,1935,1290"
           }
         }
       },
@@ -285,7 +295,8 @@
         "empty_heading": "Real footage, when there is some.",
         "empty_body": "<p>ZOREV is new, so there is nothing from customers to show here yet, and we will not stage it. If you film yours on the road, on a trail or on an ordinary Tuesday, send it over. With your permission and your name on it, it goes here.</p>",
         "empty_cta": "Send us yours"
-      }
+      },
+      "disabled": true
     },
     "why": {
       "type": "value-strip",
@@ -298,7 +309,7 @@
           "type": "point",
           "settings": {
             "num": "Shipping",
-            "title": "Free, everywhere.",
+            "title": "Free, wherever we deliver.",
             "body": "Every order ships free to every country we deliver to. No minimum, and no paid upgrade at checkout."
           }
         },
@@ -306,7 +317,7 @@
           "type": "point",
           "settings": {
             "num": "Dispatch",
-            "title": "Out within one business day.",
+            "title": "To fulfilment in one business day.",
             "body": "Orders go to our fulfilment network within one business day, and tracking follows by email as soon as the carrier scans the parcel."
           }
         },
@@ -332,15 +343,18 @@
         "v2",
         "v3",
         "v4"
-      ]
+      ],
+      "disabled": true
     },
     "after": {
       "type": "after-order",
       "settings": {
-        "eyebrow": "After you order",
+        "eyebrow": "",
         "heading": "What happens next.",
         "reviews_eyebrow": "Reviews",
-        "raised": true
+        "raised": false,
+        "makers_title": "Straight about the makers",
+        "makers_body": "Each product page says who makes the product and where the maker’s claims stop and ours begin."
       },
       "blocks": {
         "s1": {
@@ -351,12 +365,20 @@
             "body": "You see every discount, by name, before you pay."
           }
         },
+        "s5": {
+          "type": "step",
+          "settings": {
+            "icon": "truck",
+            "title": "Shipping is free, wherever we deliver",
+            "body": "Every country we deliver to, with no minimum and no paid upgrade at checkout."
+          }
+        },
         "s2": {
           "type": "step",
           "settings": {
             "icon": "box",
-            "title": "It goes out within one business day",
-            "body": "To our fulfilment network, with no charge for shipping."
+            "title": "It goes to fulfilment within one business day",
+            "body": "Our fulfilment network takes it from there."
           }
         },
         "s3": {
@@ -372,7 +394,7 @@
           "settings": {
             "icon": "shield",
             "title": "Something wrong? We make it right",
-            "body": "If it arrives damaged, defective or wrong, email a photo and we sort it out."
+            "body": "If it arrives damaged, defective or wrong, email a photo and we’ll look into it and make it right."
           }
         },
         "r1": {
@@ -390,6 +412,7 @@
       },
       "block_order": [
         "s1",
+        "s5",
         "s2",
         "s3",
         "s4",
@@ -400,16 +423,17 @@
     "closer": {
       "type": "story",
       "settings": {
-        "image": "shopify://shop_images/zorev-v12-closer-forest-1_5x_58e5d243-dc0f-4343-ac84-55e50e73ccd9.jpg",
-        "image_alt": "Misty forest floor with wet basalt rock and morning light",
-        "eyebrow": "Zorev",
-        "heading": "Two essentials. One simple order.",
-        "body": "<p>Free shipping worldwide, savings applied in your bag, and a person on the other end of the email.</p>",
+        "image": "shopify://shop_images/zorev-v12-hero-trail-dawn.jpg",
+        "image_alt": "Ferns and the edge of a forest trail in morning fog",
+        "eyebrow": "",
+        "heading": "Wherever you’re headed next.",
+        "body": "<p>Free shipping wherever we deliver, savings applied in your bag, and a person on the other end of the email.</p>",
         "cta_label": "Shop Zorev",
         "cta_link": "/collections/all",
-        "cta2_label": "The Pair · [pair_price]",
+        "cta2_label": "",
         "cta2_link": "#pair",
-        "framing": "full"
+        "framing": "detail",
+        "image_mobile": "shopify://shop_images/zorev-v12-hero-trail-dawn-mobile.jpg"
       }
     }
   },
@@ -417,9 +441,9 @@
     "film",
     "hero",
     "products",
+    "move",
     "goda",
     "hoygi",
-    "move",
     "savings",
     "pair",
     "media",

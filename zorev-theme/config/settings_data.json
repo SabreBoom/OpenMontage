@@ -9,7 +9,8 @@
  */
 {
   "current": {
-    "bg": "#0F1211",
+    "edition": "light",
+    "bg": "#F5F2EC",
     "accent": "#26372C",
     "pair_enabled": true,
     "pair_product_a": "goda-pheromone-perfume-oil",
@@ -17,19 +18,44 @@
     "pair_save_cents": 800,
     "pair_discount_title": "The ZOREV Pair · Save $8",
     "pair_name": "The ZOREV Pair",
-    "pair_tagline": "Two essentials. One simple order.",
+    "pair_tagline": "The oil and the balm, in one order.",
     "support_email": "zorevhousing@gmail.com",
     "returns_claim": false,
     "seo_home_title": "ZOREV — Perfume oil and balm stick, free shipping worldwide",
     "seo_home_description": "GODA, a 15 ml perfume oil worn from a dropper, and HOYGI, a 9 g balm stick that goes on dry. Savings apply in your bag; free tracked shipping worldwide.",
+    "social_image": "shopify://shop_images/zorev-v12-hero-trail-dawn.jpg",
+    "studio_mode": "on",
+    "studio_1_variant": "49337208045819",
+    "studio_1_image": "shopify://shop_images/3674552c-d57a-42b0-9452-2884eb0e71bb.jpg",
+    "studio_2_variant": "49337208078587",
+    "studio_2_image": "shopify://shop_images/363ece56-722f-426d-a0cc-2bec3924483b.jpg",
+    "studio_3_variant": "49337208111355",
+    "studio_3_image": "shopify://shop_images/cf28bc68-aaff-4497-83ed-cb2b842f5882.jpg",
+    "studio_4_variant": "49337208144123",
+    "studio_4_image": "shopify://shop_images/21732292-661f-48be-927f-cfdd57368829.jpg",
+    "studio_5_variant": "49337209258235",
+    "studio_5_image": "shopify://shop_images/zorev_balm.png",
+    "studio_6_variant": "49337209258235",
+    "studio_6_image": "shopify://shop_images/zorev-hoygi-cutout.png",
+    "studio_7_variant": "49337209258235",
+    "studio_7_image": "shopify://shop_images/71DF8153-C556-4599-B220-04D33419A004.jpg",
     "sections": {
+      "announcement-bar": {
+        "type": "announcement-bar",
+        "settings": {
+          "claim_1": "Free shipping worldwide",
+          "claim_2": "Savings applied in your bag",
+          "claim_3": "GODA + HOYGI · [pair_price] together"
+        }
+      },
       "header": {
         "type": "header",
         "settings": {
-          "overlay": false
+          "overlay": false,
+          "show_search": true,
+          "secondary_menu": "footer"
         }
       }
-    },
-    "social_image": "shopify://shop_images/GODA_Pheromone_Perfume_in_Blue_Smoke.png"
+    }
   }
 }

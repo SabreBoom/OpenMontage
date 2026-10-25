@@ -19,7 +19,7 @@
           "type": "accordion",
           "settings": {
             "title": "Shipping & returns",
-            "content": "<p><strong>Free shipping on every order, worldwide.</strong> Orders leave our fulfilment network within one business day, and a tracking number follows by email once the carrier scans the parcel. Delivery times and customs are on the <a href=\"/pages/shipping\">Shipping &amp; Delivery</a> page.</p><p><strong>Arrived damaged, defective or wrong?</strong> Email a photo to <a href=\"mailto:zorevhousing@gmail.com\">zorevhousing@gmail.com</a> and we'll make it right.</p><p><strong>Returns.</strong> Our <a href=\"/policies/refund-policy\">refund policy</a> doesn't take back personal care goods for a change of mind, and both ZOREV products are personal care goods. Orders shipped into the EU can still be cancelled or returned within 14 days of delivery, unused and in the original packaging.</p>"
+            "content": "<p><strong>Free shipping on every order, worldwide.</strong> Orders go to our fulfilment network within one business day, and a tracking number follows by email once the carrier scans the parcel. Delivery times and customs are on the <a href=\"/pages/shipping\">Shipping &amp; Delivery</a> page.</p><p><strong>Arrived damaged, defective or wrong?</strong> Email your order number and a photo to <a href=\"mailto:zorevhousing@gmail.com\">zorevhousing@gmail.com</a> and we'll look into it and make it right.</p><p><strong>Returns.</strong> Our <a href=\"/policies/refund-policy\">refund policy</a> lists personal care goods among the items that can't be returned, and both ZOREV products are personal care goods. Orders shipped into the EU can be cancelled or returned within 14 days of delivery, unused, in the original packaging and with proof of purchase. Email us before sending anything back.</p>"
           }
         },
         "faq": {
@@ -39,6 +39,24 @@
           },
           "disabled": true
         },
+        "story_goda": {
+          "type": "story_photo",
+          "settings": {
+            "product": "goda-pheromone-perfume-oil",
+            "image": "shopify://shop_images/zorev-v12-hero-trail-dawn.jpg",
+            "image_alt": "A narrow forest trail curving through tall firs and ferns into morning fog, with soft light coming through the trees",
+            "position": "50% 50%"
+          }
+        },
+        "story_hoygi": {
+          "type": "story_photo",
+          "settings": {
+            "product": "hoygi-calcium-multi-balm",
+            "image": "shopify://shop_images/zorev-v12-road-golden-hills.jpg",
+            "image_alt": "An empty two-lane road curving through golden hills toward blue mountains in late afternoon light",
+            "position": "45% 50%"
+          }
+        },
         "scene_hoygi": {
           "type": "scene",
           "settings": {
@@ -53,6 +71,8 @@
       "block_order": [
         "scene_goda",
         "scene_hoygi",
+        "story_goda",
+        "story_hoygi",
         "ship",
         "faq"
       ]
