@@ -1,30 +1,17 @@
-/* ZOREV — small, dependency-free.
-   Variant picking, the one Ajax add-to-cart owner, the cart drawer with
-   Shopify's own savings, and the pair rule shared by every pair surface.
-   The PDP gallery lives in main-product.liquid: it is a scroll-snap track
-   owned by that section, not a src-swapper driven from here.
+/* ZOREV — small, dependency-free. Variant picking, the one Ajax add-to-cart
+   owner, the cart drawer (Shopify's own savings), the shared pair rule.
+   The PDP gallery is owned by main-product.liquid.
 
-   Public hooks:
-     window.ZorevCart   { show(opener?), close, fetch, setCount(n), say(msg),
-                          isOpen(), media(variantId), label(title) }
-                        show(opener) remembers the control that opened the
-                        drawer; close() gives focus back to it.
-     window.ZorevPair   { applies(g, h) }  g = GODA units, h = HOYGI units in
-                        the bag AFTER an add. Inferred from Shopify's measured
-                        results; the drawer/cart always show the real outcome.
-     window.ZorevMoney(cents, format)        money formatting
-     window.ZorevDiscountsOf(cart)           [{title, amount}] from Shopify
-     window.ZorevLabel(variantTitle)         "Citrus 15ml Men" -> "Citrus (men's)"
-   Events:
-     document 'cart:painted'   after every repaint, detail = /cart.js
-     document 'cart:updated'   listened to: anything that changed the cart
-                               outside this file fires it, the drawer refetches
-     document 'variant:change' {id, index, price, available, initial}; the
-                               first one on load is the server's own selection
-                               (initial: true) and must not animate
-     form 'atc:done'           (bubbles) after an add finished, either way
-   Anything that needs to react to the real cart listens for 'cart:painted'
-   instead of fetching /cart.js again on its own. */
+   window.ZorevCart  { show(opener), close, fetch, setCount, say, isOpen,
+                       media(variantId), label(title) } — close() returns
+                       focus to the opener given to show().
+   window.ZorevPair  { applies(g, h) } g/h = GODA/HOYGI units AFTER an add.
+   window.ZorevMoney, window.ZorevDiscountsOf(cart), window.ZorevLabel(title)
+   Events: 'cart:painted' (detail = /cart.js, after every repaint; listen to
+   this instead of fetching again), 'cart:updated' (fire it after changing
+   the cart elsewhere; the drawer refetches), 'variant:change' {id, index,
+   price, available, initial} (initial = the server's own selection on load:
+   do not animate), form 'atc:done' (bubbles, after an add either way). */
 (function () {
   'use strict';
 
@@ -66,12 +53,9 @@
   window.ZorevMoney = money;
 
   // --- The pair rule -----------------------------------------------------
-  /* One definition for every surface (drawer, cart page, product page, pair
-     band). Shopify applies the pair saving once per order iff the bag, after
-     the add, holds at least one GODA and one HOYGI, and either no more than
-     two HOYGI or at least as many GODA as HOYGI. Measured: 1G1H, 2G1H, 1G2H,
-     2G2H, 3G1H, 3G3H, 4G2H apply; 1G3H, 2G3H, 1G4H do not. It is inferred,
-     so copy built on it stays modest and the bag shows Shopify's result. */
+  /* One rule for every surface. Inferred from measured carts (applies: 1G1H
+     2G1H 1G2H 2G2H 3G1H 3G3H 4G2H; not: 1G3H 2G3H 1G4H), so copy built on it
+     stays modest and the bag always shows Shopify's real result. */
   window.ZorevPair = {
     applies: function (g, h) {
       g = Number(g) || 0; h = Number(h) || 0;
@@ -80,10 +64,9 @@
   };
 
   // --- Variant labels ----------------------------------------------------
-  /* The one place JS turns an option value into the name customers see on
-     the product page: "Black 15ml" -> "Black", "Citrus 15ml Men" ->
-     "Citrus (men's)". Mirrors snippets/zvlabel.liquid. A size-only value
-     ("9g") names nothing a customer chose, so it is not shown. */
+  /* Option value -> the PDP's name for it ("Citrus 15ml Men" -> "Citrus
+     (men's)"), mirroring snippets/zvlabel. A size-only value ("9g") is not
+     a choice, so it is not shown. */
   function variantLabel(t) {
     t = String(t == null ? '' : t);
     if (!t || t === 'Default Title') return '';
@@ -96,12 +79,9 @@
   window.ZorevLabel = variantLabel;
 
   // --- Product pictures and labels for script-painted lines --------------
-  /* snippets/cutout-data renders one small JSON per page:
-       { "studio": bool, "v": { "<variant id>": { p, src, studio, label } } }
-     src is the variant's studio packshot at 240w when Theme settings >
-     Studio images is on and a slot names that variant, else the variant's
-     own photograph (or the product's). label is snippets/zvlabel's output,
-     empty for a single-variant product. Read once, lazily. */
+  /* snippets/cutout-data: {"v": {"<variant id>": {p, src, label}}}; src =
+     snippets/studio-image's choice at 240w, label = zvlabel ('' for a
+     single-variant product). */
   var mediaMap = null;
   function media(vid) {
     if (mediaMap === null) {
@@ -114,16 +94,14 @@
     }
     var x = mediaMap[String(vid)];
     if (!x) return null;
-    return { src: x.src || null, studio: !!x.studio, label: decodeEntities(x.label || '') };
+    return { src: x.src || null, label: decodeEntities(x.label || '') };
   }
 
   // --- Variant picker ----------------------------------------------------
-  /* Plural throughout: the PDP has two add-to-cart forms (inline + sticky).
-     Options may be buttons (role=radio, aria-checked) or native radio inputs
-     (main-product renders radios); both carry data-variant-id. Buttons report
-     with click, radios with change (arrow keys fire change, not always
-     click); both are listened to and a repeat of the current id is dropped,
-     so one choice is one 'variant:change'. */
+  /* Two product forms on the PDP (inline + sticky). Options are buttons
+     (aria-checked) or native radios, both with data-variant-id; click and
+     change are both heard and a repeat of the current id is dropped, so one
+     choice is one 'variant:change'. */
   function initVariants(scope) {
     var roots = (scope || document).querySelectorAll('[data-variants]');
     Array.prototype.forEach.call(roots, function (root) {
@@ -215,10 +193,7 @@
 
     function items(n) { n = Number(n) || 0; return n + (n === 1 ? ' item' : ' items'); }
 
-    /* Every line's picture sits on the studio plate: a maker's packshot from
-       Theme settings > Studio images when there is one for the variant, else
-       the variant's photograph from the page's map, else the line's own
-       Shopify image. */
+    // Studio plate: the map's picture for the variant, else the line's own.
     function thumb(item) {
       var m = media(item.variant_id);
       var src = m && m.src;
@@ -239,8 +214,7 @@
       return variantLabel(item.variant_title);
     }
 
-    /* The visible badge is a number for the eye; the link's name comes from
-       [data-cart-count-text] ("Bag, 2 items"), rendered by the header. */
+    // The badge is for the eye; the link's name is [data-cart-count-text].
     function setCount(n) {
       n = Number(n) || 0;
       document.querySelectorAll('[data-cart-count]').forEach(function (el) {
@@ -421,10 +395,8 @@
       try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
     }
 
-    /* Everything outside the drawer is inert while it is open, so neither
-       Tab, a screen reader's virtual cursor nor a stray click reaches the
-       page behind the scrim. Siblings are marked on every level from the
-       drawer up to <body>; only what this script marked is unmarked. */
+    /* While open, everything outside the drawer is inert (siblings on every
+       level up to <body>); only what this script marked is unmarked. */
     function setInert(on) {
       if (!on) {
         inerted.forEach(function (el) { el.removeAttribute('inert'); });
@@ -445,9 +417,8 @@
       }
     }
 
-    /* The wrap is decided from where focus is, not only from the first and
-       last stops: right after opening, focus is on the panel itself, and a
-       Shift+Tab from there must land on the last control, not behind. */
+    /* Wrap from where focus is: right after opening it is on the panel
+       itself, and Shift+Tab from there must reach the last control. */
     function onKey(e) {
       if (e.key === 'Escape' || e.key === 'Esc') { close(); return; }
       if (e.key !== 'Tab' || !panel) return;
@@ -507,10 +478,9 @@
     }
 
     // --- quantity changes --------------------------------------------------
-    /* After a repaint the pressed control no longer exists. Focus goes back
-       to the same control of the same line (found by the line's key, then by
-       its position); after a removal, to the line that took its place (its
-       name, never another Remove), and in an empty bag to the message. */
+    /* After a repaint: the same control of the same line (by key, then
+       position); after a removal the next line's name (never another
+       Remove); in an empty bag the message. */
     function refocus(want) {
       if (!open || !body || !want) return;
       var rows = Array.prototype.slice.call(body.querySelectorAll('.cd__line'));
@@ -548,7 +518,13 @@
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ line: line, quantity: qty })
       })
-        .then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+        .then(function (r) {
+          if (r.ok) return r.json();
+          // A 422 carries Shopify's reason (usually stock); show that.
+          return r.json().catch(function () { return null; }).then(function (j) {
+            var e2 = new Error((j && (j.description || j.message)) || ''); e2.shop = true; throw e2;
+          });
+        })
         .then(function (c) {
           if (my === seq) paint(c);
           say(qty === 0
@@ -556,12 +532,9 @@
             : title + ', quantity ' + qty + '. ' + items(c.item_count) + ' in your bag.');
           refocus(want);
         })
-        .catch(function () {
-          return fetchCart().then(function () {
-            showErr('That change did not go through. Please try again.');
-            say('That change did not go through. Please try again.');
-            refocus(want);
-          });
+        .catch(function (x) {
+          var msg = (x && x.shop && x.message) || 'That change did not go through. Please try again.';
+          return fetchCart().then(function () { showErr(msg); say(msg); refocus(want); });
         })
         .then(function () { busy = false; if (body) body.removeAttribute('aria-busy'); });
     }
@@ -619,19 +592,13 @@
     cart.fetch();
   });
 
-  /* Ajax add-to-cart, falling back to a normal post so a network blip never
-     swallows the purchase intent. This is the only add-to-cart owner for
-     product forms. A form marked data-no-ajax is left alone, and so is the
-     cart page's pair form (data-cart-pair-form): that section posts it
-     itself and re-renders in place, and two owners would add it twice.
-
-     While adding, the button is aria-busy/aria-disabled rather than
-     disabled: a focused button that becomes disabled drops focus to <body>,
-     and the drawer could then not hand focus back to it on close.
-
-     A 422 is not a network blip — it is Shopify refusing the add, usually on
-     stock — so its message is shown next to the button rather than bouncing
-     the customer to a bare error page. */
+  /* The one Ajax add-to-cart owner, falling back to a normal post so a
+     network blip never swallows the intent. Skips data-no-ajax forms and the
+     cart page's pair form (that section owns it; two owners = two adds).
+     While adding, the button is aria-busy/aria-disabled, not disabled: a
+     disabled focused button drops focus to <body>, and the drawer could not
+     hand it back on close. A 422 (Shopify refusing, usually stock) shows its
+     message under the button. */
   function initAtc(scope) {
     var forms = (scope || document).querySelectorAll(
       'form[action*="/cart/add"]:not([data-no-ajax]):not([data-cart-pair-form])');

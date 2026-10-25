@@ -532,7 +532,7 @@
         .then(function(r){
           if (r.ok) return r.json();
           return r.json().catch(function(){ return null; }).then(function(j){
-            throw new Error((j && (j.description || j.message)) || '');
+            var e2 = new Error((j && (j.description || j.message)) || ''); e2.shop = true; throw e2;
           });
         })
         .then(function(j){
@@ -546,7 +546,7 @@
         })
         .catch(function(err){
           if (btn) { btn.removeAttribute('aria-busy'); btn.removeAttribute('aria-disabled'); }
-          showErr('[data-cart-pair-err]', (err && err.message) || 'That could not be added. Please try again.');
+          showErr('[data-cart-pair-err]', (err && err.shop && err.message) || 'That could not be added. Please try again.');
         })
         .then(function(){ busy = false; });
     });

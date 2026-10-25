@@ -5,16 +5,15 @@
   read by assets/zorev.js (window.ZorevCart.media(variantId)):
 
     { "studio": true|false,
-      "v": { "<variant id>": { "p": <product id>, "src": "<url>",
-                               "studio": true|false, "label": "Black" } } }
+      "v": { "<variant id>": { "p": <product id>, "src": "<url>|null",
+                               "label": "Black" } } }
 
-  src   With Theme settings > Studio images on, the first studio slot whose
-        variant id matches (studio_{n}_variant / studio_{n}_image, n = 1..10,
-        the same slots snippets/studio-image reads), at 240w for a 72 px
-        thumbnail at 3x. Otherwise, or with no matching slot, what V14 showed:
-        the variant's own photograph, else the product's featured image, at
-        160w. A variant with no picture at all gets null, and the drawer then
-        uses the line's own Shopify image.
+  src   snippets/studio-image's choice for the option, as a URL at 240w (a
+        72 px thumbnail at 3x, never upscaled): the maker's studio packshot
+        when Theme settings > Studio images is on and a slot names this
+        variant, else the variant's own photograph, else the product's
+        featured image. The slot matching lives in that snippet only. null
+        when there is no picture: the drawer then uses the line's own image.
   label snippets/zvlabel's name for the option ("Citrus (men's)"), empty for
         a product with a single variant, so the drawer, the cart page and the
         product page all name an option the same way.
@@ -24,7 +23,7 @@
 {%- endcomment -%}
 {%- liquid
   assign studio_on = false
-  if settings.studio_mode == 'on' or settings.studio_mode == true
+  if settings.studio_mode == 'on'
     assign studio_on = true
   endif
 -%}
@@ -33,34 +32,11 @@
 {%- assign first_v = true -%}
 {%- for p in collections.all.products limit: 24 -%}
   {%- for v in p.variants -%}
-    {%- liquid
-      assign src = nil
-      assign is_studio = false
-      if studio_on
-        assign xid = v.id | append: ''
-        for n in (1..10)
-          assign kv = 'studio_' | append: n | append: '_variant'
-          assign sv = settings[kv] | append: '' | strip
-          if sv == xid
-            assign ki = 'studio_' | append: n | append: '_image'
-            if settings[ki] != blank
-              assign src = settings[ki] | image_url: width: 240
-              assign is_studio = true
-              break
-            endif
-          endif
-        endfor
-      endif
-      if src == blank
-        assign vimg = v.featured_media.preview_image | default: p.featured_media.preview_image
-        if vimg != blank
-          assign src = vimg | image_url: width: 160
-        endif
-      endif
-    -%}
+    {%- capture src -%}{% render 'studio-image', variant: v, product: p, output: 'url', url_width: 240 %}{%- endcapture -%}
+    {%- assign src = src | strip -%}
     {%- capture lbl -%}{%- if p.variants.size > 1 -%}{% render 'zvlabel', t: v.title %}{%- endif -%}{%- endcapture -%}
     {%- unless first_v -%},{%- endunless -%}{%- assign first_v = false -%}
-    "{{ v.id }}":{"p":{{ p.id }},"src":{{ src | json }},"studio":{{ is_studio }},"label":{{ lbl | strip | json }}}
+    "{{ v.id }}":{"p":{{ p.id }},"src":{% if src != blank %}{{ src | json }}{% else %}null{% endif %},"label":{{ lbl | strip | json }}}
   {%- endfor -%}
 {%- endfor -%}
 }}
