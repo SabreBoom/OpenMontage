@@ -5,39 +5,80 @@
   rendered default_pagination without one, so the paginate object was nil,
   the markup never appeared, and the page silently capped at Shopify's
   default 50 products with no way to reach the rest.
+
+  /collections/the-pair is where the menu's "The Pair" link lands, so it
+  sells the pair: the same pair band as the homepage (snippets/pair-offer:
+  price, option chooser, "Add the pair", bag-aware) sits between the title
+  and the products, and the products follow as "Or one at a time". The
+  handle can be changed in the section settings.
+
+  /collections/all is titled "Shop all", as the menu, footer and SEO call it.
 {%- endcomment -%}
 {%- liquid
   assign count = collection.products_count
   assign grid = 'zgrid zgrid--3'
+  assign card_sizes = '(min-width: 1200px) 380px, (min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw'
   if count <= 2
     assign grid = 'zgrid zgrid--pair'
+    assign card_sizes = '(min-width: 900px) 420px, (min-width: 560px) 45vw, 88vw'
   elsif count >= 7
     assign grid = 'zgrid zgrid--4'
+    assign card_sizes = '(min-width: 1200px) 290px, (min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw'
+  endif
+
+  assign pair_handle = section.settings.pair_handle | default: 'the-pair' | strip
+  assign is_pair = false
+  if settings.pair_enabled and collection.handle == pair_handle
+    assign is_pair = true
+  endif
+
+  assign title = collection.title
+  if collection.handle == 'all'
+    assign title = 'Shop all'
+  endif
+
+  assign card_level = 2
+  if is_pair
+    assign card_level = 3
   endif
 -%}
 
-<section class="zv-section">
+<div class="zv-section zcol{% if is_pair %} zcol--pair{% endif %}">
   <div class="zv-wrap">
     <header class="zsec__head" data-zv-reveal>
       <span class="zv-eyebrow">
         {{ count }} item{% if count != 1 %}s{% endif %}
       </span>
-      <h1 class="zv-h1">{{ collection.title | escape }}</h1>
+      <h1 class="zv-h1">{{ title | escape }}</h1>
       {%- if collection.description != blank -%}
         <div class="zv-lead zsec__lead zv-rte">{{ collection.description }}</div>
       {%- endif -%}
     </header>
+  </div>
+</div>
 
+{%- if is_pair -%}
+  {% render 'pair-offer', uid: section.id, anchor: 'pair', heading_level: 2 %}
+{%- endif -%}
+
+<div class="zv-section zcol__list">
+  <div class="zv-wrap">
     {%- paginate collection.products by 24 -%}
       {%- if collection.products.size > 0 -%}
+        {%- if is_pair -%}
+          <h2 class="zv-h3 zcol__sub" data-zv-reveal>Or one at a time</h2>
+        {%- endif -%}
         <div class="{{ grid }}">
           {%- for p in collection.products -%}
-            {%- comment -%} heading_level 2: these sit directly under the page h1 {%- endcomment -%}
+            {%- comment -%}
+              heading_level 2 directly under the page h1; 3 under the
+              "Or one at a time" h2 on the pair page.
+            {%- endcomment -%}
             {% render 'product-card',
                card_product: p,
                eager: forloop.first,
-               heading_level: 2,
-               sizes: '(min-width: 1200px) 300px, (min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw' %}
+               heading_level: card_level,
+               sizes: card_sizes %}
           {%- endfor -%}
         </div>
 
@@ -54,8 +95,29 @@
       {%- endif -%}
     {%- endpaginate -%}
   </div>
-</section>
+</div>
+
+<style>
+  /* The header and the list are two halves of one page: no double gap. */
+  .zcol{padding-bottom:0}
+  .zcol .zsec__head{margin-bottom:0}
+  .zcol__list{padding-top:var(--zv-7)}
+  /* On the pair page the forest band sits between them, so each half
+     keeps its own breathing room. */
+  .zcol--pair{padding-bottom:var(--zv-7)}
+  .zcol--pair ~ .zcol__list{padding-top:var(--zv-section)}
+  /* aligned with the centred two-card grid below it */
+  .zcol__sub{max-width:860px;margin:0 auto var(--zv-5)}
+  /* Packshots on the card plates stand on the plate's floor shadow. */
+  .zcard__fig.zv-studio .zcard__img{object-position:50% 100%}
+</style>
 
 {% schema %}
-{ "name": "Collection", "tag": "section", "settings": [] }
+{
+  "name": "Collection",
+  "tag": "section",
+  "settings": [
+    { "type": "text", "id": "pair_handle", "label": "Pair collection handle", "default": "the-pair", "info": "On this collection the pair offer (Theme settings > Offers) is shown above the products." }
+  ]
+}
 {% endschema %}

@@ -1,3 +1,14 @@
+{%- comment -%}
+  Collections list.
+
+  Each tile's picture: with Theme settings > Studio images on, the
+  collection's first two products as studio packshots standing on one
+  stone plate (snippets/pair-offer, mode 'plate'), in the pair's order when
+  the two are the pair's products. That is the same picture the pair band
+  uses, so the theme never fronts a collection with a generated scene of
+  the products (the Pair collection's own image is one). Without studio
+  images: the collection's image, as before.
+{%- endcomment -%}
 <section class="zv-section">
   <div class="zv-wrap">
     <header class="zsec__head" data-zv-reveal>
@@ -6,10 +17,30 @@
 
     <div class="zgrid zgrid--3">
       {%- for c in collections -%}
-        {%- assign ci = c.featured_image -%}
+        {%- liquid
+          assign ci = c.featured_image
+          assign ca = false
+          assign cb = false
+          if settings.studio_mode == 'on'
+            for cp in c.products limit: 2
+              if forloop.first
+                assign ca = cp
+              else
+                assign cb = cp
+              endif
+            endfor
+            if cb != blank and ca.id == settings.pair_product_b.id and cb.id == settings.pair_product_a.id
+              assign tmp = ca
+              assign ca = cb
+              assign cb = tmp
+            endif
+          endif
+        -%}
         <a class="zcoll" href="{{ c.url }}" data-zv-reveal>
           <div class="zcoll__fig">
-            {%- if ci -%}
+            {%- if ca != blank -%}
+              {% render 'pair-offer', mode: 'plate', a: ca, b: cb, ratio: '4 / 3', widths: '120,160,240,320', sizes: '(min-width: 1000px) 130px, (min-width: 560px) 15vw, 30vw' %}
+            {%- elsif ci -%}
               {%- comment -%} width/height reserve the box so the grid does not jump {%- endcomment -%}
               <img src="{{ ci | image_url: width: 800 }}"
                    srcset="{{ ci | image_url: width: 400 }} 400w, {{ ci | image_url: width: 800 }} 800w"
@@ -27,6 +58,12 @@
     </div>
   </div>
 </section>
+
+<style>
+  /* The plate fills the tile's 4:3 frame (zorev-pages.css owns the frame). */
+  .zcoll__fig .zpp{height:100%;border-radius:0}
+  @media (hover: hover) and (pointer: fine){ .zcoll:hover .zcoll__fig .zpp__img{transform:none} }
+</style>
 
 {% schema %}
 { "name": "Collections list", "tag": "section", "settings": [] }

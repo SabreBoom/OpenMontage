@@ -1,0 +1,660 @@
+{%- comment -%}
+  The ZOREV Pair: one offer, one markup, wherever it is sold.
+
+    Homepage band (sections/bundle-builder) and /collections/the-pair
+    (sections/main-collection):
+      {% render 'pair-offer', uid: section.id, anchor: 'pair', heading_level: 2,
+                body: s.body, photo: s.photo, photo_mobile: s.photo_mobile,
+                video: s.video, photo_alt: s.photo_alt %}
+
+    Just the stone plate with two products on it (collection list tiles):
+      {% render 'pair-offer', mode: 'plate', a: product_a, b: product_b,
+                ratio: '4 / 3', sizes: '120px' %}
+
+    One packshot, cut to the product itself (product cards, price lists):
+      {% render 'pair-offer', mode: 'img', product: p, variant: v,
+                widths: '240,360,480', sizes: '…', cls: 'my-img', alt: 'none' %}
+
+  WHAT IT PROMISES, AND WHY IT IS TRUE
+  The price block ("$47 / $55 / Save $8") comes from snippets/pair-price,
+  the single source for pair money (Theme settings > Offers, currency
+  guarded). The saving itself is Shopify's automatic "The ZOREV Pair" Buy X
+  Get Y discount; this band adds one of each product and says what that
+  discount does. It never computes or simulates a discount.
+
+  The band reads the bag, because the saving does not apply to every bag.
+  With G units of A (GODA) and H units of B (HOYGI) in the bag AFTER the add,
+  Shopify applies the pair, once per order, when
+      G >= 1 and H >= 1 and (H <= 2 or G >= H)
+  (measured against the real cart: 1+1, 2+1, 1+2, 2+2, 3+1, 3+3, 4+2 apply;
+  1+3, 2+3, 1+4 do not). The same rule is window.ZorevPair.applies in
+  assets/zorev.js and the Liquid below. Three states, rendered from the
+  cart the page was built with and kept in step with every cart:painted:
+    offer    "Add the pair · $47" and "The $8 comes off automatically in
+             your bag, once per order."
+    in-bag   Shopify's own discount list for this bag already holds the
+             pair: a plain "Add one of each" (no price: the saving is once
+             per order) and a note with a link to the bag.
+    blocked  one more of each would not get the saving: no figures at all,
+             "Add one of each" and a plain explanation.
+
+  THE PICTURE
+  One shared stone plate (.zv-studio), with the makers' own studio
+  packshots of both products standing side by side on one floor line, each
+  with the same soft contact shadow: one environment, nothing composited
+  into a scene. The packshots are cut to the product itself on Shopify's
+  CDN (image_url crop: 'region'), so every option of the oil, whatever
+  white margin its supplier photograph has, stands on the same line at the
+  same height as the balm. The boxes are measured once, below, per studio
+  file; any other picture is shown whole, contained and standing on the
+  floor. The oil's packshot follows the option chosen: radio swatches
+  drive it, by script and, without script, by :has().
+
+  NO SCRIPT
+  The form posts items[][id] / items[][quantity] for both products to
+  /cart/add, which lands on the cart page. With script, the band posts the
+  same two lines to /cart/add.js once, then opens the bag drawer
+  (ZorevCart.show(button) so focus comes back to the button) and refreshes
+  it. While posting, the button is aria-busy / aria-disabled, never
+  disabled, so it keeps focus.
+{%- endcomment -%}
+{%- liquid
+  assign m = mode | default: 'band'
+-%}
+{%- case m -%}
+{%- when 'img' -%}
+  {%- comment -%}
+    One packshot. Picks, for the option: the first studio slot whose file
+    has a measured box (a clean packshot that can stand on a floor), else
+    the first studio slot, else the option's own Shopify image, else the
+    product's. Measured boxes are per-mille of the file: left,top,right,
+    bottom of the product including its box, plus a hair of margin.
+      3674552c… GODA Black (supplier, 1600²)   363ece56… GODA White (625×708)
+      cf28bc68… GODA Citrus (800²)             21732292… GODA Neutral (800²)
+      zorev-hoygi-cutout HOYGI stick + box (577×741, transparent)
+    Params: product, variant, widths, sizes, cls, loading, fetchpriority,
+    alt ('none' = decorative), wrap (a class: wraps the img in a stand
+    span with the picture's proportions), wrap_attrs, shadow (true: a
+    contact shadow inside the stand).
+  {%- endcomment -%}
+  {%- liquid
+    assign p = product
+    assign v = variant
+    if v == blank and p != blank
+      assign v = p.selected_or_first_available_variant
+    endif
+    if p == blank and v != blank
+      assign p = v.product
+    endif
+
+    assign table = '3674552c:177,137,767,933|363ece56:72,59,831,970|cf28bc68:204,134,801,868|21732292:212,130,804,865|zorev-hoygi-cutout:42,31,956,964' | split: '|'
+    assign img = false
+    assign first_hit = false
+    assign box = ''
+    assign is_studio = false
+    if settings.studio_mode == 'on' and v != blank
+      assign vid = v.id | append: ''
+      for n in (1..10)
+        assign kv = 'studio_' | append: n | append: '_variant'
+        assign ki = 'studio_' | append: n | append: '_image'
+        assign sv = settings[kv] | append: '' | strip
+        if sv == vid and settings[ki] != blank
+          assign cand = settings[ki]
+          if first_hit == blank
+            assign first_hit = cand
+          endif
+          assign probe = cand | image_url: width: 10
+          assign box = ''
+          for row in table
+            assign kp = row | split: ':'
+            if probe contains kp[0]
+              assign box = kp[1]
+              break
+            endif
+          endfor
+          if box != blank
+            assign img = cand
+            break
+          endif
+        endif
+      endfor
+      if img == blank and first_hit != blank
+        assign img = first_hit
+        assign box = ''
+      endif
+      if img != blank
+        assign is_studio = true
+      endif
+    endif
+    if img == blank and v != blank
+      assign img = v.featured_media.preview_image
+    endif
+    if img == blank and p != blank
+      assign img = p.featured_media.preview_image
+    endif
+  -%}
+  {%- if img != blank -%}
+    {%- liquid
+      assign iw = img.width | default: 1000 | plus: 0
+      assign ih = img.height | default: iw | plus: 0
+      assign cut = false
+      assign x0 = 0
+      assign y0 = 0
+      assign cw = iw
+      assign ch = ih
+      if box != blank
+        assign bx = box | split: ','
+        assign bl = bx[0] | plus: 0
+        assign bt = bx[1] | plus: 0
+        assign br = bx[2] | plus: 0
+        assign bb = bx[3] | plus: 0
+        assign x0 = iw | times: bl | divided_by: 1000 | floor
+        assign x1 = iw | times: br | divided_by: 1000 | floor
+        assign y0 = ih | times: bt | divided_by: 1000 | floor
+        assign y1 = ih | times: bb | divided_by: 1000 | floor
+        assign cw = x1 | minus: x0
+        assign ch = y1 | minus: y0
+        if cw > 0 and ch > 0
+          assign cut = true
+        else
+          assign x0 = 0
+          assign y0 = 0
+          assign cw = iw
+          assign ch = ih
+        endif
+      endif
+
+      assign ws = widths | default: '160,240,320,400,480,560' | split: ','
+      assign srcset = ''
+      assign src_w = 0
+      for w in ws
+        assign wn = w | strip | plus: 0
+        if wn < 1 or wn >= cw
+          continue
+        endif
+        if cut
+          assign u = img | image_url: width: wn, crop: 'region', crop_left: x0, crop_top: y0, crop_width: cw, crop_height: ch
+        else
+          assign u = img | image_url: width: wn
+        endif
+        if srcset != ''
+          assign srcset = srcset | append: ', '
+        endif
+        assign srcset = srcset | append: u | append: ' ' | append: wn | append: 'w'
+        assign src_w = wn
+      endfor
+      if cut
+        assign u = img | image_url: width: cw, crop: 'region', crop_left: x0, crop_top: y0, crop_width: cw, crop_height: ch
+      else
+        assign u = img | image_url: width: cw
+      endif
+      if srcset != ''
+        assign srcset = srcset | append: ', '
+      endif
+      assign srcset = srcset | append: u | append: ' ' | append: cw | append: 'w'
+      if src_w == 0
+        assign src_w = cw
+      endif
+      assign h_attr = ch | times: src_w | divided_by: cw | round
+      if cut
+        assign src_u = img | image_url: width: src_w, crop: 'region', crop_left: x0, crop_top: y0, crop_width: cw, crop_height: ch
+      else
+        assign src_u = img | image_url: width: src_w
+      endif
+
+      if alt == 'none'
+        assign alt_text = ''
+      elsif alt != blank
+        assign alt_text = alt
+      else
+        assign alt_text = p.title
+        if p.has_only_default_variant == false and p.variants.size > 1 and v != blank
+          capture opt_label
+            render 'zvlabel', t: v.title
+          endcapture
+          assign alt_text = alt_text | append: ', ' | append: opt_label
+        endif
+      endif
+    -%}
+    {%- if wrap != blank -%}<span class="{{ wrap }}{% if is_studio %} is-studio{% else %} is-photo{% endif %}{% if cut %} is-cut{% endif %}" style="aspect-ratio: {{ cw }} / {{ ch }}"{% if wrap_attrs != blank %} {{ wrap_attrs }}{% endif %}>{%- endif -%}
+    <img{% if cls != blank %} class="{{ cls }}"{% endif %}
+         src="{{ src_u }}"
+         srcset="{{ srcset }}"
+         sizes="{{ sizes | default: '100vw' }}"
+         width="{{ src_w }}" height="{{ h_attr }}"
+         alt="{{ alt_text | strip_html | escape_once }}"
+         data-zv-studio="{{ is_studio }}"
+         {%- if loading == 'eager' %} loading="eager"{% else %} loading="lazy" decoding="async"{% endif -%}
+         {%- if fetchpriority == 'high' %} fetchpriority="high"{% endif %}>
+    {%- if wrap != blank -%}{%- if shadow -%}<span class="zpp__shadow" aria-hidden="true"></span>{%- endif -%}</span>{%- endif -%}
+  {%- endif -%}
+
+{%- when 'plate' -%}
+  {%- comment -%}
+    The shared stone plate. a = the left product (default: Theme settings >
+    Offers > Product A), b = the right one (optional). swap: true renders a
+    stand for every available option of a, all but the default one off,
+    for the band's swatches to switch between. ratio: the plate's
+    proportions (default 5 / 4). sizes: one stand's rendered width.
+  {%- endcomment -%}
+  {%- liquid
+    assign pa = a
+    if pa == blank
+      assign pa = settings.pair_product_a
+    endif
+    assign pb = b
+    assign va = pa.selected_or_first_available_variant
+    assign st_sizes = sizes | default: '(min-width: 900px) 260px, 40vw'
+    assign st_widths = widths | default: '160,240,320,400,480,560'
+  -%}
+  {%- if pa != blank -%}
+    <div class="zpp zv-studio{% if cls != blank %} {{ cls }}{% endif %}"{% if ratio != blank %} style="aspect-ratio: {{ ratio }}"{% endif %} data-zpp>
+      <div class="zpp__floor">
+        {%- if swap and pa.variants.size > 1 -%}
+          {%- for pv in pa.variants -%}
+            {%- if pv.available or pv.id == va.id -%}
+              {%- liquid
+                assign st_cls = 'zpp__stand'
+                if pv.id != va.id
+                  assign st_cls = 'zpp__stand is-off'
+                endif
+                assign st_attrs = 'data-zpr-cut="' | append: pv.id | append: '"'
+              -%}
+              {% render 'pair-offer', mode: 'img', product: pa, variant: pv, wrap: st_cls, wrap_attrs: st_attrs, shadow: true, cls: 'zpp__img', widths: st_widths, sizes: st_sizes %}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- else -%}
+          {% render 'pair-offer', mode: 'img', product: pa, variant: va, wrap: 'zpp__stand', shadow: true, cls: 'zpp__img', widths: st_widths, sizes: st_sizes %}
+        {%- endif -%}
+        {%- if pb != blank -%}
+          {% render 'pair-offer', mode: 'img', product: pb, variant: pb.selected_or_first_available_variant, wrap: 'zpp__stand', shadow: true, cls: 'zpp__img', widths: st_widths, sizes: st_sizes %}
+        {%- endif -%}
+      </div>
+    </div>
+    <style>
+      /* The plate: warm stone, a soft light from above and a slightly
+         deeper floor, so it reads as one surface the products stand on.
+         Nothing in here may create a stacking context between the plate
+         (isolated by .zv-studio) and the packshots, or multiply would have
+         nothing to dissolve the supplier's white into: no z-index,
+         transform, filter or opacity on .zpp__floor / .zpp__stand. */
+      .zpp.zv-studio{--zv-studio-pad:0;position:relative;display:block;width:100%;aspect-ratio:5 / 4;
+        background-image:var(--zv-stage-light),linear-gradient(to bottom,transparent 52%,var(--zv-plate-deep))}
+      .zpp__floor{position:absolute;left:5%;right:5%;bottom:13%;height:60%;
+        display:flex;align-items:flex-end;justify-content:center;gap:6%}
+      .zpp__stand{position:relative;display:block;height:100%;flex:0 1 auto;min-width:0}
+      .zpp__stand.is-off{display:none}
+      .zpp.zv-studio .zpp__img{display:block;width:100%;height:100%;padding:0;
+        object-fit:contain;object-position:50% 100%}
+      /* the same contact shadow under each product, on the one floor line */
+      .zpp__shadow{position:absolute;z-index:-1;left:50%;bottom:-3%;width:100%;height:8%;
+        transform:translateX(-50%);background:var(--zv-stage-shadow);filter:blur(5px);opacity:.5;pointer-events:none}
+      /* No studio picture for a product (studio images off): its own
+         photograph as a small square print standing on the floor. */
+      .zpp__stand.is-photo{height:78%}
+      .zpp.zv-studio .zpp__stand.is-photo .zpp__img{object-fit:cover;mix-blend-mode:normal;border-radius:var(--zv-r-md);box-shadow:var(--zv-sh-2)}
+      .zpp__stand.is-photo .zpp__shadow{display:none}
+      /* an option switch: the new packshot settles in, no slide */
+      @keyframes zpp-in{from{opacity:0}}
+      .zpp__stand[data-zpr-cut] .zpp__img{animation:zpp-in var(--zv-d-ui) var(--zv-ease) both}
+      @media (prefers-reduced-motion: reduce){.zpp__stand[data-zpr-cut] .zpp__img{animation:none}}
+    </style>
+  {%- endif -%}
+
+{%- else -%}
+  {%- liquid
+    assign pa = settings.pair_product_a
+    assign pb = settings.pair_product_b
+    assign hl = heading_level | default: 2 | plus: 0
+    if hl < 2
+      assign hl = 2
+    elsif hl > 4
+      assign hl = 4
+    endif
+    assign rid = 'zpr-' | append: uid
+    assign anchor_id = anchor | default: 'pair'
+  -%}
+  {%- if settings.pair_enabled and pa != blank and pb != blank and pa.title != blank and pb.title != blank -%}
+    {%- liquid
+      assign va = pa.selected_or_first_available_variant
+      assign vb = pb.selected_or_first_available_variant
+      assign avail_a = pa.variants | where: 'available'
+      assign short_a = pa.vendor | upcase
+      assign short_b = pb.vendor | upcase
+
+      capture pp
+        render 'pair-price'
+      endcapture
+      capture p_full
+        render 'pair-price', part: 'full'
+      endcapture
+      capture p_save
+        render 'pair-price', part: 'save'
+      endcapture
+      assign pp = pp | strip
+      assign p_full = p_full | strip
+      assign p_save = p_save | strip
+
+      assign can_add = true
+      if avail_a.size == 0 or vb.available == false
+        assign can_add = false
+      endif
+
+      assign g = 0
+      assign h = 0
+      for it in cart.items
+        if it.product_id == pa.id
+          assign g = g | plus: it.quantity
+        elsif it.product_id == pb.id
+          assign h = h | plus: it.quantity
+        endif
+      endfor
+      assign g1 = g | plus: 1
+      assign h1 = h | plus: 1
+      assign pair_ok = false
+      if h1 <= 2 or g1 >= h1
+        assign pair_ok = true
+      endif
+      assign in_bag = false
+      for app in cart.discount_applications
+        if app.title == settings.pair_discount_title
+          assign in_bag = true
+        endif
+      endfor
+      assign state = 'offer'
+      if in_bag
+        assign state = 'in-bag'
+      elsif pair_ok == false
+        assign state = 'blocked'
+      endif
+
+      assign has_photo = false
+      if photo != blank or video != blank
+        assign has_photo = true
+      endif
+    -%}
+    {%- capture lab_offer -%}Add the pair{% if pp != blank %} · {{ pp }}{% endif %}{%- endcapture -%}
+    <div class="zpr zv-forest" id="{{ anchor_id | escape }}" role="region" aria-labelledby="{{ rid }}-h"
+         data-zpr data-state="{{ state }}"
+         data-a-product="{{ pa.id }}" data-b-product="{{ pb.id }}"
+         data-title="{{ settings.pair_discount_title | escape }}">
+      <div class="zv-wrap zpr__in">
+        {%- if has_photo -%}
+          <figure class="zpr__photo" data-zv-reveal="media">
+            {% render 'zv-media', media: video, image: photo, image_mobile: photo_mobile, sizes: '(min-width: 900px) 640px, 92vw', alt: photo_alt %}
+          </figure>
+        {%- else -%}
+          <div class="zpr__fig" data-zv-reveal>
+            {% render 'pair-offer', mode: 'plate', a: pa, b: pb, swap: true, sizes: '(min-width: 900px) 260px, 40vw' %}
+          </div>
+        {%- endif -%}
+
+        <div class="zpr__copy" data-zv-reveal>
+          <span class="zv-eyebrow zpr__k">{{ settings.pair_name | escape }}</span>
+          <h{{ hl }} class="zpr__h" id="{{ rid }}-h">{{ short_a | escape }} + {{ short_b | escape }}</h{{ hl }}>
+          {%- if pp != blank -%}
+            <p class="zpr__price" data-zpr-price>
+              <strong><span class="visually-hidden">Pair price </span>{{ pp }}</strong>
+              <s><span class="visually-hidden">Regular price </span>{{ p_full }}</s>
+              <span class="zpr__save">Save {{ p_save }}</span>
+            </p>
+          {%- endif -%}
+          {%- if settings.pair_tagline != blank -%}
+            <p class="zpr__tag">{{ settings.pair_tagline | escape }}</p>
+          {%- endif -%}
+          <ul class="zpr__inc" role="list">
+            <li><span class="zpr__qty">1 &times;</span> <a href="{{ pa.url }}">{{ pa.title | escape }}</a>{% if avail_a.size > 1 %}, in the option you choose{% endif %}</li>
+            <li><span class="zpr__qty">1 &times;</span> <a href="{{ pb.url }}">{{ pb.title | escape }}</a></li>
+          </ul>
+          {%- if body != blank -%}<div class="zpr__body">{{ body }}</div>{%- endif -%}
+
+          <form class="zpr__form" action="{{ routes.cart_add_url }}" method="post" data-no-ajax data-zpr-form>
+            {%- if avail_a.size > 1 -%}
+              <fieldset class="zpr__opts">
+                <legend class="zpr__legend">{{ short_a | escape }} option</legend>
+                <div class="zpr__optlist">
+                  {%- for pv in avail_a -%}
+                    <label class="zpr__opt">
+                      <input class="zpr__radio" type="radio" name="items[][id]" value="{{ pv.id }}" data-zpr-opt{% if pv.id == va.id %} checked{% endif %}>
+                      <span class="zpr__sw zv-studio" aria-hidden="true">{% render 'pair-offer', mode: 'img', product: pa, variant: pv, widths: '96,128,192', sizes: '56px', cls: 'zpr__swimg', alt: 'none' %}</span>
+                      <span class="zpr__optl">{% render 'zvlabel', t: pv.title %}</span>
+                    </label>
+                  {%- endfor -%}
+                </div>
+              </fieldset>
+            {%- else -%}
+              <input type="hidden" name="items[][id]" value="{{ va.id }}" data-zpr-opt>
+            {%- endif -%}
+            <input type="hidden" name="items[][quantity]" value="1">
+            <input type="hidden" name="items[][id]" value="{{ vb.id }}" data-zpr-b>
+            <input type="hidden" name="items[][quantity]" value="1">
+            <div class="zpr__act">
+              <button class="zv-btn zpr__btn" type="submit" data-zpr-add
+                      data-label-offer="{{ lab_offer | escape }}" data-label-plain="Add one of each"
+                      {%- unless can_add %} disabled{% endunless %}>
+                {%- if can_add == false -%}Sold out{%- elsif state == 'offer' -%}{{ lab_offer | escape }}{%- else -%}Add one of each{%- endif -%}
+              </button>
+            </div>
+          </form>
+
+          <p class="zpr__note" data-zpr-note="offer">One of each. {% if p_save != blank %}The {{ p_save }}{% else %}The pair saving{% endif %} comes off automatically in your bag, once per order.</p>
+          <p class="zpr__note zpr__note--ok" data-zpr-note="in-bag">{% render 'zicon', name: 'check' %}<span>{{ settings.pair_name | escape }} is in your bag{% if p_save != blank %}, saving {{ p_save }}{% endif %}. The saving applies once per order. <a href="{{ routes.cart_url }}">View bag</a></span></p>
+          <p class="zpr__note" data-zpr-note="blocked">Your bag already has more {{ short_b | escape }} than {{ short_a | escape }}, so one more of each would not get the pair saving. Every saving shows in your bag before checkout.</p>
+          <p class="zpr__err" role="alert" data-zpr-err hidden></p>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      .zpr{position:relative;padding-block:var(--zv-section);background:var(--zv-bg);color:var(--zv-text);scroll-margin-top:72px}
+      .zpr [hidden]{display:none !important}
+      .zpr__in{display:grid;gap:clamp(32px,5vw,72px);align-items:center}
+      @media (min-width: 900px){.zpr__in{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}}
+      .zpr__fig{width:100%;max-width:640px;margin-inline:auto}
+      .zpr__fig .zpp{box-shadow:var(--zv-plate-edge)}
+      @media (max-width: 899px){.zpr__fig{max-width:520px}}
+      .zpr__photo{margin:0 auto;width:100%;max-width:640px;aspect-ratio:4 / 3;border-radius:var(--zv-r-lg);overflow:hidden;box-shadow:var(--zv-plate-edge)}
+      @media (max-width: 899px){.zpr__photo{max-width:480px;aspect-ratio:5 / 4}}
+
+      .zpr__copy{max-width:540px}
+      .zpr__k{color:var(--zv-accent)}
+      .zpr__h{margin:var(--zv-2) 0 var(--zv-4);font-family:var(--zv-serif);font-weight:400;font-size:var(--zv-t-h2);
+        line-height:var(--zv-lh-tight);letter-spacing:var(--zv-tr-tight);color:var(--zv-text)}
+      .zpr__price{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:0 0 var(--zv-3);font-variant-numeric:tabular-nums;max-width:none}
+      .zpr__price strong{font-family:var(--zv-sans);font-size:var(--zv-t-h2);font-weight:500;letter-spacing:-0.02em;line-height:1;color:var(--zv-text)}
+      .zpr__price s{font-size:var(--zv-t-lead);color:var(--zv-text-2)}
+      .zpr__save{align-self:center;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);text-transform:uppercase;
+        color:var(--zv-on-accent);background:var(--zv-accent);padding:5px 10px;border-radius:var(--zv-r-pill)}
+      .zpr__tag{margin:0 0 var(--zv-4);font-family:var(--zv-serif);font-size:var(--zv-t-h4);line-height:var(--zv-lh-snug);color:var(--zv-text);max-width:none}
+      .zpr__inc{list-style:none;margin:0 0 var(--zv-5);padding:0;display:grid;gap:4px;font-size:var(--zv-t-sm);line-height:var(--zv-lh-body);color:var(--zv-text-2)}
+      .zpr__inc a{color:var(--zv-text);text-decoration:underline;text-decoration-color:var(--zv-hairline-2);text-underline-offset:3px}
+      @media (hover: hover) and (pointer: fine){.zpr__inc a:hover{text-decoration-color:currentColor}}
+      .zpr__qty{color:var(--zv-text-3);font-variant-numeric:tabular-nums}
+      .zpr__body{color:var(--zv-text-2)}
+      .zpr__body p{margin:0 0 var(--zv-3);color:inherit}
+
+      /* GODA option: radio swatches, each the option's own packshot on a
+         small plate with its name under it. The native radio covers the
+         whole swatch (invisible), so a click anywhere picks it, the arrow
+         keys move between options and a screen reader hears "Black, radio
+         button, 1 of 4". */
+      .zpr__opts{margin:0 0 var(--zv-4);padding:0;border:0;min-width:0}
+      .zpr__legend{padding:0;margin:0 0 var(--zv-2);font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
+        text-transform:uppercase;color:var(--zv-text-2)}
+      .zpr__optlist{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--zv-2)}
+      @media (max-width: 359px){.zpr__optlist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      .zpr__opt{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:44px;
+        padding:8px 4px 10px;border:1px solid var(--zv-hairline-2);border-radius:var(--zv-r-md);cursor:pointer;text-align:center;
+        -webkit-tap-highlight-color:transparent;
+        transition:border-color var(--zv-d-hover) var(--zv-ease),background-color var(--zv-d-hover) var(--zv-ease)}
+      .zpr__radio{position:absolute;inset:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+      .zpr__sw{display:block;width:100%;max-width:56px;aspect-ratio:1 / 1;--zv-studio-pad:9%;border-radius:var(--zv-r-sm)}
+      .zpr__optl{font-size:var(--zv-t-fine);line-height:1.25;color:var(--zv-text)}
+      .zpr__opt:has(.zpr__radio:checked){border-color:var(--zv-accent);background-color:var(--zv-bg-raised);box-shadow:inset 0 0 0 1px var(--zv-accent)}
+      .zpr__radio:checked ~ .zpr__optl{font-weight:600}
+      .zpr__opt:has(.zpr__radio:focus-visible){outline:2px solid var(--zv-focus);outline-offset:2px}
+      @supports not selector(:has(*)){
+        .zpr__radio:checked ~ .zpr__sw{box-shadow:0 0 0 2px var(--zv-accent)}
+        .zpr__radio:focus-visible ~ .zpr__sw{outline:2px solid var(--zv-focus);outline-offset:3px}
+      }
+      @media (hover: hover) and (pointer: fine){.zpr__opt:hover{border-color:var(--zv-text-3)}}
+      @media (hover: none){.zpr__opt:active{transform:scale(var(--zv-press));transition-duration:var(--zv-d-tap)}}
+
+      .zpr__act{display:flex;flex-wrap:wrap;gap:var(--zv-3);align-items:center}
+      .zpr__btn{min-height:52px;flex:1 1 240px}
+      /* once the offer no longer applies to this bag, the button is plain */
+      .zpr[data-state="in-bag"] .zpr__btn,.zpr[data-state="blocked"] .zpr__btn{background:transparent;color:var(--zv-text);border-color:var(--zv-ghost-edge)}
+
+      .zpr__note{display:none;margin:var(--zv-4) 0 0;font-size:var(--zv-t-fine);line-height:var(--zv-lh-body);color:var(--zv-text-2);max-width:54ch}
+      .zpr[data-state="offer"] [data-zpr-note="offer"],
+      .zpr[data-state="blocked"] [data-zpr-note="blocked"]{display:block}
+      .zpr[data-state="in-bag"] [data-zpr-note="in-bag"]{display:flex;gap:var(--zv-2);align-items:flex-start;color:var(--zv-text)}
+      .zpr[data-state="blocked"] [data-zpr-price]{display:none}
+      .zpr__note .zicon{flex:0 0 auto;width:16px;height:16px;margin-top:3px;color:var(--zv-accent)}
+      .zpr__note a{color:var(--zv-text);text-decoration:underline;text-underline-offset:3px}
+      .zpr__err{margin:var(--zv-3) 0 0;padding:var(--zv-2) var(--zv-3);border-left:2px solid var(--zv-accent);border-radius:var(--zv-r-xs);
+        background:var(--zv-bg-raised);font-size:var(--zv-t-fine);color:var(--zv-text);max-width:54ch}
+
+      /* The oil's packshot follows the checked option, with or without
+         script (the script also sets .is-off, for browsers without :has). */
+      {%- for pv in avail_a %}
+      #{{ anchor_id | escape }}:has([data-zpr-opt][value="{{ pv.id }}"]:checked) .zpp__stand[data-zpr-cut]{display:none}
+      #{{ anchor_id | escape }}:has([data-zpr-opt][value="{{ pv.id }}"]:checked) .zpp__stand[data-zpr-cut="{{ pv.id }}"]{display:block}
+      {%- endfor %}
+    </style>
+    <script>
+    (function () {
+      'use strict';
+      var roots = document.querySelectorAll('[data-zpr]:not([data-zpr-ready])');
+      Array.prototype.forEach.call(roots, function (root) {
+        root.setAttribute('data-zpr-ready', '');
+        var form = root.querySelector('[data-zpr-form]');
+        var btn = root.querySelector('[data-zpr-add]');
+        var err = root.querySelector('[data-zpr-err]');
+        if (!form || !btn) return;
+        var aId = Number(root.getAttribute('data-a-product'));
+        var bId = Number(root.getAttribute('data-b-product'));
+        var title = root.getAttribute('data-title') || '';
+        var soldOut = btn.disabled;
+        var busy = false;
+
+        /* The one pair rule, from assets/zorev.js (a deferred script, so it
+           is looked up when needed, not now). Same expression as fallback. */
+        function applies(g, h) {
+          var P = window.ZorevPair;
+          if (P && typeof P.applies === 'function') return !!P.applies(g, h);
+          return g >= 1 && h >= 1 && (h <= 2 || g >= h);
+        }
+        function discounts(c) {
+          if (typeof window.ZorevDiscountsOf === 'function') return window.ZorevDiscountsOf(c);
+          var out = [];
+          (c.items || []).forEach(function (i) {
+            (i.line_level_discount_allocations || []).forEach(function (x) {
+              out.push({ title: x.discount_application && x.discount_application.title, amount: x.amount });
+            });
+          });
+          (c.cart_level_discount_applications || []).forEach(function (d) {
+            out.push({ title: d.title, amount: d.total_allocated_amount });
+          });
+          return out;
+        }
+        function label() {
+          return root.getAttribute('data-state') === 'offer'
+            ? btn.getAttribute('data-label-offer')
+            : btn.getAttribute('data-label-plain');
+        }
+        /* Shopify's own cart decides: its discount list for the in-bag
+           state, the rule on the bag after the add for the rest. */
+        function paint(c) {
+          if (!c || !c.items || !root.isConnected) return;
+          var g = 0, h = 0;
+          c.items.forEach(function (i) {
+            if (i.product_id === aId) g += i.quantity;
+            else if (i.product_id === bId) h += i.quantity;
+          });
+          var inBag = discounts(c).some(function (d) { return d.title === title && Number(d.amount) > 0; });
+          root.setAttribute('data-state', inBag ? 'in-bag' : (applies(g + 1, h + 1) ? 'offer' : 'blocked'));
+          if (!busy && !soldOut) btn.textContent = label();
+        }
+        document.addEventListener('cart:painted', function (e) { paint(e.detail); });
+        /* zorev.js paints the cart on every page load; only a page without
+           it asks for the bag itself. */
+        function selfCheck() {
+          if (window.ZorevCart || !window.fetch) return;
+          fetch('/cart.js', { headers: { Accept: 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(paint)
+            .catch(function () {});
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', selfCheck);
+        else selfCheck();
+
+        /* Option -> packshot. */
+        var stands = Array.prototype.slice.call(root.querySelectorAll('[data-zpr-cut]'));
+        function showCut(id) {
+          var hit = stands.filter(function (s) { return s.getAttribute('data-zpr-cut') === String(id); })[0];
+          if (!hit) return;
+          stands.forEach(function (s) { s.classList.toggle('is-off', s !== hit); });
+        }
+        form.addEventListener('change', function (e) {
+          var r = e.target;
+          if (r && r.hasAttribute && r.hasAttribute('data-zpr-opt') && r.checked) showCut(r.value);
+        });
+        var c0 = form.querySelector('[data-zpr-opt]:checked');
+        if (c0) showCut(c0.value);
+
+        /* One POST of both lines; the drawer shows Shopify's result. */
+        form.addEventListener('submit', function (e) {
+          if (!window.fetch || !window.JSON) return;
+          e.preventDefault();
+          if (busy || soldOut) return;
+          var opt = form.querySelector('[data-zpr-opt]:checked') || form.querySelector('input[type="hidden"][data-zpr-opt]');
+          var b = form.querySelector('[data-zpr-b]');
+          if (!opt || !b) return;
+          busy = true;
+          btn.setAttribute('aria-busy', 'true');
+          btn.setAttribute('aria-disabled', 'true');
+          btn.textContent = 'Adding…';
+          if (err) { err.hidden = true; err.textContent = ''; }
+          fetch(form.getAttribute('action') + '.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items: [
+              { id: Number(opt.value), quantity: 1 },
+              { id: Number(b.value), quantity: 1 }
+            ] })
+          })
+            .then(function (r) {
+              if (r.ok) return r.json();
+              return r.text().then(function (t) {
+                var j = null;
+                try { j = JSON.parse(t); } catch (x) { j = null; }
+                var e2 = new Error((j && (j.description || j.message)) || '');
+                e2.shop = true;
+                throw e2;
+              });
+            })
+            .then(function () {
+              if (window.ZorevCart) {
+                window.ZorevCart.show(btn);
+                return window.ZorevCart.fetch();
+              }
+              window.location.href = '/cart';
+            })
+            .catch(function (x) {
+              if (!err) return;
+              err.textContent = (x && x.shop && x.message) ? x.message : 'The pair could not be added. Please try again.';
+              err.hidden = false;
+            })
+            .then(function () {
+              busy = false;
+              btn.removeAttribute('aria-busy');
+              btn.removeAttribute('aria-disabled');
+              btn.textContent = label();
+            });
+        });
+      });
+    })();
+    </script>
+  {%- endif -%}
+{%- endcase -%}

@@ -6,8 +6,20 @@
   "Quantity offer" metafield, the same data the product page's selector
   reads and the same amounts the automatic discounts apply. Change a
   discount in Discounts and the metafield has to change with it.
+
+  The tiers are once per order, and their savings are fixed amounts in the
+  shop's currency: a visitor shown another currency gets the quantities
+  with "worked out in your bag" instead of figures the bag would not match.
+  Each product's picture is its studio packshot on a small stone plate (the
+  same one the pair band and the cards show).
 {%- endcomment -%}
-{%- assign s = section.settings -%}
+{%- liquid
+  assign s = section.settings
+  assign local_money = false
+  if cart.currency.iso_code == shop.currency
+    assign local_money = true
+  endif
+-%}
 <section class="zqs band--raised" aria-labelledby="zqs-h-{{ section.id }}">
   <div class="zv-wrap">
     <div class="zqs__grid">
@@ -28,7 +40,7 @@
           {%- if p != blank and p.title != blank -%}
             <div class="zqs__col" data-zv-reveal {{ block.shopify_attributes }}>
               <div class="zqs__prod">
-                <span class="zqs__fig">{% render 'product-cutout', product: p, sizes: '48px', alt: '' %}</span>
+                <span class="zqs__fig zv-studio" aria-hidden="true">{% render 'pair-offer', mode: 'img', product: p, widths: '96,144,192', sizes: '52px', cls: 'zqs__img', alt: 'none' %}</span>
                 <div>
                   <h3 class="zqs__name">{{ p.vendor | upcase | escape }}</h3>
                   {%- if p.type != blank -%}<p class="zqs__type">{{ p.type | escape }}</p>{%- endif -%}
@@ -44,8 +56,13 @@
                   {%- for t in offer.breaks -%}
                     {%- assign tot = p.price | times: t.qty | minus: t.save -%}
                     <tr>
-                      <th scope="row"><span class="zqs__qty">{{ t.qty }} {{ many | escape }}</span> <span class="zqs__save">Save {{ t.save | money_without_trailing_zeros }}</span></th>
-                      <td class="zqs__tot">{{ tot | money_without_trailing_zeros }}</td>
+                      {%- if local_money -%}
+                        <th scope="row"><span class="zqs__qty">{{ t.qty }} {{ many | escape }}</span> <span class="zqs__save">Save {{ t.save | money_without_trailing_zeros }}</span></th>
+                        <td class="zqs__tot">{{ tot | money_without_trailing_zeros }}</td>
+                      {%- else -%}
+                        <th scope="row"><span class="zqs__qty">{{ t.qty }} {{ many | escape }}</span></th>
+                        <td class="zqs__tot zqs__tot--note">Saving worked out in your bag</td>
+                      {%- endif -%}
                     </tr>
                   {%- endfor -%}
                 </tbody>
@@ -72,9 +89,8 @@
        a product line, then ruled rows. */
     .zqs__col{padding:0}
     .zqs__prod{display:flex;align-items:center;gap:var(--zv-3);margin-bottom:var(--zv-4)}
-    .zqs__fig{width:52px;height:52px;border-radius:var(--zv-r-sm);overflow:hidden;flex:0 0 auto;
-      background:var(--zv-white);box-shadow:var(--zv-plate-edge);display:grid;place-items:center;padding:3px}
-    .zqs__fig .zv-cut{width:100%;height:100%;object-fit:contain;filter:none}
+    .zqs__fig{display:block;width:52px;height:52px;flex:0 0 auto;border-radius:var(--zv-r-sm);
+      box-shadow:var(--zv-plate-edge);--zv-studio-pad:8%}
     .zqs__name{margin:0;font-family:var(--zv-sans);font-size:var(--zv-t-body);font-weight:600;
       letter-spacing:var(--zv-tr-wide);color:var(--zv-ink)}
     .zqs__type{margin:0;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
@@ -88,6 +104,7 @@
     .zqs__save{display:inline-block;color:var(--zv-forest);font-size:var(--zv-t-micro);font-weight:600;
       letter-spacing:var(--zv-tr-wide);text-transform:uppercase;white-space:nowrap}
     .zqs__tot{text-align:right !important;font-weight:600;font-size:var(--zv-t-lead);color:var(--zv-ink);white-space:nowrap;padding-left:12px !important;letter-spacing:-0.01em}
+    .zqs__tot--note{font-weight:400;font-size:var(--zv-t-fine);color:var(--zv-text-2);white-space:normal;letter-spacing:0}
     .zqs__link{display:inline-block;padding-block:12px;line-height:1.4;margin-top:var(--zv-2);
       font-size:var(--zv-t-sm);font-weight:600;color:var(--zv-forest);text-decoration:none}
     @media (hover:hover) and (pointer:fine){ .zqs__link:hover{text-decoration:underline;text-underline-offset:4px} }

@@ -5,23 +5,30 @@
                               sizes: '(min-width: 1100px) 33vw, (min-width: 700px) 50vw, 100vw' %}
 
   Written against the real catalogue, which is two products:
-    - the oil: 4 images, 4 variants, no per-variant images
-    - the balm: ONE image, ONE variant
+    - the oil: 4 options, each with its own picture
+    - the balm: ONE option ("9g")
 
-  So the hover swap has to be conditional (a one-image product must not
-  crossfade to nothing) and quick-add only appears where a single variant
-  means there is genuinely nothing to choose. Anything with options goes to
-  the product page, because a card cannot ask which one you want.
+  Picture. With Theme settings > Studio images on and a studio picture for
+  the product's first available option, the card is a studio plate
+  (.zv-studio, the warm stone every packshot in the theme stands on) with
+  the maker's own packshot, cut to the product and standing on the plate's
+  floor shadow (snippets/pair-offer, mode 'img', which picks the same
+  packshot the pair band and the line-up show). No hover swap there: the
+  other studio pictures are other options or the same product again.
+  Without a studio picture: the product's own photograph, cover-cropped,
+  crossfading on a fine pointer to its second photograph when there is one.
 
-  Every image in the catalogue has empty alt text, so alt falls back to the
-  product title rather than shipping an unlabelled image.
+  One link per card. The whole card (picture, name, price) is the link;
+  "Choose options" repeats it as a visible button for pointer users and is
+  left out of the tab order and the accessibility tree, so a keyboard or
+  screen reader meets each product once. Quick-add only appears where a
+  single variant means there is genuinely nothing to choose; it is a real
+  form, outside the link.
 
-  A product with clean cutouts (product.metafields.zorev.cutouts) shows its
-  first cutout on the same lit stage as the homepage and the product page,
-  so a collection or search grid never shows a different picture of the
-  product from the rest of the site. On a fine pointer, the card then
-  crossfades to the first curated photograph (product.metafields.zorev.
-  gallery), if there is one. No cutouts: the listing image, as before.
+  The multi-buy line ("2 for $54 · 3 for $76") comes from the product's
+  "Quantity offer" metafield — the same numbers the product page and the
+  automatic discounts use. Those savings are fixed amounts in the shop's
+  currency, so the line is only shown when the visitor sees that currency.
 
   heading_level exists because the correct level depends on what is above the
   card. In a grid under a section h2 the title is an h3; in a collection or
@@ -31,21 +38,27 @@
 
 {%- liquid
   assign p = card_product
+  assign dv = p.selected_or_first_available_variant
   assign media_count = p.media.size
   assign img = p.featured_media.preview_image
-  assign hover_img = nil
-  if media_count > 1
-    assign hover_img = p.media[1].preview_image
-  endif
-  assign card_cut = false
-  if p.metafields.zorev.cutouts.value.size > 0
-    assign card_cut = true
-    assign hover_img = nil
-    for g in p.metafields.zorev.gallery.value
-      if hover_img == nil and g.media_type == 'image'
-        assign hover_img = g
+
+  assign studio = false
+  if settings.studio_mode == 'on' and dv != blank
+    assign dvid = dv.id | append: ''
+    for n in (1..10)
+      assign kv = 'studio_' | append: n | append: '_variant'
+      assign ki = 'studio_' | append: n | append: '_image'
+      assign sv = settings[kv] | append: '' | strip
+      if sv == dvid and settings[ki] != blank
+        assign studio = true
+        break
       endif
     endfor
+  endif
+
+  assign hover_img = false
+  if studio == false and media_count > 1
+    assign hover_img = p.media[1].preview_image
   endif
 
   assign sizes = sizes | default: '(min-width: 1100px) 360px, (min-width: 700px) 44vw, 88vw'
@@ -76,21 +89,11 @@
 
 <article class="zcard{% unless p.available %} zcard--out{% endunless %}" data-zv-reveal>
   <a class="zcard__link" href="{{ p.url }}" aria-label="{{ p.title | escape }}">
-    <div class="zcard__fig{% if card_cut %} zcard__fig--stage zv-stage{% endif %}">
-      {%- if card_cut -%}
-        <span class="zcard__obj">
-          {% render 'product-cutout', product: p, sizes: sizes, alt: p.title, eager: eager %}
-        </span>
-        <span class="zv-stage__shadow zcard__shadow" aria-hidden="true"></span>
-        {%- if hover_img -%}
-          <img class="zcard__img zcard__img--alt zcard__img--cover"
-               src="{{ hover_img | image_url: width: 800 }}"
-               srcset="{{ hover_img | image_url: width: 480 }} 480w,
-                       {{ hover_img | image_url: width: 800 }} 800w"
-               sizes="{{ sizes }}"
-               width="{{ hover_img.width }}" height="{{ hover_img.height }}"
-               alt="" loading="lazy" decoding="async" aria-hidden="true">
-        {%- endif -%}
+    <div class="zcard__fig{% if studio %} zv-studio zv-studio--floor{% endif %}"{% if studio %} style="--zv-studio-pad: 13% 15% 14%"{% endif %}>
+      {%- if studio -%}
+        {% render 'pair-offer', mode: 'img', product: p, variant: dv,
+           widths: '240,320,400,480,560,720', sizes: sizes, cls: 'zcard__img',
+           loading: loading, fetchpriority: fetch %}
       {%- elsif img -%}
         <img class="zcard__img"
              src="{{ img | image_url: width: 800 }}"
@@ -131,19 +134,14 @@
           {%- endif -%}
         </span>
         {%- if p.compare_at_price > p.price -%}
-          <s class="zcard__was zv-num">{{ p.compare_at_price | money_without_trailing_zeros }}</s>
+          <s class="zcard__was zv-num"><span class="visually-hidden">Regular price </span>{{ p.compare_at_price | money_without_trailing_zeros }}</s>
         {%- endif -%}
         {%- if p.variants.size > 1 -%}
           <span class="zcard__opts">{{ p.variants.size }} options</span>
         {%- endif -%}
       </p>
-      {%- comment -%}
-        The multi-buy line comes from the product's "Quantity offer"
-        metafield — the same numbers the product page and the automatic
-        discounts use — so a card can never quote a different deal.
-      {%- endcomment -%}
       {%- assign zoffer = p.metafields.zorev.offer.value -%}
-      {%- if zoffer.breaks.size > 0 -%}
+      {%- if zoffer.breaks.size > 0 and cart.currency.iso_code == shop.currency -%}
         <p class="zcard__multi zv-num">
           {%- for t in zoffer.breaks -%}
             {%- assign ztot = p.price | times: t.qty | minus: t.save -%}

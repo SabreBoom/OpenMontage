@@ -32,7 +32,8 @@
           <div class="zgrid zgrid--3">
             {%- for item in search.results -%}
               {%- if item.object_type == 'product' -%}
-                {% render 'product-card', card_product: item, eager: forloop.first, heading_level: 2 %}
+                {% render 'product-card', card_product: item, eager: forloop.first, heading_level: 2,
+                   sizes: '(min-width: 1200px) 380px, (min-width: 1000px) 30vw, (min-width: 560px) 45vw, 88vw' %}
               {%- else -%}
                 <a class="zresult" href="{{ item.url }}">
                   <span class="zv-eyebrow">{{ item.object_type | capitalize }}</span>
@@ -58,6 +59,12 @@
     {%- endif -%}
   </div>
 </section>
+
+<style>
+  /* Packshots on the card plates stand on the plate's floor shadow
+     (snippets/product-card; same rule as the collection page). */
+  .zcard__fig.zv-studio .zcard__img{object-position:50% 100%}
+</style>
 
 {% schema %}
 { "name": "Search", "tag": "section", "settings": [] }
