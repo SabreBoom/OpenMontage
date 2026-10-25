@@ -1,29 +1,67 @@
 {%- comment -%}
-  Product photographs as data, for the scripts that paint product images
-  without Liquid: the cart drawer (which paints lines from /cart.js). One
-  small JSON per page — product id -> variant id -> image URL — read by
-  zorev.js. V14: the URL is the photograph assigned to the option in
-  Shopify (the variant's image), else the product's featured image — the
-  same picture snippets/product-cutout shows everywhere else. A product
-  with no photographs is simply absent, and the drawer then uses the
-  line's own Shopify image.
+  Product pictures and option names as data, for the scripts that paint
+  products without Liquid: the cart drawer (lines painted from /cart.js),
+  its pair offer, and the cart page's pair chooser. One small JSON per page,
+  read by assets/zorev.js (window.ZorevCart.media(variantId)):
+
+    { "studio": true|false,
+      "v": { "<variant id>": { "p": <product id>, "src": "<url>",
+                               "studio": true|false, "label": "Black" } } }
+
+  src   With Theme settings > Studio images on, the first studio slot whose
+        variant id matches (studio_{n}_variant / studio_{n}_image, n = 1..10,
+        the same slots snippets/studio-image reads), at 240w for a 72 px
+        thumbnail at 3x. Otherwise, or with no matching slot, what V14 showed:
+        the variant's own photograph, else the product's featured image, at
+        160w. A variant with no picture at all gets null, and the drawer then
+        uses the line's own Shopify image.
+  label snippets/zvlabel's name for the option ("Citrus (men's)"), empty for
+        a product with a single variant, so the drawer, the cart page and the
+        product page all name an option the same way.
 
   Bounded to the first 24 products: this catalogue has two, and the loop
   must never become the slow part of a page.
 {%- endcomment -%}
+{%- liquid
+  assign studio_on = false
+  if settings.studio_mode == 'on' or settings.studio_mode == true
+    assign studio_on = true
+  endif
+-%}
 <script type="application/json" data-cutout-map>
-{
-{%- assign first_p = true -%}
+{"studio":{{ studio_on | json }},"v":{
+{%- assign first_v = true -%}
 {%- for p in collections.all.products limit: 24 -%}
-  {%- if p.featured_media -%}
-    {%- unless first_p -%},{%- endunless -%}{%- assign first_p = false -%}
-    "{{ p.id }}": {
-    {%- for v in p.variants -%}
-      {%- assign vimg = v.featured_media.preview_image | default: p.featured_media.preview_image -%}
-      "{{ v.id }}": {{ vimg | image_url: width: 160 | json }}{%- unless forloop.last -%},{%- endunless -%}
-    {%- endfor -%}
-    }
-  {%- endif -%}
+  {%- for v in p.variants -%}
+    {%- liquid
+      assign src = nil
+      assign is_studio = false
+      if studio_on
+        assign xid = v.id | append: ''
+        for n in (1..10)
+          assign kv = 'studio_' | append: n | append: '_variant'
+          assign sv = settings[kv] | append: '' | strip
+          if sv == xid
+            assign ki = 'studio_' | append: n | append: '_image'
+            if settings[ki] != blank
+              assign src = settings[ki] | image_url: width: 240
+              assign is_studio = true
+              break
+            endif
+          endif
+        endfor
+      endif
+      if src == blank
+        assign vimg = v.featured_media.preview_image | default: p.featured_media.preview_image
+        if vimg != blank
+          assign src = vimg | image_url: width: 160
+        endif
+      endif
+    -%}
+    {%- capture lbl -%}{%- if p.variants.size > 1 -%}{% render 'zvlabel', t: v.title %}{%- endif -%}{%- endcapture -%}
+    {%- unless first_v -%},{%- endunless -%}{%- assign first_v = false -%}
+    "{{ v.id }}":{"p":{{ p.id }},"src":{{ src | json }},"studio":{{ is_studio }},"label":{{ lbl | strip | json }}}
+  {%- endfor -%}
 {%- endfor -%}
-}
+}}
 </script>
