@@ -474,14 +474,23 @@
              data-name="{{ settings.pair_name | escape }}"
              data-a-short="{{ pa.vendor | upcase | escape }}" data-b-short="{{ pb.vendor | upcase | escape }}">
           {%- comment -%}
-            The two small pictures (snippets/studio-image): each option's
-            studio packshot when the studio set has one, else that option's
-            own photograph, else the product's.
+            The two small pictures (snippets/pair-offer, mode 'img': the
+            makers' studio packshots cut to the product itself, the same
+            chooser as the homepage pair band, so the HOYGI picture is the
+            clean stick-and-box cutout, not the busy lifestyle photo). One
+            GODA picture per option; the chosen one shows (the others are
+            hidden, so their lazy images never load until chosen).
           {%- endcomment -%}
           <div class="pairc__figs" aria-hidden="true">
-            <span class="pairc__plate zv-studio">{% render 'studio-image', variant: pva, product: pa, widths: '160', sizes: '60px', alt: pa.title, attrs: 'data-pairc-aimg' %}</span>
+            <span class="pairc__plate zv-studio">
+              {%- for pv in pa.variants -%}
+                {%- if pv.available or pv.id == pva.id -%}
+                  <span class="pairc__pimg" data-pairc-aimg="{{ pv.id }}"{% unless pv.id == pva.id %} hidden{% endunless %}>{% render 'pair-offer', mode: 'img', product: pa, variant: pv, widths: '96,160', sizes: '60px', alt: 'none' %}</span>
+                {%- endif -%}
+              {%- endfor -%}
+            </span>
             <span class="pairc__plus">{% render 'zicon', name: 'plus' %}</span>
-            <span class="pairc__plate zv-studio">{% render 'studio-image', variant: pvb, product: pb, widths: '160', sizes: '60px', alt: pb.title %}</span>
+            <span class="pairc__plate zv-studio"><span class="pairc__pimg">{% render 'pair-offer', mode: 'img', product: pb, variant: pvb, widths: '96,160', sizes: '60px', alt: 'none' %}</span></span>
           </div>
           <div class="pairc__txt">
             <h2 class="pairc__k">{{ settings.pair_name | escape }}</h2>
@@ -497,24 +506,36 @@
               <p class="pairc__tag" data-pairc-tag{% if pair_state != blank %} hidden{% endif %}>One of each. The pair saving comes off automatically in your bag, once per order.</p>
             {%- endif -%}
           </div>
-          <div class="pairc__act" data-pairc-act>
+          {%- comment -%}
+            A real form: without script it posts one of each to /cart/add
+            (items[][id] / items[][quantity]) and lands on the cart page.
+            With script the card posts the same two lines to /cart/add.js
+            and opens the bag (data-no-ajax keeps zorev.js's own add-to-bag
+            handler off this form).
+          {%- endcomment -%}
+          <form class="pairc__act" action="{{ routes.cart_add_url }}" method="post" data-no-ajax data-pairc-act>
             {%- if product.id != pa.id and pa.variants.size > 1 -%}
               <label class="pairc__pick">
                 <span class="pairc__picklabel">{{ pa.vendor | upcase | escape }} option</span>
                 <span class="pairc__selw">
-                  <select data-pairc-avar>
+                  <select name="items[][id]" data-pairc-avar>
                     {%- for pv in pa.variants -%}
                       {%- if pv.available -%}<option value="{{ pv.id }}"{% if pv.id == pva.id %} selected{% endif %}>{% render 'zvlabel', t: pv.title %}</option>{%- endif -%}
                     {%- endfor -%}
                   </select>
                 </span>
               </label>
+            {%- else -%}
+              <input type="hidden" name="items[][id]" value="{{ pva.id }}" data-pairc-aid>
             {%- endif -%}
+            <input type="hidden" name="items[][quantity]" value="1">
+            <input type="hidden" name="items[][id]" value="{{ pvb.id }}">
+            <input type="hidden" name="items[][quantity]" value="1">
             {%- capture offer_label -%}Add the pair{% if pp != blank %} · {{ pp }}{% endif %}{%- endcapture -%}
-            <button type="button" class="pairc__add" data-pairc-add
+            <button type="submit" class="pairc__add" data-pairc-add
                     data-a="{{ pva.id }}" data-b="{{ pvb.id }}"
                     data-label-offer="{{ offer_label | escape_once }}" data-label-plain="Add one of each">{% if pair_state == 'blocked' %}Add one of each{% else %}{{ offer_label }}{% endif %}</button>
-          </div>
+          </form>
           <p class="pairc__state" data-pairc-state{% if pair_state == blank %} hidden{% endif %}>
             {%- if pair_state == 'in-bag' -%}
               &#10003; {{ settings.pair_name | escape }} is in your bag. <a href="{{ routes.cart_url }}">View bag</a>
@@ -524,14 +545,6 @@
           </p>
           <p class="pairc__err" role="alert" data-pairc-err hidden></p>
           <p class="visually-hidden" role="status" aria-live="polite" data-pairc-live></p>
-          {%- if pa.variants.size > 1 -%}
-            <script type="application/json" data-pairc-thumbs>{
-              {%- for pv in pa.variants -%}
-                {%- capture pu -%}{% render 'studio-image', variant: pv, product: pa, output: 'url', url_width: 160 %}{%- endcapture -%}
-                "{{ pv.id }}":{{ pu | strip | json }}{% unless forloop.last %},{% endunless %}
-              {%- endfor -%}
-            }</script>
-          {%- endif -%}
         </div>
       {%- endif -%}
 
@@ -630,7 +643,11 @@
          picture is as large as the square allows. */
       --zv-studio-pad:0;
     }
-    .gal__slide--shot img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+    /* Pinned to the square (absolute, inset 0): as a grid item, height:100%
+       does not resolve against the slide, so a portrait file (White 625x708,
+       the HOYGI cutout 577x741) grew taller than the square and lost its
+       base to overflow:hidden. Now every packshot is contained whole. */
+    .gal__slide--shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
     /* A curated photograph or film fills its square edge to edge. */
     .gal__slide--photo{place-items:stretch;background:var(--zv-bg-sunken)}
     .gal__slide--photo .zv-media{position:absolute;inset:0}
@@ -639,7 +656,7 @@
        takes the arrow keys. 44px targets while they fit. */
     .gal__dots{display:flex;gap:var(--zv-1);justify-content:center;min-width:0}
     @media(min-width:600px){.gal__dots{display:none}}
-    .gal__dot{flex:0 1 44px;min-width:24px;height:36px;padding:0;border:0;background:none;
+    .gal__dot{flex:0 1 44px;min-width:24px;height:44px;padding:0;border:0;background:none;
       display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
     .gal__dot::after{content:"";width:6px;height:6px;border-radius:50%;
       background:var(--zv-line-input);transition:background var(--zv-d-hover) var(--zv-ease),transform var(--zv-d-hover) var(--zv-ease)}
@@ -652,7 +669,7 @@
       -webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
       box-shadow:inset 0 0 0 1px var(--zv-line);transition:box-shadow var(--zv-d-hover) var(--zv-ease)}
     @media(min-width:1100px){.gal__thumb{width:72px;height:72px}}
-    .gal__thumb img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;pointer-events:none}
+    .gal__thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply;pointer-events:none}
     .gal__thumb--photo img{object-fit:cover;mix-blend-mode:normal}
     @media (hover:hover) and (pointer:fine){ .gal__thumb:hover{box-shadow:inset 0 0 0 1px var(--zv-line-input)} }
     .gal__thumb[aria-current="true"]{box-shadow:inset 0 0 0 2px var(--zv-forest)}
@@ -693,9 +710,9 @@
     .vopt.is-on,.vopt:has(.vopt__in:checked){box-shadow:inset 0 0 0 2px var(--zv-forest);
       background:color-mix(in srgb, var(--zv-forest) 5%, var(--zv-bg-raised))}
     .vopt:has(.vopt__in:focus-visible){outline:2px solid var(--zv-focus);outline-offset:2px}
-    .vopt__sw{flex:0 0 auto;width:42px;height:42px;border-radius:var(--zv-r-sm);overflow:hidden;--zv-studio-pad:0;
+    .vopt__sw{position:relative;flex:0 0 auto;width:42px;height:42px;border-radius:var(--zv-r-sm);overflow:hidden;--zv-studio-pad:0;
       background:var(--zv-plate);display:grid;place-items:center}
-    .vopt__sw img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+    .vopt__sw img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
     .vopt__t{min-width:0;font-family:var(--zv-sans);font-size:var(--zv-t-sm);font-weight:600;line-height:1.25;color:var(--zv-text)}
     .vopt__sold{display:block;font-weight:400;font-size:var(--zv-t-fine);color:var(--zv-text-2)}
     .vopt.is-sold .vopt__sw{opacity:.55}
@@ -809,7 +826,9 @@
     .pairc__figs{display:flex;align-items:center;gap:4px}
     .pairc__plate{width:60px;height:60px;border-radius:var(--zv-r-sm);overflow:hidden;--zv-studio-pad:0;
       background:var(--zv-plate);display:grid;place-items:center}
-    .pairc__plate img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+    .pairc__plate{position:relative}
+    .pairc__pimg{position:absolute;inset:4px}
+    .pairc__plate img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
     .pairc__plus{color:var(--zv-text-2);display:grid;place-items:center}
     .pairc__plus .zicon{width:16px;height:16px}
     .pairc__txt{min-width:0}
@@ -859,7 +878,9 @@
       font-size:var(--zv-t-sm);line-height:1.45;color:var(--zv-text-2)}
     .trust2 .zicon{flex:0 0 auto;width:18px;height:18px;color:var(--zv-forest);margin-top:1px}
     .trust2 strong{font-weight:600;color:var(--zv-text)}
-    .trust2__mail{display:inline-block;padding-block:2px;color:var(--zv-text);text-decoration:underline;text-underline-offset:3px;
+    /* 44px tall target without changing the line: the padding is taken
+       back by an equal negative margin. */
+    .trust2__mail{display:inline-block;padding-block:12px;margin-block:-12px;color:var(--zv-text);text-decoration:underline;text-underline-offset:3px;
       text-decoration-color:var(--zv-line-input);overflow-wrap:anywhere}
     @media (hover:hover) and (pointer:fine){ .trust2__mail:hover{text-decoration-color:currentColor} }
     .trust2__mail:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
@@ -907,12 +928,14 @@
     .pstory__in--solo{max-width:calc(var(--zv-container-narrow) + 2 * var(--zv-gutter))}
     @media(min-width:900px){
       .pstory__in:not(.pstory__in--solo){grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(40px,5vw,80px);align-items:start}
-      .pstory__fig{position:sticky;top:96px}
     }
-    .pstory__fig{margin:0;border-radius:var(--zv-r-lg);overflow:hidden;aspect-ratio:3/2;background:var(--zv-bg)}
-    @media(min-width:900px){ .pstory__fig{aspect-ratio:4/5} }
-    .pstory__fig picture,.pstory__fig img{display:block;width:100%;height:100%}
-    .pstory__fig img{object-fit:cover}
+    /* A close-up of the product (snippets/pdp-story): the frame takes the
+       crop's own proportions; at most 360px wide on phones. */
+    .pstory__fig{position:relative;margin:0;width:100%;max-width:360px;border-radius:var(--zv-r-lg);overflow:hidden;background:var(--zv-bg)}
+    .pstory__fig img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover}
+    .pstory__fig--plate{background:var(--zv-plate-deep);--zv-studio-pad:0}
+    .pstory__fig--plate img{object-fit:contain;mix-blend-mode:multiply}
+    @media(min-width:900px){ .pstory__fig{position:sticky;top:96px;max-width:440px} }
     .pstory__list{display:grid;gap:var(--zv-6);min-width:0}
     .pstory__blk{padding-top:var(--zv-5);border-top:1px solid var(--zv-line)}
     .pstory__blk:first-child{padding-top:0;border-top:0}
@@ -1342,9 +1365,9 @@
         var errEl = pc.querySelector('[data-pairc-err]');
         var live = pc.querySelector('[data-pairc-live]');
         var pick = pc.querySelector('[data-pairc-avar]');
-        var aImg = pc.querySelector('[data-pairc-aimg]');
-        var thumbsA = {};
-        try { var tj = pc.querySelector('[data-pairc-thumbs]'); thumbsA = tj ? (JSON.parse(tj.textContent) || {}) : {}; } catch (e) { thumbsA = {}; }
+        var form = pc.querySelector('[data-pairc-act]');
+        var aInput = pc.querySelector('[data-pairc-aid]');
+        var aPics = [].slice.call(pc.querySelectorAll('[data-pairc-aimg]'));
         var aId = Number(pc.getAttribute('data-a-product')), bId = Number(pc.getAttribute('data-b-product'));
         var title = pc.getAttribute('data-title') || '';
         var name = pc.getAttribute('data-name') || 'The pair';
@@ -1360,9 +1383,14 @@
           return g >= 1 && h >= 1 && (h <= 2 || g >= h);
         };
 
+        /* The GODA option for the pair: the button, the form's own
+           items[][id] (the no-script post) and the picture all follow it. */
         var setA = function (id) {
+          id = String(id);
           add.setAttribute('data-a', id);
-          if (aImg && thumbsA[String(id)]) { aImg.removeAttribute('srcset'); aImg.src = thumbsA[String(id)]; }
+          if (aInput) aInput.value = id;
+          var has = aPics.some(function (el) { return el.getAttribute('data-pairc-aimg') === id; });
+          if (has) aPics.forEach(function (el) { el.hidden = el.getAttribute('data-pairc-aimg') !== id; });
         };
         if (pick) on(pick, 'change', function () { setA(pick.value); });
         if (pc.getAttribute('data-follow') === 'a') {
@@ -1415,7 +1443,9 @@
           if (add.getAttribute('aria-busy') !== 'true') add.textContent = blocked ? labelPlain : labelOffer;
         });
 
-        on(add, 'click', function () {
+        on(form, 'submit', function (e) {
+          if (!window.fetch) return;
+          e.preventDefault();
           if (add.getAttribute('aria-busy') === 'true') return;
           add.setAttribute('aria-busy', 'true');
           add.setAttribute('aria-disabled', 'true');
@@ -1505,7 +1535,7 @@
     { "type": "checkbox", "id": "sticky_atc", "label": "Sticky add-to-cart bar", "default": true,
       "info": "Phones and small tablets only. It appears once the real button scrolls off screen, shows the option, quantity and price it will add, and the page reserves space for it so it never covers content." },
     { "type": "paragraph", "content": "Photographs: with Theme settings > Studio images on, the gallery shows the packshots set there for this product's options; otherwise the product's own photographs from Products > Media. Either way, choosing an option shows the photograph assigned to that option." },
-    { "type": "paragraph", "content": "The quantity offer reads each product's 'Quantity offer' metafield. The pair card reads Theme settings > Offers. The story under the buy box comes from the description's own headings (Details, How to use, What's included); the accordion blocks below close it as 'Good to know'." }
+    { "type": "paragraph", "content": "The quantity offer reads each product's 'Quantity offer' metafield. The pair card reads Theme settings > Offers. The story under the buy box comes from the description's own headings (Details, How to use, What's included); the accordion blocks below close it as 'Good to know', beside the 'Story close-up' block set to the product." }
   ],
   "blocks": [
     { "type": "scene", "name": "In-use photograph",
@@ -1516,13 +1546,14 @@
         { "type": "text", "id": "image_alt", "label": "Description", "info": "What is in the picture, for screen readers." },
         { "type": "text", "id": "position", "label": "Crop", "default": "50% 50%", "info": "Where the square centres on the photograph, as x% y%." }
       ] },
-    { "type": "story_photo", "name": "Story photograph",
+    { "type": "story_photo", "name": "Story close-up",
       "settings": [
-        { "type": "paragraph", "content": "A landscape beside the product's story (What it is, How to use…). Keep it product-free: no picture of a different product, and no product composited into a scene." },
-        { "type": "product", "id": "product", "label": "Product", "info": "The page this photograph belongs to. Empty: every product page." },
-        { "type": "image_picker", "id": "image", "label": "Photograph", "info": "Wide, at least 2000 px across. Cropped 4:5 on wide screens, 3:2 on phones." },
-        { "type": "text", "id": "image_alt", "label": "Description", "info": "What is in the picture, for screen readers." },
-        { "type": "text", "id": "position", "label": "Crop point", "default": "50% 50%", "info": "Where both crops centre on the photograph, as x% y%." }
+        { "type": "paragraph", "content": "A close-up of the product beside its story (What it is, How to use…): a region of one of the makers' own packshots. Never a picture of a different product, and nothing composited into a scene." },
+        { "type": "product", "id": "product", "label": "Product", "info": "The page this picture belongs to. Empty: every product page." },
+        { "type": "image_picker", "id": "image", "label": "Packshot" },
+        { "type": "text", "id": "region", "label": "Region", "default": "0,0,1000,1000", "info": "left,top,width,height in thousandths of the picture (0,0,1000,1000 = all of it). Shown at the region's own pixels at most, never enlarged." },
+        { "type": "checkbox", "id": "plate", "label": "On the studio plate", "default": false, "info": "For packshots shot on white: the white dissolves into the warm studio plate, as in the gallery." },
+        { "type": "text", "id": "image_alt", "label": "Description", "info": "What the close-up shows, for screen readers." }
       ] },
     { "type": "accordion", "name": "Accordion",
       "settings": [

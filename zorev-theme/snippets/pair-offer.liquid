@@ -424,7 +424,7 @@
             <p class="zpr__tag">{{ settings.pair_tagline | escape }}</p>
           {%- endif -%}
           <ul class="zpr__inc" role="list">
-            <li><span class="zpr__qty">1 &times;</span> <a href="{{ pa.url }}">{{ pa.title | escape }}</a>{% if avail_a.size > 1 %}, in the option you choose{% endif %}</li>
+            <li><span class="zpr__qty">1 &times;</span> <a href="{{ pa.url }}">{{ pa.title | escape }}</a></li>
             <li><span class="zpr__qty">1 &times;</span> <a href="{{ pb.url }}">{{ pb.title | escape }}</a></li>
           </ul>
           {%- if body != blank -%}<div class="zpr__body">{{ body }}</div>{%- endif -%}

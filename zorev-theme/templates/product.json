@@ -43,18 +43,20 @@
           "type": "story_photo",
           "settings": {
             "product": "goda-pheromone-perfume-oil",
-            "image": "shopify://shop_images/zorev-v12-hero-trail-dawn.jpg",
-            "image_alt": "A narrow forest trail curving through tall firs and ferns into morning fog, with soft light coming through the trees",
-            "position": "50% 50%"
+            "image": "shopify://shop_images/3674552c-d57a-42b0-9452-2884eb0e71bb.jpg",
+            "region": "485,420,310,388",
+            "plate": true,
+            "image_alt": "Close-up of the GODA perfume oil bottle: the dark glass with the white GODA logo, below the black dropper cap"
           }
         },
         "story_hoygi": {
           "type": "story_photo",
           "settings": {
             "product": "hoygi-calcium-multi-balm",
-            "image": "shopify://shop_images/zorev-v12-road-golden-hills.jpg",
-            "image_alt": "An empty two-lane road curving through golden hills toward blue mountains in late afternoon light",
-            "position": "45% 50%"
+            "image": "shopify://shop_images/71DF8153-C556-4599-B220-04D33419A004.jpg",
+            "region": "300,60,640,800",
+            "plate": false,
+            "image_alt": "The Hoygi Calcium Multi Balm stick, twisted up, standing beside its plum box on pale stone"
           }
         },
         "scene_hoygi": {
