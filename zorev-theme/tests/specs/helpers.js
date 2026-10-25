@@ -21,7 +21,20 @@ function withPreview(path) {
 
 const STORE_HOST = new URL(process.env.BASE_URL || 'https://www.zorev.org').host;
 
+// Optional spacing between test starts (per worker), for full runs: the
+// store answers every request from this IP with HTTP 429 for ~6 minutes
+// once a run has sent a few hundred requests in a few minutes (measured
+// 2026-10-25: tripped after ~30 tests at full speed). ZV_TEST_GAP_MS=20000
+// keeps a full two-project run under it; the default (0) changes nothing.
+const TEST_GAP_MS = Number(process.env.ZV_TEST_GAP_MS || 0);
+let lastTestStart = 0;
+
 async function prep(page) {
+  if (TEST_GAP_MS > 0) {
+    const wait = lastTestStart + TEST_GAP_MS - Date.now();
+    if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    lastTestStart = Date.now();
+  }
   // Third-party beacons make "networkidle" unreachable and add nothing to
   // what is under test. Console errors from these are not the theme's.
   // The store's own dynamic requests go through transport.js (see there
@@ -33,6 +46,11 @@ async function go(page, path, opts) {
   await page.goto(withPreview(path), { waitUntil: 'domcontentloaded', ...(opts || {}) });
   await page.waitForSelector('main');
   await page.waitForLoadState('load').catch(() => {});
+  // On a draft, Shopify injects its preview bar (a top-layer popover with
+  // an iframe, bottom of the screen) that customers never see. On a phone
+  // it sits over the sticky add-to-bag bar and the lower part of the page
+  // and swallows clicks meant for them, so it is hidden for the tests.
+  if (PREVIEW) await page.addStyleTag({ content: '#PBarNextFrameWrapper,#PBarNextFrame,#preview-bar-iframe{display:none !important}' }).catch(() => {});
 }
 
 // Cart calls go through the page's own fetch, exactly as the theme's JS does.

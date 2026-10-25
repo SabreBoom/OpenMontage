@@ -118,7 +118,10 @@
     .zsc__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px 12px}
     @media(min-width:760px){.zsc__grid{gap:clamp(24px,3vw,48px)}}
 
-    .zsc__item{display:grid;gap:14px;align-content:start}
+    /* The two cards stretch to the same height (grid row); the body fills
+       what is left under the plate and the price + button sit at its foot,
+       so a description that wraps one line more never staggers the row. */
+    .zsc__item{display:grid;grid-template-rows:auto 1fr;gap:14px}
     @media(min-width:760px){.zsc__item{gap:var(--zv-5)}}
     /* Square at every width: the packshot contained on the warm stone plate
        (.zv-studio, zorev-tokens.css), never cropped. */
@@ -140,7 +143,7 @@
       .zsc__frame:active{transform:scale(var(--zv-press,.985))}
     }
 
-    .zsc__body{display:grid;gap:var(--zv-2)}
+    .zsc__body{display:flex;flex-direction:column;align-items:stretch;gap:var(--zv-2);min-width:0}
     .zsc__k{margin:0;font-size:var(--zv-t-micro);font-weight:600;letter-spacing:var(--zv-tr-caps);
       text-transform:uppercase;color:var(--zv-forest)}
     .zsc__name{margin:0;font-family:var(--zv-serif);font-weight:400;font-size:clamp(1.5rem,1.2rem + 1.4vw,2.75rem);
@@ -153,7 +156,7 @@
     .zsc__facts li:last-child{border-bottom:1px solid var(--zv-line)}
     .zsc__facts strong{color:var(--zv-text);font-weight:600}
     .zsc__facts p{margin:0;font-size:var(--zv-t-sm);color:var(--zv-text-2)}
-    .zsc__buy{display:grid;gap:var(--zv-4);margin-top:var(--zv-2)}
+    .zsc__buy{display:grid;gap:var(--zv-4);margin-top:auto;padding-top:var(--zv-2)}
     .zsc__price{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin:0;max-width:none;
       font-variant-numeric:tabular-nums}
     @media(min-width:760px){.zsc__price{gap:4px 14px}}
