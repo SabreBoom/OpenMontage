@@ -42,7 +42,6 @@
   assign offer = product.metafields.zorev.offer.value
   assign unit_one = offer.unit | default: 'item'
   assign unit_many = offer.units | default: 'items'
-  assign parts = product.description | split: '<h3>'
   assign jd = product.metafields.judgeme.review_widget_data.value
   assign rcount = jd.number_of_reviews | default: 0
   assign pa = settings.pair_product_a
@@ -591,127 +590,10 @@
 </section>
 
 {%- comment -%}
-  The product's story. Built from the product description's own sections
-  (Shopify > the product > Description: a lede, then <h3> Details, How to
-  use, What's included), so it says only what the listing says: "Details"
-  is shown as "What it is", led by the description's first paragraph. The
-  store-wide accordion blocks (shipping and returns, FAQ) close it as
-  "Good to know" and stay <details>, so they work without JavaScript.
-  Beside it on wide screens, one product-free landscape from the "Story
-  photograph" block set to this product (none: the copy runs alone).
+  The product's story (what it is, how to use, what's included, good to
+  know) beside a close-up of the product: snippets/pdp-story.
 {%- endcomment -%}
-{%- liquid
-  assign story_pick = nil
-  for block in section.blocks
-    if block.type == 'story_photo' and block.settings.image != blank
-      if block.settings.product == blank or block.settings.product.id == product.id
-        assign story_pick = block
-        break
-      endif
-    endif
-  endfor
-  assign acc_blocks = section.blocks | where: 'type', 'accordion'
-  assign has_details = false
-  if product.description contains '<h3>Details</h3>'
-    assign has_details = true
-  endif
-  assign has_story = false
-  if parts.size > 1 or parts[0] != blank or acc_blocks.size > 0
-    assign has_story = true
-  endif
--%}
-{%- if has_story -%}
-<div class="pstory">
-  <div class="wrap pstory__in{% unless story_pick %} pstory__in--solo{% endunless %}">
-    {%- if story_pick -%}
-      {%- liquid
-        assign ph = story_pick.settings.image
-        assign pos = story_pick.settings.position | default: '50% 50%' | split: ' '
-        assign px = pos[0] | remove: '%' | strip | plus: 0
-        assign py = pos[1] | default: '50%' | remove: '%' | strip | plus: 0
-
-        comment
-          Two region crops of the original, so the delivered pixels are the
-          frame's shape (no cover-crop over-fetch): 4:5 beside the copy on
-          wide screens, 3:2 above it on phones, both centred on the crop
-          point set in the block. The widths assume a photograph of at least
-          2000 px across (the block's own instruction); Shopify never
-          enlarges a crop beyond its source.
-        endcomment
-        assign cap_w = ph.height | times: 0.8 | round
-        assign d_w = ph.width | at_most: cap_w
-        assign cap_h = d_w | times: 1.25 | round
-        assign d_h = ph.height | at_most: cap_h
-        assign d_l = ph.width | minus: d_w | times: px | divided_by: 100 | round
-        assign d_t = ph.height | minus: d_h | times: py | divided_by: 100 | round
-        assign cap_w = ph.height | times: 1.5 | round
-        assign m_w = ph.width | at_most: cap_w
-        assign cap_h = m_w | divided_by: 1.5 | round
-        assign m_h = ph.height | at_most: cap_h
-        assign m_l = ph.width | minus: m_w | times: px | divided_by: 100 | round
-        assign m_t = ph.height | minus: m_h | times: py | divided_by: 100 | round
-      -%}
-      <figure class="pstory__fig" {{ story_pick.shopify_attributes }}>
-        <picture>
-          <source media="(min-width: 900px)" sizes="(min-width: 1240px) 440px, 36vw"
-                  srcset="{{ ph | image_url: width: 440, height: 550, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 440w, {{ ph | image_url: width: 660, height: 825, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 660w, {{ ph | image_url: width: 880, height: 1100, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 880w, {{ ph | image_url: width: 1100, height: 1375, crop: 'region', crop_left: d_l, crop_top: d_t, crop_width: d_w, crop_height: d_h }} 1100w">
-          <img src="{{ ph | image_url: width: 720, height: 480, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }}"
-               srcset="{{ ph | image_url: width: 480, height: 320, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 480w, {{ ph | image_url: width: 720, height: 480, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 720w, {{ ph | image_url: width: 960, height: 640, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 960w, {{ ph | image_url: width: 1200, height: 800, crop: 'region', crop_left: m_l, crop_top: m_t, crop_width: m_w, crop_height: m_h }} 1200w"
-               sizes="calc(100vw - 40px)"
-               width="720" height="480"
-               alt="{{ story_pick.settings.image_alt | default: ph.alt | escape }}"
-               loading="lazy" decoding="async">
-        </picture>
-      </figure>
-    {%- endif -%}
-
-    <div class="pstory__list">
-      {%- unless has_details -%}
-        {%- if parts[0] != blank -%}
-          <div class="pstory__blk" data-zv-reveal>
-            <h2 class="pstory__h">What it is</h2>
-            <div class="pstory__b rte">{{ parts[0] }}</div>
-          </div>
-        {%- endif -%}
-      {%- endunless -%}
-      {%- for part in parts offset: 1 -%}
-        {%- liquid
-          assign bits = part | split: '</h3>'
-          assign t_raw = bits[0] | strip_html | strip
-          assign t_down = t_raw | downcase
-          assign body = part | remove_first: bits[0] | remove_first: '</h3>'
-          assign t_show = t_raw
-          if t_down == 'details'
-            assign t_show = 'What it is'
-          endif
-        -%}
-        <div class="pstory__blk" data-zv-reveal>
-          <h2 class="pstory__h">{{ t_show | escape_once }}</h2>
-          <div class="pstory__b rte">
-            {%- if t_down == 'details' and parts[0] != blank -%}{{ parts[0] }}{%- endif -%}
-            {{ body }}
-          </div>
-        </div>
-      {%- endfor -%}
-      {%- if acc_blocks.size > 0 -%}
-        <div class="pstory__blk" data-zv-reveal>
-          <h2 class="pstory__h">Good to know</h2>
-          <div class="accs">
-            {%- for block in acc_blocks -%}
-              {%- if block.settings.title != blank -%}
-                <details class="acc" {{ block.shopify_attributes }}>
-                  <summary class="acc__sum"><h3 class="acc__h">{{ block.settings.title | escape }}</h3><span class="acc__ic" aria-hidden="true"></span></summary>
-                  <div class="acc__body rte">{{ block.settings.content }}</div>
-                </details>
-              {%- endif -%}
-            {%- endfor -%}
-          </div>
-        </div>
-      {%- endif -%}
-    </div>
-  </div>
-</div>
-{%- endif -%}
+{% render 'pdp-story', product: product, blocks: section.blocks %}
 
   <style>
     .zpdp{padding-top:clamp(12px,1.6vw,24px)}

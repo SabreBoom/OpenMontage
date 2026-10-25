@@ -1,0 +1,118 @@
+{%- comment -%}
+  The product's story band, under the buy box (sections/main-product).
+
+    {% render 'pdp-story', product: product, blocks: section.blocks %}
+
+  Built from the product description's own sections (Shopify > the product >
+  Description: a lede, then <h3> Details, How to use, What's included), so
+  it says only what the listing says: "Details" is shown as "What it is",
+  led by the description's first paragraph. The section's accordion blocks
+  (shipping and returns, FAQ) close it as "Good to know" and stay
+  <details>, so they work without JavaScript. Headings are h2 (blocks) and
+  h3 (accordions).
+
+  Beside the copy (above it on phones): a close-up of the product itself,
+  from the "Story photograph" block set to this product — a region of one of
+  the makers' own packshots, cut on Shopify's CDN (image_url crop: 'region'),
+  never enlarged past the region's own pixels. "On the studio plate" puts a
+  packshot shot on white on the warm plate (.zv-studio, multiply), the same
+  ground as the gallery. No block for the product: the copy runs alone.
+
+  Region: "left,top,width,height" in thousandths of the photograph, so the
+  crop holds if the file is re-uploaded at another size.
+{%- endcomment -%}
+{%- liquid
+  assign parts = product.description | split: '<h3>'
+  assign pick = nil
+  for block in blocks
+    if block.type == 'story_photo' and block.settings.image != blank
+      if block.settings.product == blank or block.settings.product.id == product.id
+        assign pick = block
+        break
+      endif
+    endif
+  endfor
+  assign acc_blocks = blocks | where: 'type', 'accordion'
+  assign has_details = false
+  if product.description contains '<h3>Details</h3>'
+    assign has_details = true
+  endif
+-%}
+{%- if parts.size > 1 or parts[0] != blank or acc_blocks.size > 0 -%}
+<div class="pstory">
+  <div class="wrap pstory__in{% unless pick %} pstory__in--solo{% endunless %}">
+    {%- if pick -%}
+      {%- liquid
+        assign ph = pick.settings.image
+        assign rg = pick.settings.region | default: '0,0,1000,1000' | split: ','
+        assign rl = rg[0] | strip | plus: 0
+        assign rt = rg[1] | strip | plus: 0
+        assign rw = rg[2] | default: 1000 | strip | plus: 0
+        assign rh = rg[3] | default: 1000 | strip | plus: 0
+        assign cl = ph.width | times: rl | divided_by: 1000
+        assign ct = ph.height | times: rt | divided_by: 1000
+        assign room_w = ph.width | minus: cl
+        assign room_h = ph.height | minus: ct
+        assign cw = ph.width | times: rw | divided_by: 1000 | at_most: room_w | at_least: 1
+        assign ch = ph.height | times: rh | divided_by: 1000 | at_most: room_h | at_least: 1
+        assign ladder = '360,480,640,800,1000' | split: ','
+        assign src_w = cw | at_most: 640
+        assign src_h = ch | times: src_w | divided_by: cw
+      -%}
+      <figure class="pstory__fig{% if pick.settings.plate %} pstory__fig--plate zv-studio{% endif %}" style="aspect-ratio: {{ cw }} / {{ ch }}" {{ pick.shopify_attributes }}>
+        <img src="{{ ph | image_url: width: src_w, crop: 'region', crop_left: cl, crop_top: ct, crop_width: cw, crop_height: ch }}"
+             srcset="{%- for w in ladder -%}{%- assign wn = w | plus: 0 -%}{%- if wn < cw -%}{{ ph | image_url: width: wn, crop: 'region', crop_left: cl, crop_top: ct, crop_width: cw, crop_height: ch }} {{ wn }}w, {% endif -%}{%- endfor -%}{{ ph | image_url: width: cw, crop: 'region', crop_left: cl, crop_top: ct, crop_width: cw, crop_height: ch }} {{ cw }}w"
+             sizes="(min-width: 1240px) 440px, (min-width: 900px) 36vw, min(calc(100vw - 40px), 360px)"
+             width="{{ src_w }}" height="{{ src_h }}"
+             alt="{{ pick.settings.image_alt | default: product.title | escape }}"
+             loading="lazy" decoding="async">
+      </figure>
+    {%- endif -%}
+
+    <div class="pstory__list">
+      {%- unless has_details -%}
+        {%- if parts[0] != blank -%}
+          <div class="pstory__blk" data-zv-reveal>
+            <h2 class="pstory__h">What it is</h2>
+            <div class="pstory__b rte">{{ parts[0] }}</div>
+          </div>
+        {%- endif -%}
+      {%- endunless -%}
+      {%- for part in parts offset: 1 -%}
+        {%- liquid
+          assign bits = part | split: '</h3>'
+          assign t_raw = bits[0] | strip_html | strip
+          assign t_down = t_raw | downcase
+          assign body = part | remove_first: bits[0] | remove_first: '</h3>'
+          assign t_show = t_raw
+          if t_down == 'details'
+            assign t_show = 'What it is'
+          endif
+        -%}
+        <div class="pstory__blk" data-zv-reveal>
+          <h2 class="pstory__h">{{ t_show | escape_once }}</h2>
+          <div class="pstory__b rte">
+            {%- if t_down == 'details' and parts[0] != blank -%}{{ parts[0] }}{%- endif -%}
+            {{ body }}
+          </div>
+        </div>
+      {%- endfor -%}
+      {%- if acc_blocks.size > 0 -%}
+        <div class="pstory__blk" data-zv-reveal>
+          <h2 class="pstory__h">Good to know</h2>
+          <div class="accs">
+            {%- for block in acc_blocks -%}
+              {%- if block.settings.title != blank -%}
+                <details class="acc" {{ block.shopify_attributes }}>
+                  <summary class="acc__sum"><h3 class="acc__h">{{ block.settings.title | escape }}</h3><span class="acc__ic" aria-hidden="true"></span></summary>
+                  <div class="acc__body rte">{{ block.settings.content }}</div>
+                </details>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+{%- endif -%}

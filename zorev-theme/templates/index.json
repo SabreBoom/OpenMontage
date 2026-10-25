@@ -203,7 +203,10 @@
             "image": "shopify://shop_images/zorev-v12-road-golden-hills.jpg",
             "image_alt": "An empty two-lane road curving through golden hills toward blue mountains in late afternoon light",
             "position": "50% 50%",
-            "link": ""
+            "link": "",
+            "grade": "natural",
+            "region": "0,96,2400,1600",
+            "region_mobile": "483,0,1434,1792"
           }
         },
         "m2": {
@@ -215,7 +218,9 @@
             "image": "shopify://shop_images/8C64E5DB-41A4-4F4E-B7C5-D3CAEC464CFF.jpg",
             "image_alt": "A river valley between granite cliffs at dawn, pink light behind the peaks",
             "position": "50% 50%",
-            "link": ""
+            "link": "",
+            "grade": "soften",
+            "region_mobile": "342,0,785,981"
           }
         },
         "m3": {
@@ -227,7 +232,10 @@
             "image": "shopify://shop_images/zorev-v12-trail-moss-2x.jpg",
             "image_alt": "Sunlight falling through a dark forest onto mossy rocks",
             "position": "50% 60%",
-            "link": ""
+            "link": "",
+            "grade": "lift",
+            "region": "0,700,1536,1024",
+            "region_mobile": "0,499,1536,1920"
           }
         },
         "m4": {
@@ -240,7 +248,9 @@
             "image_alt": "Sunglasses, an espresso cup and a folded map on a cafe table by a window",
             "position": "41% 55%",
             "link": "",
-            "region": "40,180,1935,1290"
+            "region": "40,180,1935,1290",
+            "grade": "natural",
+            "region_mobile": "624,0,1229,1536"
           }
         }
       },
