@@ -49,15 +49,15 @@
         assign rt = rg[1] | strip | plus: 0
         assign rw = rg[2] | default: 1000 | strip | plus: 0
         assign rh = rg[3] | default: 1000 | strip | plus: 0
-        assign cl = ph.width | times: rl | divided_by: 1000
-        assign ct = ph.height | times: rt | divided_by: 1000
+        assign cl = ph.width | times: rl | divided_by: 1000 | floor
+        assign ct = ph.height | times: rt | divided_by: 1000 | floor
         assign room_w = ph.width | minus: cl
         assign room_h = ph.height | minus: ct
-        assign cw = ph.width | times: rw | divided_by: 1000 | at_most: room_w | at_least: 1
-        assign ch = ph.height | times: rh | divided_by: 1000 | at_most: room_h | at_least: 1
+        assign cw = ph.width | times: rw | divided_by: 1000 | floor | at_most: room_w | at_least: 1
+        assign ch = ph.height | times: rh | divided_by: 1000 | floor | at_most: room_h | at_least: 1
         assign ladder = '360,480,640,800,1000' | split: ','
         assign src_w = cw | at_most: 640
-        assign src_h = ch | times: src_w | divided_by: cw
+        assign src_h = ch | times: src_w | divided_by: cw | floor
       -%}
       <figure class="pstory__fig{% if pick.settings.plate %} pstory__fig--plate zv-studio{% endif %}" style="aspect-ratio: {{ cw }} / {{ ch }}" {{ pick.shopify_attributes }}>
         <img src="{{ ph | image_url: width: src_w, crop: 'region', crop_left: cl, crop_top: ct, crop_width: cw, crop_height: ch }}"

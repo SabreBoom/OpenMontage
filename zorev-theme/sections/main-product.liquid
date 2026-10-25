@@ -79,9 +79,19 @@
     endif
   endfor
   assign tiers_plain = false
+  assign hide_auto = ''
+  assign hide_bag = ' hidden'
   if in_bag_qty > 0
     assign tiers_plain = true
+    assign hide_auto = ' hidden'
+    assign hide_bag = ''
   endif
+  assign atc_dis = ''
+  assign atc_txt = 'Add to bag'
+  unless v.available
+    assign atc_dis = ' disabled'
+    assign atc_txt = 'Sold out'
+  endunless
 
   comment
     Studio images (Theme settings > Studio images): slot N pairs a numeric
@@ -401,17 +411,12 @@
             </div>
           {%- endif -%}
 
-          <button class="btn btn--block pdp__atc" type="submit" data-add
-            {% unless v.available %}disabled{% endunless %}>
-            {% if v.available %}Add to bag{% else %}Sold out{% endif %}
-          </button>
+          <button class="btn btn--block pdp__atc" type="submit" data-add{{ atc_dis }}>{{ atc_txt }}</button>
           <p class="atc__err" role="alert" data-atc-error hidden></p>
         {%- endform -%}
-        {%- if offer.breaks.size > 0 or show_pair -%}
-          <p class="pdp__note" data-note-auto{% if tiers_plain %} hidden{% endif %}>{% render 'zicon', name: 'check' %}<span>Savings are applied automatically in your bag. No code.</span></p>
-        {%- endif -%}
         {%- if offer.breaks.size > 0 -%}
-          <p class="pdp__note" data-note-bag{% unless tiers_plain %} hidden{% endunless %}>{% render 'zicon', name: 'check' %}<span>Savings are worked out in your bag.</span></p>
+          <p class="pdp__note" data-note-auto{{ hide_auto }}>{% render 'zicon', name: 'check' %}<span>Savings are applied automatically in your bag. No code.</span></p>
+          <p class="pdp__note" data-note-bag{{ hide_bag }}>{% render 'zicon', name: 'check' %}<span>Savings are worked out in your bag.</span></p>
         {%- endif -%}
       </div>
 
@@ -577,16 +582,13 @@
       <div class="satc" data-zsatc aria-hidden="true">
         <div class="satc__in">
           <div class="satc__meta">
-            <p class="satc__t{% if multi %} satc__t--opt{% endif %}"><span class="satc__name">{{ product.vendor | upcase | escape }}</span>{% if multi %}<span class="satc__sep"> &middot; </span><span data-satc-opt>{{ v_label | strip }}</span>{% endif %}</p>
+            <p class="satc__t"><span class="satc__name">{{ product.vendor | upcase | escape }}</span><span class="satc__opt" data-satc-opt>{{ v_label | strip }}</span></p>
             <p class="satc__p"><span data-satc-sum>{{ v.price | money_without_trailing_zeros }}</span></p>
           </div>
           {%- form 'product', product, id: 'zpf-sticky' -%}
             <input type="hidden" name="id" value="{{ v.id }}">
             <input type="hidden" name="quantity" value="1" data-qo-mirror>
-            <button class="btn satc__btn" type="submit" data-add
-              {% unless v.available %}disabled{% endunless %}>
-              {% if v.available %}Add to bag{% else %}Sold out{% endif %}
-            </button>
+            <button class="btn satc__btn" type="submit" data-add{{ atc_dis }}>{{ atc_txt }}</button>
             <p class="atc__err" role="alert" data-atc-error hidden></p>
           {%- endform -%}
         </div>
@@ -909,7 +911,8 @@
     .satc__btn{flex:0 0 auto;padding-inline:22px;white-space:nowrap}
     /* On a narrow phone the option is what matters: the product name is
        already the page's title. */
-    @media(max-width:420px){ .satc__t--opt .satc__name,.satc__t--opt .satc__sep{display:none} }
+    .satc__opt:not(:empty)::before{content:" \00B7  "}
+    @media(max-width:420px){ .satc__t:has(.satc__opt:not(:empty)) .satc__name{display:none} .satc__opt::before{content:none !important} }
     .satc__in form{display:flex;flex:0 0 auto}
 
     .pdp .btn[disabled], .satc .btn[disabled]{
