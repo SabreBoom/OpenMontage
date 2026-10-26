@@ -207,6 +207,55 @@ test.describe('commerce: the pair', () => {
     expect(discountTitles(j)).toContain(PAIR);
     await expect(drawer.locator('[data-cd-subtotal]')).toContainText(usd(j.total_price));
   });
+
+  // The product page's pair card is a real form (items[][id]) that the
+  // page's script intercepts: one /cart/add.js with the option on screen
+  // (GODA page) or the one chosen in the card (HOYGI page) plus HOYGI.
+  test('product page pair card: one add of the option shown + HOYGI, Shopify charges $47, then the card says it is in the bag', async ({ page }, testInfo) => {
+    // GODA page: the card follows the option picked above it
+    await go(page, '/products/' + GODA.handle);
+    const white = page.locator(`.vopt__in[data-variant-id="${GODA.white}"]`);
+    await page.locator('.vopt', { has: white }).click();
+    await expect(white).toBeChecked();
+    let card = page.locator('[data-pairc]');
+    let add = card.locator('[data-pairc-add]');
+    await expect(add).toHaveText('Add the pair · $47');
+    await expect(add).toHaveAttribute('data-a', String(GODA.white));
+    let posts = watchAdds(page);
+    await add.click();
+    await expect(page.locator('[data-cart-drawer]')).toHaveClass(/is-open/);
+    await expect.poll(() => posts.length).toBe(1);
+    await page.waitForTimeout(1200);
+    expect(posts.length, 'one add per click').toBe(1);
+    expect(JSON.parse(posts[0].body)).toEqual({ items: [{ id: GODA.white, quantity: 1 }, { id: HOYGI.id, quantity: 1 }] });
+    let j = await cart(page);
+    record(testInfo, 'GODA PDP pair card "Add the pair · $47" (White)', j);
+    expect(byVariant(j)).toEqual({ [GODA.white]: 1, [HOYGI.id]: 1 });
+    expect(j.total_price).toBe(4700);
+    expect(discountTitles(j)).toContain(PAIR);
+    await expect(card).toHaveAttribute('data-state', 'in-bag');
+
+    // HOYGI page, fresh bag: the GODA option is chosen in the card
+    await clearCart(page);
+    await go(page, '/products/' + HOYGI.handle);
+    card = page.locator('[data-pairc]');
+    add = card.locator('[data-pairc-add]');
+    await expect(card).not.toHaveAttribute('data-state', /.+/);
+    await card.locator('[data-pairc-avar]').selectOption(String(GODA.neutral));
+    await expect(add).toHaveAttribute('data-a', String(GODA.neutral));
+    await expect(add).toHaveText('Add the pair · $47');
+    posts = watchAdds(page);
+    await add.click();
+    await expect(page.locator('[data-cart-drawer]')).toHaveClass(/is-open/);
+    await expect.poll(() => posts.length).toBe(1);
+    await page.waitForTimeout(1200);
+    expect(posts.length, 'one add per click').toBe(1);
+    j = await cart(page);
+    record(testInfo, 'HOYGI PDP pair card "Add the pair · $47" (Neutral chosen in card)', j);
+    expect(byVariant(j)).toEqual({ [GODA.neutral]: 1, [HOYGI.id]: 1 });
+    expect(j.total_price).toBe(4700);
+    expect(discountTitles(j)).toContain(PAIR);
+  });
 });
 
 test.describe('commerce: cart page', () => {
