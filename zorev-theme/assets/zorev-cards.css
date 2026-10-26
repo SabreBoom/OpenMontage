@@ -18,32 +18,34 @@
   gap: var(--zv-4);
   text-decoration: none;
   color: inherit;
-  border-radius: var(--zv-r-md);
+  border-radius: var(--zv-r-lg);
+  -webkit-tap-highlight-color: transparent;
 }
 /* one ring around the whole card, not a ring around the text node */
 .zcard__link:focus-visible { outline: 2px solid var(--zv-focus); outline-offset: 4px; }
 
 /* ---- media ---------------------------------------------------------------
    aspect-ratio reserves the box before the image loads, so the grid does not
-   jump. The catalogue is square (1254x1254), so 1/1 is the true ratio and
-   nothing gets cropped.                                                    */
+   jump. The figure is the studio plate (the same warm stone as .zv-studio,
+   which the snippet may add), so a maker's packshot shot on white sits on
+   the plate rather than in a white box. Same 12px radius as every photo. */
 .zcard__fig {
   position: relative;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  border-radius: var(--zv-r-md);
-  /* White under a white-ground product shot, with the shared plate edge —
-     a faint rim and a soft shadow — so it reads as a print on the page. */
-  background: var(--zv-white);
-  box-shadow: var(--zv-plate-edge);
+  border-radius: var(--zv-r-lg);
+  background: var(--zv-plate);
+  isolation: isolate;
 }
 .zcard__img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
-  transition: transform var(--zv-d-reveal) var(--zv-ease),
+  transition: transform var(--zv-d-zoom) var(--zv-ease-reveal),
               opacity var(--zv-d-ui) var(--zv-ease);
 }
+/* A packshot on the plate is contained, never cropped. */
+.zv-studio .zcard__img, .zcard__fig.zv-studio .zcard__img { object-fit: contain; }
 .zcard__img--alt { opacity: 0; }
 .zcard__blank { position: absolute; inset: 0; background: var(--zv-bg-sunken); }
 
@@ -52,9 +54,7 @@
    homepage and product page, fading into the page with no frame. The hover
    photograph, when there is one, covers it. */
 .zcard__fig--stage { background: none; box-shadow: none; }
-/* a fixed-size cell, so the picture's height:100% resolves and it can
-   never size itself by width and run off the bottom of the square */
-.zcard__obj { position: absolute; inset: 0; z-index: 1; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: end center;
+.zcard__obj { position: absolute; inset: 0; z-index: 1; display: grid; place-items: end center;
   padding: 9% 14% 12%; transition: transform var(--zv-d-reveal) var(--zv-ease); }
 .zcard__obj .zv-cut { width: auto; max-width: 100%; height: 100%; max-height: 100%; }
 .zcard__shadow { bottom: 8%; width: 54%; height: 7%; z-index: 0; }
@@ -65,7 +65,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .zcard:hover .zcard__img { transform: scale(1.035); }
+  .zcard:hover .zcard__img { transform: scale(var(--zv-zoom)); }
   /* only meaningful when a second image exists — the snippet omits the
      element entirely for a one-image product, so there is nothing to fade to */
   .zcard:hover .zcard__img--alt { opacity: 1; }
@@ -139,8 +139,15 @@
    flight, so the disabled state is the one that actually occurs. */
 .zcard__add:disabled { cursor: progress; opacity: .7; }
 
+/* A finger gets an answer: the picture gives a little while pressed. */
+@media (hover: none) {
+  .zcard__fig { transition: transform var(--zv-d-tap) var(--zv-ease); }
+  .zcard__link:active .zcard__fig { transform: scale(var(--zv-press)); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .zcard__img { transition-property: opacity; }
+  .zcard__link:active .zcard__fig { transform: none; }
   .zcard:hover .zcard__img, .zcard:hover .zcard__obj { transform: none; }
   .zcard__add { transform: none; }
 }
@@ -157,6 +164,13 @@
 /* With a two-product catalogue a 4-up grid leaves two dead columns, so the
    two-item case is centred and capped rather than stretched. */
 .zgrid--pair { max-width: 860px; margin-inline: auto; }
+/* ...and the collection page's head (eyebrow, H1, description) stands in
+   the same 860px column, so the title and the cards share one left edge
+   (V15 QA MINOR 2). The head and the grid are sibling blocks of the same
+   section (sections/main-collection.liquid: .zcol, then .zcol__list), with
+   the pair band between them on the pair page. Browsers without :has()
+   keep the head on the container edge, as before. */
+.zcol:has(~ .zcol__list .zgrid--pair) .zsec__head { max-width: 860px; margin-inline: auto; }
 
 /* ==========================================================================
    Section furniture shared by the homepage bands.

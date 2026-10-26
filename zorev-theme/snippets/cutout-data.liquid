@@ -1,34 +1,77 @@
 {%- comment -%}
-  The clean cutouts as data, for the scripts that paint product images
-  without Liquid: the cart drawer (which paints lines from /cart.js). One
-  small JSON per page — product id -> variant id -> image URL — read by
-  zorev.js. Products without cutouts are simply absent, and the drawer then
-  uses the line's own Shopify image as before.
+  Product pictures and option names as data, for the scripts that paint
+  products without Liquid: the cart drawer (lines painted from /cart.js),
+  its pair offer, and the cart page's pair chooser. One small JSON per page,
+  read by assets/zorev.js (window.ZorevCart.media(variantId)):
+
+    { "studio": true|false,
+      "v": { "<variant id>": { "p": <product id>, "src": "<url>|null",
+                               "label": "Black" } } }
+
+  src   snippets/studio-image's choice for the option, as a URL at 240w (a
+        72 px thumbnail at 3x, never upscaled): the maker's studio packshot
+        when Theme settings > Studio images is on and a slot names this
+        variant (for HOYGI its clean cutout slot, see below), else the
+        variant's own photograph, else the product's featured image. null
+        when there is no picture: the drawer then uses the line's own image.
+  label snippets/zvlabel's name for the option ("Citrus (men's)"), empty for
+        a product with a single variant, so the drawer, the cart page and the
+        product page all name an option the same way.
 
   Bounded to the first 24 products: this catalogue has two, and the loop
   must never become the slow part of a page.
 {%- endcomment -%}
+{%- liquid
+  assign studio_on = false
+  if settings.studio_mode == 'on'
+    assign studio_on = true
+  endif
+  comment
+    Thumbnail slot. HOYGI (Theme settings > Offers > pair product B) has
+    the maker's balm photo in its first studio slot (a busy still life of
+    leaves and stone, unreadable at 72 px) and the clean stick-and-box
+    cutout in its second, so thumbnails use the second slot whenever that
+    variant has one. Every other option keeps its first slot (GODA: one
+    packshot per option). cut_ids lists ",<variant id>," for those.
+  endcomment
+  assign cut_ids = ','
+  assign pbx = settings.pair_product_b
+  if studio_on and pbx != blank
+    for pv in pbx.variants
+      assign xid = pv.id | append: ''
+      assign hits = 0
+      for n in (1..10)
+        assign kv = 'studio_' | append: n | append: '_variant'
+        assign ki = 'studio_' | append: n | append: '_image'
+        assign sv = settings[kv] | append: '' | strip
+        if sv == xid and settings[ki] != blank
+          assign hits = hits | plus: 1
+        endif
+      endfor
+      if hits > 1
+        assign cut_ids = cut_ids | append: xid | append: ','
+      endif
+    endfor
+  endif
+-%}
 <script type="application/json" data-cutout-map>
-{
-{%- assign first_p = true -%}
+{"studio":{{ studio_on | json }},"v":{
+{%- assign first_v = true -%}
 {%- for p in collections.all.products limit: 24 -%}
-  {%- assign cuts = p.metafields.zorev.cutouts.value -%}
-  {%- if cuts.size > 0 -%}
-    {%- comment -%}
-      The file list iterates but does not index (cuts[i] is not an image),
-      so the URLs are resolved once in a loop into a plain array first.
-    {%- endcomment -%}
-    {%- capture cut_urls -%}{%- for c in cuts -%}{{ c | image_url: width: 160 }}{%- unless forloop.last -%}|{%- endunless -%}{%- endfor -%}{%- endcapture -%}
-    {%- assign cut_urls = cut_urls | split: '|' -%}
-    {%- unless first_p -%},{%- endunless -%}{%- assign first_p = false -%}
-    "{{ p.id }}": {
-    {%- for v in p.variants -%}
-      {%- assign ci = forloop.index0 -%}
-      {%- if ci >= cut_urls.size -%}{%- assign ci = cut_urls.size | minus: 1 -%}{%- endif -%}
-      "{{ v.id }}": {{ cut_urls[ci] | json }}{%- unless forloop.last -%},{%- endunless -%}
-    {%- endfor -%}
-    }
-  {%- endif -%}
+  {%- for v in p.variants -%}
+    {%- liquid
+      assign ti = 0
+      assign needle = ',' | append: v.id | append: ','
+      if cut_ids contains needle
+        assign ti = 1
+      endif
+    -%}
+    {%- capture src -%}{% render 'studio-image', variant: v, product: p, index: ti, output: 'url', url_width: 240 %}{%- endcapture -%}
+    {%- assign src = src | strip -%}
+    {%- capture lbl -%}{%- if p.variants.size > 1 -%}{% render 'zvlabel', t: v.title %}{%- endif -%}{%- endcapture -%}
+    {%- unless first_v -%},{%- endunless -%}{%- assign first_v = false -%}
+    "{{ v.id }}":{"p":{{ p.id }},"src":{% if src != blank %}{{ src | json }}{% else %}null{% endif %},"label":{{ lbl | strip | json }}}
+  {%- endfor -%}
 {%- endfor -%}
-}
+}}
 </script>

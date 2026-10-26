@@ -114,9 +114,17 @@ async function shoot(browser, w, name, spec) {
         tiles.push({ file, y: at });
         if (i === 0) {
           await page.evaluate(() => {
+            // Hide what would repeat in every tile: fixed layers and bars stuck
+            // to the top edge (the header). In-flow sticky content such as a
+            // product photo column or a cart summary is pinned in place instead,
+            // so it is captured once where it sits rather than blanked.
             for (const el of document.querySelectorAll('body *')) {
-              const p = getComputedStyle(el).position;
-              if (p === 'fixed' || p === 'sticky') el.style.setProperty('visibility', 'hidden', 'important');
+              const cs = getComputedStyle(el);
+              if (cs.position === 'fixed' || (cs.position === 'sticky' && parseFloat(cs.top) <= 0)) {
+                el.style.setProperty('visibility', 'hidden', 'important');
+              } else if (cs.position === 'sticky') {
+                el.style.setProperty('position', 'static', 'important');
+              }
             }
           });
         }

@@ -3,24 +3,36 @@
    One source of truth for colour, type, space, depth, motion and breakpoints.
    Loaded before zorev.css so the theme can still override anything.
 
-   Every colour pair used for text in this file has been measured against
-   WCAG 2.1 contrast. Three values from the original palette did not pass and
-   are handled explicitly rather than silently shipped:
+   V15 (Oct 2026) is the LIGHT edition again: warm white paper and soft
+   stone grounds, charcoal-green ink, deep forest for the one coloured band
+   (the Pair) and the announcement, and two dark photo bands (hero, closer).
+   The token names keep their light meaning (as in V12):
+     --zv-ink    near-black charcoal-green TEXT
+     --zv-warm   warm white PAGE ground (and light text on dark fills)
+     --zv-white  the raised plate (#FBFAF7, not sterile white)
+     --zv-forest the brand forest #26372C (accent, primary button)
+   Scopes: .zv-dark = photo bands, .zv-forest = the Pair band. Both only set
+   tokens; the section paints itself with var(--zv-bg).
 
-     MOSS  #78846D on warm white = 3.53:1  -> fails body text.
-           Kept as a DECORATIVE token only. --zv-moss-text (#68725F, 4.51:1)
-           and --zv-moss-strong (#4D5446, 7.02:1) exist for text use.
-     BORDER #D9D8D1 on warm white = 1.28:1 -> decorative hairline only.
-           Form fields and other meaningful boundaries use
-           --zv-line-input (#8D8C88, 3.01:1) to satisfy WCAG 1.4.11.
-     FOCUS  forest on warm white = 11.26:1 but on ink only 1.48:1.
-           The focus ring therefore FLIPS: forest on light grounds, sand on
-           dark ones. A single ring colour cannot pass on both.
+   Rollback: Theme settings > Brand > Colour edition = Dark puts
+   <html class="zv-ed-dark">, which restores the V14 dark token values at
+   the end of this file. No section code changes.
+
+   Contrast, WCAG 2.1 (measured on warm #F5F2EC / stone #ECE7DE / stone-2
+   #E3DDD2):
+     ink 14.9 / 13.5 / 12.3   text-2 9.1 / 8.2 / 7.5   muted 5.8 / 5.3 / 4.8
+     forest 11.3 / 10.2 / 9.3 olive 5.8 / 5.2 / 4.8    moss-text 5.2 / 4.7 (not on stone-2)
+     moss-strong 7.0 / 6.4 / 5.8
+     MOSS #78846D is DECORATIVE only. LINE #DAD4C9 is a decorative hairline;
+     fields and real boundaries use --zv-line-input (3.7 / 3.4 / 3.1).
+     FOCUS flips: forest on light grounds, sand inside .zv-dark/.zv-forest.
    ========================================================================== */
 
 /* Fallback faces sized to the brand fonts, so text barely reflows when
-   Newsreader and Public Sans arrive (measured on the homepage at 390 px:
-   up to 89 px of shift below the fold without these, 29 px with). */
+   Newsreader and Public Sans arrive (the V14 hero copy moved 17 px on the
+   swap; measured on the homepage at 390 px in V12: 89 px of shift below the
+   fold without these, 29 px with). The brand fonts themselves are
+   self-hosted and declared in layout/theme.liquid. */
 @font-face { font-family: "Newsreader Fallback"; src: local("Georgia");
   size-adjust: 95%; ascent-override: 77%; descent-override: 28%; line-gap-override: 0%; }
 @font-face { font-family: "Newsreader Fallback Noto"; src: local("Noto Serif"), local("NotoSerif");
@@ -29,33 +41,51 @@
   size-adjust: 105%; ascent-override: 90.5%; descent-override: 21.4%; line-gap-override: 0%; }
 
 :root {
-  /* ---- raw palette -------------------------------------------------- */
-  --zv-ink:         #101310;   /* near-black, green cast          */
-  --zv-charcoal:    #171B18;
-  --zv-forest:      #26372C;   /* deep accent, 11.26:1 on warm    */
-  --zv-olive:       #53634B;   /*  5.76:1 on warm                 */
-  --zv-moss:        #78846D;   /* DECORATIVE ONLY — 3.53:1        */
-  --zv-moss-text:   #68725F;   /*  4.51:1 on warm — AA body       */
-  --zv-moss-strong: #4D5446;   /*  7.02:1 on warm — AAA body      */
-  --zv-sand:        #D7D0C3;
-  --zv-warm:        #F4F2EC;   /* warm off-white, not sterile     */
-  --zv-white:       #FFFFFF;
-  --zv-line:        #D9D8D1;   /* decorative hairline             */
-  --zv-line-input:  #8D8C88;   /*  3.01:1 — fields, real edges    */
-  --zv-muted:       #6B706A;   /*  4.52:1 on warm                 */
+  color-scheme: light;         /* native fields, menus, scrollbars */
+  /* ---- raw palette (light edition) ---------------------------------- */
+  --zv-ink:          #1B1F1C;  /* charcoal-green text, 14.9:1 on warm */
+  --zv-charcoal:     #171B18;
+  --zv-warm:         #F5F2EC;  /* page ground: warm white            */
+  --zv-stone:        #ECE7DE;  /* soft stone band                    */
+  --zv-stone-2:      #E3DDD2;  /* deeper stone: footer, wells        */
+  --zv-white:        #FBFAF7;  /* raised plate, not sterile white    */
+  --zv-paper:        #FBFAF7;  /* printed cards laid on photographs  */
+  --zv-paper-well:   #ECE7DE;  /* a tile set into a card             */
+  --zv-forest:       #26372C;  /* brand forest: accent, primary btn  */
+  --zv-forest-hover: #1B2820;
+  --zv-forest-deep:  #1F2E25;  /* the Pair band and the announcement */
+  --zv-olive:        #53634B;
+  --zv-moss:         #78846D;  /* DECORATIVE ONLY                    */
+  --zv-moss-text:    #5E6956;
+  --zv-moss-strong:  #4D5446;
+  --zv-sand:         #D7D0C3;  /* accent on dark and forest bands    */
+  --zv-line:         #DAD4C9;  /* decorative hairline                */
+  --zv-line-input:   #7E7C75;  /* fields and real edges, >= 3:1      */
+  --zv-muted:        #5A6058;  /* text-3, passes on every light ground */
+  /* Dark raws, for the photo bands (and the V14 rollback). Their names say
+     dark, so they stay dark in every edition. */
+  --zv-night:        #0F1211;
+  --zv-night-deep:   #0B0D0D;
+  --zv-night-2:      #151918;
+  --zv-night-3:      #1B201E;
+  /* Studio plate: the ground a maker's packshot sits on (.zv-studio). */
+  --zv-plate:        #EFEBE4;
+  --zv-plate-deep:   #E6E0D6;
 
-  /* ---- semantic, light ground (the site's default) ------------------ */
+  /* ---- semantic ground ----------------------------------------------- */
   --zv-bg:          var(--zv-warm);
   --zv-bg-raised:   var(--zv-white);
-  --zv-bg-sunken:   #EBE8E0;
+  --zv-bg-sunken:   var(--zv-stone);
+  --zv-bg-deep:     var(--zv-stone-2);
   --zv-text:        var(--zv-ink);
-  --zv-text-2:      #3D423C;          /* 10.4:1 on warm */
+  --zv-text-2:      #3D433D;
   --zv-text-3:      var(--zv-muted);
   --zv-accent:      var(--zv-forest);
-  --zv-accent-hover:#1B2820;
-  --zv-on-accent:   var(--zv-warm);
+  --zv-accent-hover:var(--zv-forest-hover);
+  --zv-on-accent:   var(--zv-warm);   /* 11.3:1 on forest */
   --zv-hairline:    var(--zv-line);
-  --zv-hairline-2:  #C6C4BB;
+  --zv-hairline-2:  #C3BCB0;          /* second hairline, decorative */
+  --zv-ghost-edge:  rgba(27,31,28,.5);/* ghost button edge, 3.2:1 on warm */
   --zv-focus:       var(--zv-forest);
 
   /* ---- type --------------------------------------------------------- */
@@ -65,7 +95,8 @@
               Georgia, "Times New Roman", serif;
 
   /* Fluid scale. Body is 17px at every width — the one size that never
-     shrinks, because shrinking body copy is how mobile gets unreadable. */
+     shrinks, because shrinking body copy is how mobile gets unreadable.
+     The hero H1 is the only display size; every section h2 reads --zv-t-h2. */
   --zv-t-micro:  0.75rem;                                        /* 12 */
   --zv-t-fine:   0.8125rem;                                      /* 13 */
   --zv-t-sm:     0.9375rem;                                      /* 15 */
@@ -73,9 +104,9 @@
   --zv-t-lead:   clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);   /* 18-21 */
   --zv-t-h4:     clamp(1.1875rem, 1.1rem + 0.4vw, 1.4375rem);    /* 19-23 */
   --zv-t-h3:     clamp(1.375rem, 1.24rem + 0.6vw, 1.75rem);      /* 22-28 */
-  --zv-t-h2:     clamp(1.75rem, 1.45rem + 1.35vw, 2.625rem);     /* 28-42 */
-  --zv-t-h1:     clamp(2.125rem, 1.68rem + 2vw, 3.5rem);         /* 34-56 */
-  --zv-t-display: clamp(2.5rem, 1.7rem + 3.6vw, 5rem);           /* 40-80 */
+  --zv-t-h2:     clamp(1.875rem, 1.5rem + 1.6vw, 3rem);          /* 30-48: every section h2 */
+  --zv-t-h1:     clamp(2.125rem, 1.68rem + 2vw, 3.5rem);         /* 34-56: page titles */
+  --zv-t-display: clamp(2.5rem, 1.7rem + 3.6vw, 5rem);           /* 40-80: hero H1 only */
 
   --zv-lh-tight: 1.06;
   --zv-lh-snug:  1.25;
@@ -93,57 +124,55 @@
   --zv-9: 96px;  --zv-10: 128px;
   --zv-section:  clamp(56px, 7vw, 112px);   /* vertical section rhythm */
   --zv-gutter:   max(20px, 4vw);            /* never below 20px        */
-  --zv-container: 1240px;
+  --zv-container: 1240px;                   /* every section, no exceptions */
   --zv-container-narrow: 760px;
 
   /* ---- radii + edges ------------------------------------------------ */
-  /* Radii were 10 / 16. Stepped down to 8 / 12 in the final design pass:
-     at 16px every plate and panel read as an app card, and the pill buttons
-     are already the one soft shape the brand needs. */
+  /* One radius for every photograph and plate: --zv-r-lg (12px), also
+     exposed as --zv-r-photo. The pill is the one soft control shape. */
   --zv-r-xs: 2px;  --zv-r-sm: 6px;  --zv-r-md: 8px;
   --zv-r-lg: 12px; --zv-r-xl: 18px; --zv-r-pill: 999px;
+  --zv-r-photo: var(--zv-r-lg);
   --zv-border: 1px solid var(--zv-hairline);
 
   /* ---- depth: layered and soft. No single hard drop shadow. -------- */
-  --zv-sh-1: 0 1px 2px rgba(16,19,16,.05),
-             0 2px 6px rgba(16,19,16,.04);
-  --zv-sh-2: 0 2px 4px rgba(16,19,16,.05),
-             0 8px 18px rgba(16,19,16,.06);
-  --zv-sh-3: 0 4px 8px rgba(16,19,16,.06),
-             0 18px 40px rgba(16,19,16,.08);
-  --zv-sh-4: 0 8px 16px rgba(16,19,16,.07),
-             0 36px 70px rgba(16,19,16,.11);
+  --zv-sh-1: 0 1px 2px rgba(27,31,28,.05),
+             0 2px 6px rgba(27,31,28,.04);
+  --zv-sh-2: 0 2px 4px rgba(27,31,28,.05),
+             0 8px 18px rgba(27,31,28,.06);
+  --zv-sh-3: 0 4px 8px rgba(27,31,28,.06),
+             0 18px 40px rgba(27,31,28,.08);
+  --zv-sh-4: 0 8px 16px rgba(27,31,28,.07),
+             0 36px 70px rgba(27,31,28,.11);
   --zv-sh-inset: inset 0 1px 0 rgba(255,255,255,.5);
-  /* Photo plates. Supplier photography is shot on white, so a product sits
-     on a white plate on warm paper. A 3:1 outline made every plate look like
-     a form field; a faint ink edge plus a long, soft shadow reads as a print
-     laid on paper instead: the rim is 1.6:1 against the white plate (the
-     house minimum for a photo edge), and 3:1 is kept for controls. */
-  --zv-plate-edge: 0 0 0 1px rgba(16,19,16,.22),
-                   0 14px 34px -20px rgba(16,19,16,.28);
+  /* Photo plates: a faint ink rim plus a long soft shadow reads as a print
+     laid on paper, not as a form field. */
+  --zv-plate-edge: 0 0 0 1px rgba(27,31,28,.10),
+                   0 14px 34px -20px rgba(27,31,28,.26);
 
-  /* ---- product stage: the ground a cutout sits on ------------------- */
-  /* The catalogue's clean cutouts (product.metafields.zorev.cutouts) have
-     no background of their own, so every place they appear draws the same
-     quiet studio: a warm plate lit from the top with a soft fall-off, and a
-     contact shadow under the object. One recipe, so the hero, the line-up,
-     the pair and the gallery read as one photo shoot. */
+  /* ---- product stage (legacy cutout stage, kept for old sections) ---- */
   --zv-stage-light: radial-gradient(90% 70% at 50% 18%, rgba(255,255,255,.9), rgba(255,255,255,0) 70%);
-  --zv-stage-floor: linear-gradient(to top, rgba(16,19,16,.06), rgba(16,19,16,0) 42%);
-  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(16,19,16,.30), rgba(16,19,16,.12) 46%, rgba(16,19,16,0) 72%);
-  --zv-cut-drop: drop-shadow(0 18px 22px rgba(16,19,16,.18)) drop-shadow(0 2px 4px rgba(16,19,16,.10));
+  --zv-stage-floor: linear-gradient(to top, rgba(27,31,28,.06), rgba(27,31,28,0) 42%);
+  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(27,31,28,.30), rgba(27,31,28,.12) 46%, rgba(27,31,28,0) 72%);
+  --zv-cut-drop: drop-shadow(0 18px 22px rgba(27,31,28,.18)) drop-shadow(0 2px 4px rgba(27,31,28,.10));
 
   /* ---- motion ------------------------------------------------------- */
   --zv-ease:        cubic-bezier(.23, 1, .32, 1);      /* strong ease-out */
   --zv-ease-inout:  cubic-bezier(.77, 0, .175, 1);
   --zv-ease-drawer: cubic-bezier(.32, .72, 0, 1);
   --zv-ease-loop:   cubic-bezier(.45, 0, .55, 1);    /* ambient back-and-forth loops: slow at both turns, no jolt */
+  --zv-ease-reveal: cubic-bezier(.2, .7, .2, 1);     /* the page settling in */
   --zv-d-press:  140ms;
+  --zv-d-tap:    90ms;    /* touch pressed state */
   --zv-d-hover:  200ms;
   --zv-d-ui:     260ms;   /* dropdowns, toggles — under the 300ms budget */
   --zv-d-drawer: 420ms;
-  --zv-d-reveal: 620ms;   /* editorial reveals may run longer */
-  --zv-lift: -3px;        /* the one hover translate used site-wide */
+  --zv-d-reveal: 600ms;   /* editorial reveals may run longer */
+  --zv-d-zoom:   600ms;   /* image hover zoom */
+  --zv-reveal-y: 14px;    /* reveal travel */
+  --zv-zoom:     1.02;    /* the most an image grows on hover */
+  --zv-press:    .985;    /* the most a control shrinks when pressed */
+  --zv-lift: -1px;        /* the one hover translate used site-wide */
   /* Springs, for things that settle rather than stop: a released button,
      the quantity selector's ring, a product flying between pages. The
      cubic-bezier values are the fallback; the linear() curves below replace
@@ -174,30 +203,59 @@
   }
 }
 
-/* Dark bands (hero, spotlight, final CTA) flip the semantic layer. Scoped
-   to a class, not prefers-color-scheme: these are brand surfaces the design
-   chooses, not a user theme preference. */
+/* Photo bands (hero, closer). Scoped to a class, not prefers-color-scheme:
+   these are brand surfaces the design chooses, not a user preference.
+   Raw tokens (--zv-ink, --zv-warm, --zv-sand) keep their meaning inside;
+   use the semantic ones (--zv-text, --zv-bg, --zv-accent) for anything
+   that should flip. */
 .zv-dark {
-  --zv-bg:          var(--zv-ink);
-  --zv-bg-raised:   var(--zv-charcoal);
-  --zv-bg-sunken:   #0A0C0A;
-  --zv-text:        var(--zv-warm);
-  --zv-text-2:      #CFCCC2;       /* 11.6:1 on ink */
-  --zv-text-3:      #A5A79C;       /*  6.9:1 on ink */
+  --zv-bg:          #141815;
+  --zv-bg-raised:   #1C211E;
+  --zv-bg-sunken:   #0E110F;
+  --zv-bg-deep:     #0E110F;
+  --zv-text:        #F1EEE7;       /* 15.5:1 */
+  --zv-text-2:      #C9CCC4;       /* 11.0:1 */
+  --zv-text-3:      #A5A79C;       /*  7.4:1 */
   --zv-accent:      var(--zv-sand);
   --zv-accent-hover:#E6E0D5;
-  --zv-on-accent:   var(--zv-ink);
-  --zv-hairline:    rgba(244,242,236,.12);
-  --zv-hairline-2:  rgba(244,242,236,.22);
-  --zv-focus:       var(--zv-sand);   /* forest is 1.48:1 here — unusable */
+  --zv-on-accent:   #141815;
+  --zv-hairline:    rgba(241,238,231,.14);
+  --zv-hairline-2:  rgba(241,238,231,.24);
+  --zv-ghost-edge:  rgba(241,238,231,.55);
+  --zv-focus:       var(--zv-sand);   /* forest is unusable on dark */
   --zv-stage-light: radial-gradient(70% 60% at 50% 30%, rgba(215,208,195,.16), rgba(215,208,195,0) 70%);
   --zv-stage-floor: linear-gradient(to top, rgba(0,0,0,.28), rgba(0,0,0,0) 46%);
   --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.70), rgba(0,0,0,.30) 46%, rgba(0,0,0,0) 72%);
   --zv-cut-drop: drop-shadow(0 22px 26px rgba(0,0,0,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.35));
+  --zv-plate-edge: 0 0 0 1px rgba(241,238,231,.08), 0 14px 34px -20px rgba(0,0,0,.6);
   --zv-sh-1: 0 1px 2px rgba(0,0,0,.4);
   --zv-sh-2: 0 6px 18px rgba(0,0,0,.45);
   --zv-sh-3: 0 16px 40px rgba(0,0,0,.5);
   --zv-sh-4: 0 34px 70px rgba(0,0,0,.55);
+  --zv-sh-inset: inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* The Pair band: the page's one coloured band. Same contract as .zv-dark. */
+.zv-forest {
+  --zv-bg:          var(--zv-forest-deep);
+  --zv-bg-raised:   #283A2F;
+  --zv-bg-sunken:   #19251E;
+  --zv-bg-deep:     #19251E;
+  --zv-text:        var(--zv-warm);  /* 12.7:1 on forest-deep */
+  --zv-text-2:      #D9DDD3;         /* 10.3:1 */
+  --zv-text-3:      #B8C0B2;         /*  7.6:1 */
+  --zv-accent:      var(--zv-sand);  /*  9.3:1 */
+  --zv-accent-hover:#E6E0D5;
+  --zv-on-accent:   var(--zv-forest-deep);
+  --zv-hairline:    rgba(245,242,236,.16);
+  --zv-hairline-2:  rgba(245,242,236,.28);
+  --zv-ghost-edge:  rgba(245,242,236,.55);
+  --zv-focus:       var(--zv-sand);
+  --zv-plate-edge: 0 0 0 1px rgba(245,242,236,.10), 0 18px 40px -22px rgba(0,0,0,.55);
+  --zv-sh-1: 0 1px 2px rgba(0,0,0,.25);
+  --zv-sh-2: 0 6px 18px rgba(0,0,0,.28);
+  --zv-sh-3: 0 16px 40px rgba(0,0,0,.32);
+  --zv-sh-4: 0 34px 70px rgba(0,0,0,.36);
   --zv-sh-inset: inset 0 1px 0 rgba(255,255,255,.06);
 }
 
@@ -221,9 +279,6 @@
 h1, h2, h3, h4, p, li, dt, dd, figcaption, blockquote,
 .zv-h1, .zv-h2, .zv-h3 { overflow-wrap: break-word; }
 h1, h2, h3, .zv-h1, .zv-h2, .zv-h3 { hyphens: manual; text-wrap: balance; }
-/* Newsreader ships at one weight; a bolded word in an editor heading stays
-   at that weight instead of being smeared into a fake bold. */
-h1, h2, h3, h4, .zv-h1, .zv-h2, .zv-h3 { font-synthesis-weight: none; }
 p, li, dd, figcaption { text-wrap: pretty; }
 .zv-section { padding-block: var(--zv-section); background: var(--zv-bg); color: var(--zv-text); }
 
@@ -259,11 +314,12 @@ p, li, dd, figcaption { text-wrap: pretty; }
   white-space: nowrap; border: 0;
 }
 
-/* Buttons. 48px minimum on touch, per the brief; desktop keeps it tighter
-   only where a pointer is confirmed fine.
+/* Buttons. 48px minimum on touch, per the brief.
    .btn is the same control under its older name — the product page, cart
    and forms still use it — so both names share one rule rather than two
-   copies that drift apart. */
+   copies that drift apart. Light grounds: forest pill with warm text;
+   inside .zv-dark / .zv-forest the same tokens give a sand pill. Ghost is
+   an ink outline that flips with the scope. */
 .zv-btn, .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--zv-2);
   min-height: 48px; padding: 0 var(--zv-5);
@@ -271,6 +327,7 @@ p, li, dd, figcaption { text-wrap: pretty; }
   letter-spacing: var(--zv-tr-wide); text-transform: uppercase; text-decoration: none;
   border: 1px solid var(--zv-accent); border-radius: var(--zv-r-pill);
   background: var(--zv-accent); color: var(--zv-on-accent); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   /* Pressed in fast and flat (the :active rule), let go on a spring: the
      button settles back with a hair of overshoot, the way a real key does. */
   transition: transform var(--zv-d-spring) var(--zv-spring),
@@ -279,197 +336,89 @@ p, li, dd, figcaption { text-wrap: pretty; }
               box-shadow var(--zv-d-hover) var(--zv-ease);
 }
 .zv-btn--ghost, .btn--ghost { background: transparent; color: var(--zv-text);
-  border-color: var(--zv-hairline-2); }
+  border-color: var(--zv-ghost-edge); }
 .zv-btn--block, .btn--block { width: 100%; }
 @media (hover: hover) and (pointer: fine) {
-  .zv-btn:hover, .btn:hover { background: var(--zv-accent-hover); transform: translateY(var(--zv-lift));
-    box-shadow: var(--zv-sh-2); }
-  .zv-btn--ghost:hover, .btn--ghost:hover { background: var(--zv-bg-raised); border-color: var(--zv-accent);
-    box-shadow: none; }
+  .zv-btn:hover, .btn:hover { background: var(--zv-accent-hover); border-color: var(--zv-accent-hover);
+    transform: translateY(var(--zv-lift)); box-shadow: var(--zv-sh-2); }
+  .zv-btn--ghost:hover, .btn--ghost:hover { background: color-mix(in srgb, var(--zv-text) 6%, transparent);
+    border-color: var(--zv-text); box-shadow: none; }
 }
-.zv-btn:active, .btn:active { transform: scale(.97);
-  transition-duration: 90ms, var(--zv-d-hover), var(--zv-d-hover), var(--zv-d-hover);
+.zv-btn:active, .btn:active { transform: scale(var(--zv-press));
+  transition-duration: var(--zv-d-tap), var(--zv-d-hover), var(--zv-d-hover), var(--zv-d-hover);
   transition-timing-function: var(--zv-ease); }
 .zv-btn[aria-busy="true"], .btn[aria-busy="true"] { opacity: .7; cursor: progress; }
 .zv-btn[disabled], .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
 
-/* ---- product cutouts on the stage ----------------------------------
-   .zv-cut is a transparent product photograph; .zv-stage is the place it
-   stands. The shadow is a real element under the object, not a filter on
-   it, so it can flatten as the product lifts on hover and it never costs a
-   repaint of the image itself.
+/* ---- touch and pointer feedback (opt-in utilities) -------------------
+   .zv-press  a tile, card or image link that should answer a finger: on
+              touch screens it gives a little (scale .985) for 90ms. Desktop
+              is untouched (pointer users get the hover instead).
+   .zv-zoom   a link or figure whose photograph grows a touch on hover
+              (scale 1.02 over 600ms), fine pointers only. The image is
+              the direct img, or any element marked .zv-zoom__img. */
+@media (hover: none) {
+  .zv-press { -webkit-tap-highlight-color: transparent;
+    transition: transform var(--zv-d-tap) var(--zv-ease); }
+  .zv-press:active { transform: scale(var(--zv-press)); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .zv-zoom img, .zv-zoom .zv-zoom__img {
+    transition: transform var(--zv-d-zoom) var(--zv-ease-reveal); }
+  .zv-zoom:hover img, .zv-zoom:hover .zv-zoom__img,
+  .zv-zoom:focus-visible img, .zv-zoom:focus-visible .zv-zoom__img { transform: scale(var(--zv-zoom)); }
+}
 
-   The place is a landscape: a far ridge, a nearer ridge and a stone floor,
-   drawn as three flat shapes in the page's own sage, paper and stone, with
-   low light from the upper left. It has no edge of its own; it fades into
-   whatever the page is behind it, so a product stands somewhere rather
-   than in a box. Drawn, not photographed, on purpose: a real product cut
-   out and laid over a landscape photograph is the stack that read as fake
-   on this store before. The Pair band gets a dark version. */
+/* ---- studio plate: a maker's packshot on warm stone ------------------
+   <div class="zv-studio" style="aspect-ratio: 1">{% render 'studio-image', … %}</div>
+   The supplier photographs are shot on white; multiply dissolves that white
+   into the plate, and transparent cutouts simply stand on it, so every
+   packshot reads as one studio. The product pixels themselves are never
+   recoloured beyond the white ground. The section sets the plate's size
+   (aspect-ratio or height); the picture is contained, never cropped.
+   Modifiers: .zv-studio--deep (a step darker, for a plate on stone),
+   .zv-studio--floor (a very soft contact shadow at the foot),
+   --zv-studio-pad (space round the packshot, default 6%). */
+.zv-studio {
+  position: relative; isolation: isolate; overflow: hidden;
+  background: var(--zv-plate); border-radius: var(--zv-r-lg);
+}
+.zv-studio--deep { background: var(--zv-plate-deep); }
+/* No position here: a section may place the picture absolutely in its
+   frame. The floor shadow sits at z-index -1 inside the isolated plate, so
+   it is above the plate colour and under the packshot, which multiplies
+   over both. */
+.zv-studio img, .zv-studio .zv-studio__img {
+  display: block; width: 100%; height: 100%;
+  padding: var(--zv-studio-pad, 6%);
+  object-fit: contain; object-position: 50% 50%;
+  mix-blend-mode: multiply;
+}
+.zv-studio--floor::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  left: 50%; bottom: 7%; width: 58%; height: 7%; transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(27,31,28,.16), rgba(27,31,28,.05) 60%, rgba(27,31,28,0));
+}
+
+/* ---- product cutouts on the stage (legacy, V12–V14 sections) --------- */
 :root {
-  --zv-land: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient%20id='f'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23D8DCCF'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23E8E8E0'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='t'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23C8CFBE'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23DEE0D4'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23E7E1D4'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23DAD1C0'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill='url%28%23f%29'%20d='M0%2055%20C10%2050.5%2018%2049%2027%2050.8%20C36%2052.6%2043%2047.6%2053%2046.4%20C63%2045.2%2069%2049.8%2078%2049.2%20C87%2048.6%2093%2046.8%20100%2049.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23t%29'%20d='M0%2063%20C9%2060.5%2017%2059.6%2027%2061.2%20C37%2062.8%2045%2058.4%2056%2058%20C67%2057.6%2074%2061.6%2084%2061%20C92%2060.5%2096%2059.4%20100%2060.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23g%29'%20d='M0%2072%20C20%2070.4%2042%2071.2%2060%2070.6%20C78%2070%2090%2071%20100%2072%20V100%20H0Z'/%3E%3C/svg%3E");
-  --zv-land-sun: radial-gradient(42% 30% at 32% 32%, rgba(255,253,248,.85), rgba(255,253,248,0) 72%);
-  --zv-land-mist: linear-gradient(to bottom, rgba(250,249,245,0) 56%, rgba(250,249,245,.4) 65%, rgba(250,249,245,0) 73%);
+  --zv-land: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient%20id='f'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23C8CCC2'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23D1D3CC'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='t'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23BBC1B4'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23CACDC4'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23CECEC7'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23C4C4BD'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill='url%28%23f%29'%20d='M0%2055%20C10%2050.5%2018%2049%2027%2050.8%20C36%2052.6%2043%2047.6%2053%2046.4%20C63%2045.2%2069%2049.8%2078%2049.2%20C87%2048.6%2093%2046.8%20100%2049.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23t%29'%20d='M0%2063%20C9%2060.5%2017%2059.6%2027%2061.2%20C37%2062.8%2045%2058.4%2056%2058%20C67%2057.6%2074%2061.6%2084%2061%20C92%2060.5%2096%2059.4%20100%2060.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23g%29'%20d='M0%2072%20C20%2070.4%2042%2071.2%2060%2070.6%20C78%2070%2090%2071%20100%2072%20V100%20H0Z'/%3E%3C/svg%3E");
+  --zv-land-sun: radial-gradient(42% 30% at 32% 32%, rgba(238,239,235,.7), rgba(238,239,235,0) 72%);
+  --zv-land-mist: linear-gradient(to bottom, rgba(224,225,221,0) 56%, rgba(224,225,221,.4) 65%, rgba(224,225,221,0) 73%);
   --zv-land-fade: radial-gradient(ellipse 50% 44% at 50% 56%, #000 55%, rgba(0,0,0,0) 100%);
+  --zv-dapple: 238,239,235; --zv-dapple-a: .45;
 }
-.zv-dark {
-  --zv-land: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%20preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient%20id='f'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%239AA58F'%20stop-opacity='0.15'/%3E%3Cstop%20offset='1'%20stop-color='%239AA58F'%20stop-opacity='0.05'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='t'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2378846D'%20stop-opacity='0.28'/%3E%3Cstop%20offset='1'%20stop-color='%2378846D'%20stop-opacity='0.1'/%3E%3C/linearGradient%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23D7D0C3'%20stop-opacity='0.1'/%3E%3Cstop%20offset='1'%20stop-color='%23D7D0C3'%20stop-opacity='0.03'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath%20fill='url%28%23f%29'%20d='M0%2055%20C10%2050.5%2018%2049%2027%2050.8%20C36%2052.6%2043%2047.6%2053%2046.4%20C63%2045.2%2069%2049.8%2078%2049.2%20C87%2048.6%2093%2046.8%20100%2049.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23t%29'%20d='M0%2063%20C9%2060.5%2017%2059.6%2027%2061.2%20C37%2062.8%2045%2058.4%2056%2058%20C67%2057.6%2074%2061.6%2084%2061%20C92%2060.5%2096%2059.4%20100%2060.2%20V100%20H0Z'/%3E%3Cpath%20fill='url%28%23g%29'%20d='M0%2072%20C20%2070.4%2042%2071.2%2060%2070.6%20C78%2070%2090%2071%20100%2072%20V100%20H0Z'/%3E%3C/svg%3E");
-  --zv-land-sun: radial-gradient(42% 30% at 32% 32%, rgba(215,208,195,.10), rgba(215,208,195,0) 72%);
-  --zv-land-mist: linear-gradient(to bottom, rgba(215,208,195,0) 56%, rgba(215,208,195,.05) 65%, rgba(215,208,195,0) 73%);
-}
+.zv-dark { --zv-dapple: 213,214,208; --zv-dapple-a: .075; }
 .zv-stage, .zv-landed { position: relative; isolation: isolate; }
-.zv-stage::before, .zv-landed::before {
-  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
-  background: var(--zv-land-sun), var(--zv-land-mist), var(--zv-land) center / 100% 100% no-repeat;
-  -webkit-mask-image: var(--zv-land-fade); mask-image: var(--zv-land-fade);
-}
 .zv-cut { display: block; width: 100%; height: 100%; object-fit: contain;
   filter: var(--zv-cut-drop); }
 .zv-stage__shadow { position: absolute; left: 50%; bottom: 6%; width: 62%; height: 9%;
   transform: translateX(-50%); background: var(--zv-stage-shadow); filter: blur(6px);
   pointer-events: none; z-index: -1; }
-
-/* ---- studio stage: a lit set in the product's own colour ----------------
-   A product with a "Product stage colour" (zorev.stage_tone) stands on a
-   small studio set instead of the faded landscape: a wall that darkens
-   toward a tabletop edge, a tabletop that catches the light at that edge
-   and falls off toward the viewer, a key light from the upper left, a
-   warm or cool glow behind the object, a vignette and a fine grain, so
-   it reads as photographed rather than pasted. The colour is chosen to
-   separate the packaging from the set: amber behind GODA's black box and
-   amber glass, sage behind HOYGI's plum (its complementary colour).
-   The product pixels are never lit, tinted or moved by any of this; the
-   key light drifts a few percent over 16 s, and is still for reduced
-   motion (the global rule below). */
-.zv-stage[data-tone] {
-  --tone-wall: linear-gradient(180deg, #F4EFE6 0%, #E9E0D1 48%, #DACDB8 70.6%, #EDE4D5 71%, #E1D5C2 86%, #D0C1AA 100%);
-  --tone-glow: rgba(255, 246, 228, .5);
-  --tone-edge: rgba(60, 46, 28, .16);
-  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(58, 42, 22, .42), rgba(58, 42, 22, .14) 46%, rgba(58, 42, 22, 0) 72%);
-}
-.zv-stage[data-tone="amber"] {
-  --tone-wall: linear-gradient(180deg, #F6EAD6 0%, #ECD5B1 46%, #DDB98A 70.6%, #EED6AF 71%, #E3C398 86%, #D2A979 100%);
-  --tone-glow: rgba(226, 150, 66, .26);
-  --tone-edge: rgba(92, 56, 20, .2);
-  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(86, 50, 16, .5), rgba(86, 50, 16, .18) 46%, rgba(86, 50, 16, 0) 72%);
-}
-.zv-stage[data-tone="sage"] {
-  --tone-wall: linear-gradient(180deg, #EBEFE6 0%, #D7E0CF 46%, #BFCDB4 70.6%, #DAE2D2 71%, #C9D5BF 86%, #AFC0A3 100%);
-  --tone-glow: rgba(255, 255, 250, .42);
-  --tone-edge: rgba(30, 48, 28, .2);
-  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(28, 44, 26, .46), rgba(28, 44, 26, .16) 46%, rgba(28, 44, 26, 0) 72%);
-}
-.zv-stage[data-tone="stone"] {
-  --tone-wall: linear-gradient(180deg, #EFEFEC 0%, #E0E0DC 46%, #C9C9C4 70.6%, #E3E3DF 71%, #D3D3CE 86%, #BBBBB5 100%);
-  --tone-glow: rgba(255, 255, 255, .45);
-  --tone-edge: rgba(20, 22, 20, .18);
-}
-.zv-stage[data-tone="noir"] {
-  --tone-wall: linear-gradient(180deg, #2E322E 0%, #232723 46%, #191C19 70.6%, #2C302C 71%, #202320 86%, #141614 100%);
-  --tone-glow: rgba(214, 196, 160, .16);
-  --tone-edge: rgba(0, 0, 0, .4);
-  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(0, 0, 0, .7), rgba(0, 0, 0, .3) 46%, rgba(0, 0, 0, 0) 72%);
-}
-.zv-stage[data-tone]::before {
-  -webkit-mask-image: none; mask-image: none;
-  background:
-    /* fine grain, so the gradients do not read as flat vector */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(130% 95% at 50% 38%, rgba(0, 0, 0, 0) 58%, var(--tone-edge) 100%),
-    radial-gradient(40% 32% at 52% 54%, var(--tone-glow), rgba(255, 255, 255, 0) 72%),
-    var(--tone-photo, none) center bottom / cover no-repeat,
-    var(--tone-wall);
-}
-/* Amber and sage are places, not paper: a wet basalt ledge at the edge of
-   a misty forest (the Pair photograph with the products removed), shot
-   with the forest out of focus so the product stands sharp in front of
-   it. Amber is the golden side for GODA's black box and amber glass; sage
-   the green side for HOYGI's plum. The relative URLs resolve beside this
-   stylesheet in the theme's assets; 800 px for 1x screens, 1600 px for 2x.
-   The drawn wall stays underneath as the fallback while a photo loads. */
-.zv-stage[data-tone="amber"] {
-  --tone-photo: url("zorev-stage-amber-800.jpg");
-  --tone-glow: rgba(255, 214, 150, .16);
-  --tone-edge: rgba(20, 14, 6, .28);
-  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(6, 8, 6, .66), rgba(6, 8, 6, .24) 46%, rgba(6, 8, 6, 0) 72%);
-}
-.zv-stage[data-tone="sage"] {
-  --tone-photo: url("zorev-stage-sage-800.jpg");
-  --tone-glow: rgba(235, 245, 228, .14);
-  --tone-edge: rgba(8, 16, 8, .3);
-  --zv-stage-shadow: radial-gradient(50% 50% at 50% 50%, rgba(6, 8, 6, .66), rgba(6, 8, 6, .24) 46%, rgba(6, 8, 6, 0) 72%);
-}
-/* sharp screens get the 1600 px plate (a resolution query rather than
-   image-set() in a custom property, which older Safari would reject and so
-   drop the whole backdrop with it) */
-@media (min-resolution: 1.5dppx), (-webkit-min-device-pixel-ratio: 1.5) {
-  .zv-stage[data-tone="amber"] { --tone-photo: url("zorev-stage-amber.jpg"); }
-  .zv-stage[data-tone="sage"] { --tone-photo: url("zorev-stage-sage.jpg"); }
-}
-.zv-stage[data-tone="amber"]::after, .zv-stage[data-tone="sage"]::after { opacity: .45; }
-.zv-stage[data-tone]::after {
-  content: ""; position: absolute; inset: -12%; z-index: -2; pointer-events: none;
-  background: radial-gradient(42% 34% at 34% 24%, rgba(255, 252, 244, .62), rgba(255, 252, 244, 0) 72%);
-}
-.zv-stage[data-tone="noir"]::after {
-  background: radial-gradient(42% 34% at 34% 24%, rgba(232, 222, 200, .14), rgba(232, 222, 200, 0) 72%);
-}
-/* The light drifts only in the product gallery, where people linger; on the
-   line-up and cards it would redraw every frame for a few pixels nobody sees. */
-@media (prefers-reduced-motion: no-preference) {
-  .gal__slide--stage[data-tone]::after { animation: zv-stage-key 16s var(--zv-ease-loop) infinite alternate; }
-}
-/* off screen (zorev-enhance.js marks it), the light holds still */
-.zv-stage.zv-resting::after { animation-play-state: paused; }
-@keyframes zv-stage-key { from { transform: translate3d(-3%, -2%, 0); } to { transform: translate3d(4%, 2%, 0); } }
-
-/* ---- the two big stages are outdoors -------------------------------------
-   The hero and the Pair scene (.zv-landed) get two slow signs of a real
-   place. Both sit behind the products and neither touches them: the
-   product pixels are never lit, tinted or moved by this.
-   1  Light. Soft patches of sun drift over the ground, the way light moves
-      under leaves: one 19 s cycle, eased and alternating, so there is no
-      loop point to notice. It is the "light moving over a still set" the
-      hero film brief asks for, drawn instead of filmed.
-   2  Depth. As the stage scrolls through the window the landscape moves a
-      little slower than the page, so the products (which the depth script
-      already moves a little faster) stand in front of it. This is a CSS
-      scroll-driven animation: it runs on the compositor, costs no script,
-      and browsers without it simply keep the landscape still.
-   Under reduced motion both stop (the rule at the end of this file ends
-   every animation at once, and the scroll link is only set up for
-   no-preference). */
-:root { --zv-dapple: 255,251,240; --zv-dapple-a: .5; }
-.zv-dark { --zv-dapple: 215,208,195; --zv-dapple-a: .075; }
-.zv-landed::after {
-  content: ""; position: absolute; inset: -6% -16% -6% -16%; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(12% 8% at 24% 66%, rgba(var(--zv-dapple), var(--zv-dapple-a)), rgba(var(--zv-dapple), 0) 72%),
-    radial-gradient(17% 10% at 71% 71%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .85)), rgba(var(--zv-dapple), 0) 72%),
-    radial-gradient(9% 6% at 47% 60%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .7)), rgba(var(--zv-dapple), 0) 70%),
-    radial-gradient(22% 9% at 40% 78%, rgba(var(--zv-dapple), calc(var(--zv-dapple-a) * .55)), rgba(var(--zv-dapple), 0) 74%);
-  -webkit-mask-image: var(--zv-land-fade); mask-image: var(--zv-land-fade);
-  animation: zv-dapple 19s var(--zv-ease-loop) infinite alternate;
-}
-@keyframes zv-dapple {
-  0%   { transform: translate3d(-1.6%, .3%, 0);  opacity: .72; }
-  45%  { transform: translate3d(.4%, -.5%, 0);   opacity: 1; }
-  100% { transform: translate3d(1.8%, .2%, 0);   opacity: .8; }
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .zv-landed { view-timeline-name: --zv-land; }
-    .zv-landed::before {
-      animation: zv-land-depth linear both;
-      animation-timeline: --zv-land;
-      animation-range: cover 0% cover 100%;
-    }
-  }
-}
-@keyframes zv-land-depth {
-  from { transform: translate3d(0, -2.6%, 0); }
-  to   { transform: translate3d(0, 2.6%, 0); }
-}
+/* The drawn landscape and the contact shadow belonged to the generated
+   cutouts, which are retired (V14). Off everywhere. */
+.zv-stage::before, .zv-landed::before, .zv-landed::after { content: none; }
+.zv-stage__shadow { display: none; }
 
 /* ---- real photography and film in a frame (snippets/zv-media) ----------
    The section owns the frame (its size and aspect ratio); the media fills
@@ -500,14 +449,24 @@ p, li, dd, figcaption { text-wrap: pretty; }
   border-radius: var(--zv-r-xs);
 }
 
+/* ---- sideways strips (zorev-enhance.js, [data-zv-strip]) --------------
+   The controls are rendered hidden and shown by the script, so a visitor
+   without JavaScript never meets a dead button; native scrolling and
+   swiping stay in charge either way. At either end the matching arrow is
+   aria-disabled (not disabled, so focus is never dropped). */
+[data-zv-strip] [data-zv-strip-prev][aria-disabled="true"],
+[data-zv-strip] [data-zv-strip-next][aria-disabled="true"] { opacity: .35; cursor: default; }
+[data-zv-strip][data-zv-strip-overflow="false"] [data-zv-strip-controls] { display: none; }
+
 /* Scroll reveal. The resting state is VISIBLE — an element is only hidden
    once JS has confirmed it can reveal it, so a JS failure or a crawler sees
-   the full page rather than an empty one. */
+   the full page rather than an empty one. Reveal only what matters: section
+   heads, product tiles and plates, story copy, key images. */
 [data-zv-reveal] { will-change: auto; }
 .zv-js [data-zv-reveal] {
-  opacity: 0; transform: translateY(14px);
-  transition: opacity var(--zv-d-reveal) var(--zv-ease),
-              transform var(--zv-d-reveal) var(--zv-ease);
+  opacity: 0; transform: translateY(var(--zv-reveal-y));
+  transition: opacity var(--zv-d-reveal) var(--zv-ease-reveal),
+              transform var(--zv-d-reveal) var(--zv-ease-reveal);
 }
 .zv-js [data-zv-reveal].is-in { opacity: 1; transform: none; }
 /* Fail-safe. The inline script in <head> marks the document scripted before
@@ -520,6 +479,13 @@ p, li, dd, figcaption { text-wrap: pretty; }
   animation: zv-reveal-failsafe 1ms linear 2s both;
 }
 @keyframes zv-reveal-failsafe { to { opacity: 1; transform: none; } }
+/* The observer never fires for a printout: print everything, settled. */
+@media print {
+  .zv-js [data-zv-reveal], .zv-js [data-zv-reveal] * {
+    opacity: 1 !important; transform: none !important; clip-path: none !important;
+    animation: none !important; transition: none !important;
+  }
+}
 
 /* ---- page to page ---------------------------------------------------------
    Cross-document view transitions (Chrome and Edge 126+, Safari 18.2+;
@@ -554,7 +520,8 @@ p, li, dd, figcaption { text-wrap: pretty; }
    a state change with no transition at all reads as a glitch rather than a
    change, and people who set this preference still need to see that something
    happened. So: kill travel, looping and parallax; keep colour, opacity and
-   background changes but cap them short. */
+   background changes but cap them short. zorev-enhance.js listens for a
+   change of this preference and clears the transforms it set itself. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     /* no looping or long-running animation, and nothing that travels */
@@ -573,6 +540,152 @@ p, li, dd, figcaption { text-wrap: pretty; }
                          box-shadow, opacity, fill, stroke, backdrop-filter !important;
   }
   .zv-js [data-zv-reveal] { opacity: 1 !important; transform: none !important; }
-  .zv-btn:hover, .zv-btn:active, .btn:hover, .btn:active, .card:hover, .card:hover .card__fig img,
-  .zcoll:hover .zcoll__fig img, .zmm__fig:hover .zv-media img { transform: none !important; }
+  .zv-btn:hover, .zv-btn:active, .btn:hover, .btn:active,
+  .zv-press:active, .zv-zoom:hover img, .zv-zoom:hover .zv-zoom__img { transform: none; }
 }
+
+/* ---- component fit: surfaces --------------------------------------------
+   A few components painted their own surface with a token that changed
+   meaning between editions. They are pointed at the semantic layer here,
+   in one place. Each selector carries a leading `html` so it outranks the
+   component's own rule, which comes later in the cascade (section <style>
+   blocks sit in <body>, and zorev-film.css loads after this file). */
+/* Header: a solid warm bar. No backdrop blur: on phones it cost frames
+   while scrolling, and over warm paper there is nothing to see through. */
+html .zhdr.is-stuck .zhdr__bar { background: var(--zv-bg); }
+html .zhdr__drawer,
+html .cd__panel { background: var(--zv-bg); }
+/* Printed cards over photographs take --zv-paper, not --zv-bg-raised: the
+   hero is .zv-dark, where "raised" flips to charcoal. */
+html .zhf__card,
+html .zps__card,
+html .zcard__flag { background: var(--zv-paper); }
+html .zhf__card-objs,
+html .zps__card-obj { background: var(--zv-paper-well); }
+
+/* ---- component fit: product photographs (V14, still used) ---------------
+   snippets/product-cutout renders the store's own photograph (.zv-cut
+   .zv-photo). Where a section still frames it, it fills the frame. Studio
+   packshots (snippets/studio-image in a .zv-studio plate) are not touched. */
+html .zv-cut.zv-photo { filter: none; }
+html .zsc__stage.zv-stage { box-shadow: var(--zv-plate-edge); }
+html .zsc__stage.zv-stage .zsc__obj { padding: 0; place-items: stretch; }
+html .zsc__obj .zv-cut.zv-photo { width: 100%; height: 100%; max-height: none; object-fit: cover;
+  transition: transform var(--zv-d-zoom) var(--zv-ease); }
+@media (hover: hover) and (pointer: fine) {
+  html .zsc__item:hover .zsc__obj { transform: none; }
+  html .zsc__item:hover .zsc__obj .zv-photo { transform: scale(var(--zv-zoom)); }
+}
+html .zhf__card-objs { height: auto; padding: 4px; gap: 4px; align-items: center; }
+html .zhf__card-obj { width: 54px; height: 54px; border-radius: 6px; overflow: hidden; }
+html .zps__card-obj { width: 60px; height: 60px; padding: 0; overflow: hidden; }
+html .zhf__card-obj .zv-cut.zv-photo,
+html .zps__card-obj .zv-cut.zv-photo { object-fit: cover; object-position: 50% 50%; }
+html .zline__fig--stage,
+html .cd__thumb--stage,
+html .cd__pairimg--stage,
+html .zpair__img--stage { padding: 0; }
+html .zline__fig .zv-cut.zv-photo,
+html .cd__thumb--stage img { object-fit: cover; }
+
+/* Square product photographs in the story bands (sections/product-story
+   adds .zps--square for a photo under 1.3:1). A square frame inside the
+   content column shows the whole product at every width. It stands still. */
+html .zps--square .zps__frame { aspect-ratio: 1 / 1; height: auto; }
+html .zps--square .zps__plate { inset: 0; transform: none !important; }
+html .zps--square .zps__plate img { object-position: 50% 50% !important; }
+@media (min-width: 700px) {
+  html .zps--square .zps__frame { width: min(100%, 560px); margin-inline: auto;
+    border-radius: var(--zv-r-lg); box-shadow: var(--zv-plate-edge); }
+}
+@media (min-width: 900px) {
+  html .zps--square .zps__media { grid-column: 2; }
+  html .zps--square.zps--media-right .zps__media { grid-column: 3; }
+  html .zps--square .zps__frame { width: min(100%, 78svh); margin-inline: 0; }
+  html .zps--square.zps--media-right .zps__frame { margin-left: auto; }
+}
+
+/* ==========================================================================
+   ROLLBACK: the V14 dark edition (Theme settings > Brand > Colour edition).
+   The V14 values, unchanged. Layout and copy stay V15; only colour returns.
+   ========================================================================== */
+html.zv-ed-dark {
+  color-scheme: dark;
+  --zv-night:       #0F1211;
+  --zv-night-deep:  #0B0D0D;
+  --zv-night-2:     #151918;
+  --zv-night-3:     #1B201E;
+  --zv-ink:         #EDEFEB;
+  --zv-charcoal:    #151918;
+  --zv-forest:      #9FB293;
+  --zv-forest-hover:#B2BEA6;
+  --zv-forest-deep: #26372C;
+  --zv-olive:       #B2BEA6;
+  --zv-moss:        #6E7A66;
+  --zv-moss-text:   #A6B19B;
+  --zv-moss-strong: #C2CBB9;
+  --zv-sand:        #DCDFD8;
+  --zv-warm:        #EDEFEB;
+  --zv-white:       #1B201E;
+  --zv-stone:       #0F1211;
+  --zv-stone-2:     #151918;
+  --zv-paper:       #1B201E;
+  --zv-paper-well:  #131716;
+  --zv-line:        #2B312E;
+  --zv-line-input:  #737A73;
+  --zv-muted:       #9BA19A;
+  --zv-bg:          var(--zv-night);
+  --zv-bg-raised:   var(--zv-night-3);
+  --zv-bg-sunken:   var(--zv-night-2);
+  --zv-bg-deep:     var(--zv-night-2);
+  --zv-text:        var(--zv-ink);
+  --zv-text-2:      #C4C9C2;
+  --zv-text-3:      var(--zv-muted);
+  --zv-accent:      var(--zv-sand);
+  --zv-accent-hover:#EDEFEB;
+  --zv-on-accent:   var(--zv-night);
+  --zv-hairline:    var(--zv-line);
+  --zv-hairline-2:  #474E49;
+  --zv-ghost-edge:  #474E49;
+  --zv-focus:       var(--zv-sand);
+  --zv-sh-1: 0 1px 2px rgba(0,0,0,.4);
+  --zv-sh-2: 0 6px 18px rgba(0,0,0,.45);
+  --zv-sh-3: 0 16px 40px rgba(0,0,0,.5);
+  --zv-sh-4: 0 34px 70px rgba(0,0,0,.55);
+  --zv-sh-inset: inset 0 1px 0 rgba(255,255,255,.06);
+  --zv-plate-edge: 0 0 0 1px rgba(237,239,235,.08), 0 14px 34px -20px rgba(0,0,0,.6);
+  /* The studio plate stays light in both editions: multiply on a dark plate
+     would sink a packshot into the ground. */
+}
+html.zv-ed-dark .zv-dark {
+  --zv-bg:          var(--zv-night-deep);
+  --zv-bg-raised:   var(--zv-night-2);
+  --zv-bg-sunken:   #080A09;
+  --zv-text:        var(--zv-warm);
+  --zv-text-2:      #C4C9C2;
+  --zv-text-3:      #9BA19A;
+  --zv-accent:      var(--zv-sand);
+  --zv-accent-hover:#EDEFEB;
+  --zv-on-accent:   var(--zv-night);
+  --zv-hairline:    rgba(237,239,235,.12);
+  --zv-hairline-2:  rgba(237,239,235,.22);
+  --zv-ghost-edge:  rgba(237,239,235,.22);
+  --zv-focus:       var(--zv-sand);
+}
+html.zv-ed-dark .zv-forest {
+  --zv-bg:          var(--zv-night-deep);
+  --zv-text:        var(--zv-warm);
+  --zv-text-2:      #C4C9C2;
+  --zv-text-3:      #9BA19A;
+  --zv-accent:      var(--zv-sand);
+  --zv-on-accent:   var(--zv-night);
+}
+/* V14's dark-only repaints. */
+html.zv-ed-dark .zann { background: var(--zv-forest-deep); }
+html.zv-ed-dark .zps--dark { background: radial-gradient(60% 70% at 70% 40%, rgba(83,99,75,.26), transparent 72%), var(--zv-night-deep); }
+html.zv-ed-dark .zstory { background: radial-gradient(70% 60% at 26% 30%, rgba(83,99,75,.30), transparent 72%), var(--zv-night-deep); }
+html.zv-ed-dark .zhf { background: radial-gradient(70% 60% at 30% 40%, rgba(83,99,75,.35), transparent 72%), var(--zv-night-deep); }
+html.zv-ed-dark .zpsc { background: var(--zv-night-deep); }
+html.zv-ed-dark .skip:focus { background: var(--zv-sand); color: var(--zv-night); }
+html.zv-ed-dark .zhf__card-p,
+html.zv-ed-dark .zps__card-d { color: var(--zv-text-2); }

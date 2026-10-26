@@ -12,15 +12,34 @@
   image         an image. With a film it is the poster; alone it is the
                 picture. Without it, a film uses its own preview frame.
   image_mobile  optional art-directed crop for screens under 700px.
+  sizes         the `sizes` of the main picture. Describe the IMAGE, not the
+                frame: a landscape photograph covering a portrait frame is
+                drawn wider than the frame (and a breathing or parallax plate
+                wider still), so the caller scales the frame width by that
+                factor, or the browser fetches a file that is too small.
+  sizes_mobile  the same for the phone <source> (default 100vw).
+  region        optional 'left,top,width,height' in the original's pixels:
+                the main picture is cut to that box on Shopify's CDN (crop
+                region), so a frame of the same proportions shows exactly it,
+                and everything outside it never reaches the browser. Phones
+                (under 700px) then get the uncropped photograph through their
+                own <source>, cropped by `position` as before, unless
+                image_mobile or region_mobile is set.
+  region_mobile the same box for phones (under 700px), cut from `image`
+                when there is no image_mobile: a 4:5 box for a 4:5 phone
+                frame means the phone downloads only what it shows.
   fit           'cover' (default) or 'contain'.
   class         extra classes on the wrapper.
   position      the crop to use while the image has no focal point of its
                 own (Shopify reports an unset focal point as 50% 50%), e.g.
                 '50% 44%'. A focal point set in Content > Files always wins.
+  eager         true for the page's LCP picture only: fetchpriority high, no
+                lazy loading and no async decoding (an async decode can hold
+                the first paint of the largest picture back a frame).
 
-  The srcset never offers a width larger than the file itself, so a browser
-  is never handed an upscale it believes is sharp. The crop follows the
-  focal point set on the image in Content > Files.
+  The srcset never offers a width larger than the file (or the region), so
+  a browser is never handed an upscale it believes is sharp. The crop
+  follows the focal point set on the image in Content > Files.
 
   Films never autoplay from the markup. zorev-enhance.js plays one only
   while it is on screen, never for a visitor who asks for reduced motion or
@@ -43,10 +62,61 @@
   endif
   assign label = alt | default: still.alt | default: vid.alt | strip_html | escape
   assign sizes_attr = sizes | default: '100vw'
-  assign ladder = '600,900,1200,1600,2200,3000' | split: ','
+  assign sizes_m = sizes_mobile | default: '100vw'
+  assign ladder = '600,900,1200,1600,1800,2000,2200,3000' | split: ','
   assign crop = still.presentation.focal_point | default: '50% 50%'
   if position != blank and still.presentation.focal_point.x == 50 and still.presentation.focal_point.y == 50
     assign crop = position
+  endif
+
+  comment
+    A crop region is used only when it is four whole numbers that fit
+    inside the file; anything else is ignored and the full picture shows.
+  endcomment
+  assign use_region = false
+  assign rl = 0
+  assign rt = 0
+  assign rw = 0
+  assign rh = 0
+  if region != blank and still != blank
+    assign rparts = region | split: ','
+    if rparts.size == 4
+      assign rl = rparts[0] | strip | plus: 0
+      assign rt = rparts[1] | strip | plus: 0
+      assign rw = rparts[2] | strip | plus: 0
+      assign rh = rparts[3] | strip | plus: 0
+      assign r_right = rl | plus: rw
+      assign r_bottom = rt | plus: rh
+      if rl >= 0 and rt >= 0 and rw > 0 and rh > 0 and r_right <= still.width and r_bottom <= still.height
+        assign use_region = true
+      endif
+    endif
+  endif
+  assign img_w = still.width
+  assign img_h = still.height
+  if use_region
+    assign img_w = rw
+    assign img_h = rh
+  endif
+
+  assign use_mregion = false
+  assign ml = 0
+  assign mt = 0
+  assign mw = 0
+  assign mh = 0
+  if region_mobile != blank and image_mobile == blank and still != blank
+    assign mparts = region_mobile | split: ','
+    if mparts.size == 4
+      assign ml = mparts[0] | strip | plus: 0
+      assign mt = mparts[1] | strip | plus: 0
+      assign mw = mparts[2] | strip | plus: 0
+      assign mh = mparts[3] | strip | plus: 0
+      assign m_right = ml | plus: mw
+      assign m_bottom = mt | plus: mh
+      if ml >= 0 and mt >= 0 and mw > 0 and mh > 0 and m_right <= still.width and m_bottom <= still.height
+        assign use_mregion = true
+      endif
+    endif
   endif
 -%}
 {%- if still != blank or vid -%}
@@ -55,28 +125,56 @@
     {%- capture still_set -%}
       {%- for w in ladder -%}
         {%- assign wn = w | plus: 0 -%}
-        {%- if wn < still.width -%}{{ still | image_url: width: wn }} {{ wn }}w, {% endif -%}
+        {%- if wn < img_w -%}
+          {%- if use_region -%}{{ still | image_url: width: wn, crop: 'region', crop_left: rl, crop_top: rt, crop_width: rw, crop_height: rh }}{%- else -%}{{ still | image_url: width: wn }}{%- endif %} {{ wn }}w, {% endif -%}
       {%- endfor -%}
-      {{- still | image_url: width: still.width }} {{ still.width }}w
+      {%- if use_region -%}{{ still | image_url: crop: 'region', crop_left: rl, crop_top: rt, crop_width: rw, crop_height: rh }}{%- else -%}{{ still | image_url: width: still.width }}{%- endif %} {{ img_w }}w
     {%- endcapture -%}
+    {%- liquid
+      assign src_w = 1600
+      if img_w < 1600
+        assign src_w = img_w
+      endif
+      if use_region
+        assign src_url = still | image_url: width: src_w, crop: 'region', crop_left: rl, crop_top: rt, crop_width: rw, crop_height: rh
+      else
+        assign src_url = still | image_url: width: src_w
+      endif
+      assign mob = nil
+      if image_mobile != blank
+        assign mob = image_mobile
+      elsif use_region or use_mregion
+        assign mob = still
+      endif
+    -%}
     <picture>
-      {%- if image_mobile != blank -%}
+      {%- if use_mregion -%}
         {%- capture mob_set -%}
           {%- for w in ladder -%}
             {%- assign wn = w | plus: 0 -%}
-            {%- if wn < image_mobile.width and wn <= 1600 -%}{{ image_mobile | image_url: width: wn }} {{ wn }}w, {% endif -%}
+            {%- if wn < mw and wn <= 1600 -%}{{ still | image_url: width: wn, crop: 'region', crop_left: ml, crop_top: mt, crop_width: mw, crop_height: mh }} {{ wn }}w, {% endif -%}
           {%- endfor -%}
-          {{- image_mobile | image_url: width: image_mobile.width }} {{ image_mobile.width }}w
+          {%- if mw <= 2200 -%}{{- still | image_url: crop: 'region', crop_left: ml, crop_top: mt, crop_width: mw, crop_height: mh }} {{ mw }}w{%- else -%}{{- still | image_url: width: 2200, crop: 'region', crop_left: ml, crop_top: mt, crop_width: mw, crop_height: mh }} 2200w{%- endif -%}
         {%- endcapture -%}
-        <source media="(max-width: 699px)" srcset="{{ mob_set | strip }}" sizes="100vw">
+        <source media="(max-width: 699px)" srcset="{{ mob_set | strip }}" sizes="{{ sizes_m }}" width="{{ mw }}" height="{{ mh }}">
+      {%- elsif mob != blank -%}
+        {%- capture mob_set -%}
+          {%- for w in ladder -%}
+            {%- assign wn = w | plus: 0 -%}
+            {%- if wn < mob.width and wn <= 1600 -%}{{ mob | image_url: width: wn }} {{ wn }}w, {% endif -%}
+            {%- comment -%} the last rung is the file itself, or 2200 px for a very large one {%- endcomment -%}
+          {%- endfor -%}
+          {%- if mob.width <= 2200 -%}{{- mob | image_url: width: mob.width }} {{ mob.width }}w{%- else -%}{{- mob | image_url: width: 2200 }} 2200w{%- endif -%}
+        {%- endcapture -%}
+        <source media="(max-width: 699px)" srcset="{{ mob_set | strip }}" sizes="{{ sizes_m }}" width="{{ mob.width }}" height="{{ mob.height }}">
       {%- endif -%}
-      <img src="{{ still | image_url: width: 1600 }}"
+      <img src="{{ src_url }}"
            srcset="{{ still_set | strip }}"
            sizes="{{ sizes_attr }}"
-           width="{{ still.width }}" height="{{ still.height }}"
+           width="{{ img_w }}" height="{{ img_h }}"
            alt="{{ label }}"
            style="object-position: {{ crop }}"
-           {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">
+           {% if eager %}fetchpriority="high"{% else %}loading="lazy" decoding="async"{% endif %}>
     </picture>
   {%- endif -%}
   {%- if vid -%}
@@ -110,7 +208,7 @@
       endif
     -%}
     <video class="zv-media__vid" data-zv-video muted playsinline loop preload="none" disableremoteplayback
-           {% if still != blank %}poster="{{ still | image_url: width: 1600 }}"{% endif %}
+           {% if still != blank %}poster="{{ src_url }}"{% endif %}
            aria-label="{{ label }}">
       {%- for src in vid.sources -%}
         {%- if src.format == 'm3u8' -%}<source src="{{ src.url }}" type="{{ src.mime_type }}">{%- endif -%}

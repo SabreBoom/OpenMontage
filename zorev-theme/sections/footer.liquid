@@ -5,14 +5,20 @@
   below 720px — a rule meant for the header, where a hamburger takes over.
   The footer has no hamburger, so on a phone every link here (Contact,
   Shipping, FAQ, Track Order) simply vanished. It owns its own class now.
+
+  V15: the deeper stone ground (zorev.css .ftr), and the brand column says
+  one useful thing: where to write (Theme settings > Trust > Support email),
+  unless a note is set.
 {%- endcomment -%}
 <footer class="ftr">
   <div class="wrap">
     <div class="ftr__in">
       <div class="ftr__brand">
-        <span class="eyebrow">{{ shop.name }}</span>
+        <span class="eyebrow">{{ shop.name | escape }}</span>
         {%- if section.settings.note != blank -%}
           <p class="fine ftr__note">{{ section.settings.note }}</p>
+        {%- elsif section.settings.show_email and settings.support_email != blank -%}
+          <p class="fine ftr__note">Questions about an order? <a class="ftr__mail" href="mailto:{{ settings.support_email | escape }}">{{ settings.support_email | escape }}</a></p>
         {%- endif -%}
       </div>
 
@@ -20,7 +26,7 @@
         <nav class="ftr__nav" aria-label="Footer">
           <ul role="list">
             {%- for link in section.settings.menu.links -%}
-              <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+              <li><a href="{{ link.url }}"{% if link.active %} aria-current="page"{% endif %}>{{ link.title | escape }}</a></li>
             {%- endfor -%}
           </ul>
         </nav>
@@ -44,6 +50,11 @@
   .ftr__in{display:grid;gap:var(--zv-6);align-items:start}
   @media(min-width:760px){.ftr__in{grid-template-columns:1fr auto;gap:var(--zv-8)}}
   .ftr__note{max-width:38ch;margin:0}
+  /* inline-flex + 44px so the address is a comfortable target on a phone */
+  .ftr__mail{display:inline-flex;align-items:center;min-height:44px;
+    color:var(--zv-text);text-decoration:underline;text-decoration-color:var(--zv-hairline-2);
+    text-underline-offset:3px;overflow-wrap:anywhere}
+  @media (hover:hover) and (pointer:fine){.ftr__mail:hover{text-decoration-color:currentColor}}
 
   .ftr__nav ul{list-style:none;margin:0;padding:0;display:grid}
   @media(min-width:760px){
@@ -58,8 +69,9 @@
     transition:color var(--zv-d-hover) var(--zv-ease);
   }
   @media (hover:hover) and (pointer:fine){
-    .ftr__nav a:hover{color:var(--zv-ink);text-decoration:underline;text-underline-offset:3px}
+    .ftr__nav a:hover{color:var(--zv-text);text-decoration:underline;text-underline-offset:3px}
   }
+  .ftr__nav a[aria-current="page"]{color:var(--zv-text);font-weight:600}
   .ftr__nav a:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
 
   .ftr__base{
@@ -73,13 +85,13 @@
   .ftr__legal a{
     display:inline-flex;align-items:center;min-height:44px;
     font-family:var(--zv-sans);font-size:var(--zv-t-fine);
-    /* The footer sits on the sunken ground, where --zv-muted is 4.13:1. The
+    /* The footer sits on the deep stone, where --zv-muted is 4.78:1. The
        bridge layer re-points --zv-text-3 for this surface, so these policy
-       links resolve to moss-strong at 6.42:1 rather than just missing. */
+       links resolve to moss-strong at 5.82:1. */
     color:var(--zv-text-3);text-decoration:none;
   }
   @media (hover:hover) and (pointer:fine){
-    .ftr__legal a:hover{color:var(--zv-ink);text-decoration:underline;text-underline-offset:3px}
+    .ftr__legal a:hover{color:var(--zv-text);text-decoration:underline;text-underline-offset:3px}
   }
   .ftr__legal a:focus-visible{outline:2px solid var(--zv-focus);outline-offset:2px}
   @media(prefers-reduced-motion:reduce){.ftr__nav a{transition-duration:120ms}}
@@ -88,7 +100,9 @@
 { "name": "Footer",
   "settings": [
     { "type": "link_list", "id": "menu", "label": "Menu", "default": "footer" },
-    { "type": "text", "id": "note", "label": "Note" },
+    { "type": "text", "id": "note", "label": "Note", "info": "One line under the shop name. Leave empty to show the support email instead." },
+    { "type": "checkbox", "id": "show_email", "label": "Show the support email", "default": true,
+      "info": "From Theme settings > Trust > Support email. Shown when the note is empty." },
     { "type": "checkbox", "id": "show_policies", "label": "Show policy links", "default": true,
       "info": "Links the store policies you have published (refund, privacy, terms, shipping)." }
   ] }

@@ -13,8 +13,11 @@ test.describe('storefront', () => {
     await expect(page.locator('h1')).toBeVisible();
     await expect(page.locator('#line')).toBeVisible();
     await expect(page.locator('#pair')).toBeVisible();
-    // clean cutouts, not the maker's infographics, on the homepage
-    expect(await page.locator('img.zv-cut').count()).toBeGreaterThanOrEqual(4);
+    // V15 (PLAN §1.4): the products are the makers' own studio packshots on
+    // stone plates (Theme settings > Studio images), not the maker's
+    // infographics and never a generated scene with the products in it.
+    expect(await page.locator('.zv-studio img[data-zv-studio="true"]').count()).toBeGreaterThanOrEqual(4);
+    expect(await page.locator('img[src*="pair-basalt"], img[srcset*="pair-basalt"]').count()).toBe(0);
     await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } window.scrollTo(0, 0); });
     await page.waitForTimeout(800);
     const hidden = await page.evaluate(() => [...document.querySelectorAll('[data-zv-reveal]')].filter(e => getComputedStyle(e).opacity === '0').length);
@@ -86,7 +89,8 @@ test.describe('storefront', () => {
     const opts = page.locator('.opt[data-variant-id]');
     expect(await opts.count()).toBe(4);
     await opts.nth(1).click();
-    await expect(opts.nth(1)).toHaveAttribute('aria-checked', 'true');
+    // V15: the options are native radios in a fieldset (checked, not aria-checked)
+    await expect(opts.nth(1)).toBeChecked();
     await expect(page.locator('#zpf-main input[name="id"]')).toHaveValue(String(GODA.white));
     // the pair card follows the chosen option
     await expect(page.locator('[data-pairc-add]')).toHaveAttribute('data-a', String(GODA.white));
@@ -98,7 +102,7 @@ test.describe('storefront', () => {
     expect(current).toMatch(/2/);
   });
 
-  test('pair upsell: offered with GODA only, confirmed once HOYGI is added, absent with 2 HOYGI and no GODA', async ({ page }) => {
+  test('pair upsell: offered with GODA only, confirmed once HOYGI is added; with 2 HOYGI and no GODA the bag offers GODA at its real price', async ({ page }) => {
     await addItems(page, [{ id: GODA.black, quantity: 1 }]);
     await go(page, '/products/' + GODA.handle);
     await page.locator('[data-cart-link]').click();
@@ -120,9 +124,14 @@ test.describe('storefront', () => {
     await go(page, '/products/' + HOYGI.handle);
     await page.locator('[data-cart-link]').click();
     await expect(drawer).toHaveClass(/is-open/);
-    await page.waitForTimeout(800);
-    await expect(drawer.locator('[data-cd-pair]')).toBeHidden();
+    // V15 (pair rule, PLAN §5): one GODA on top of 2 HOYGI is 1G+2H, which
+    // Shopify gives the pair ($66 = $44 + $22), so the bag offers it; the
+    // product page's "one of each" card is blocked (1G+3H would lose it).
+    const offer = drawer.locator('[data-cd-pair]');
+    await expect(offer).toBeVisible();
+    await expect(offer).toContainText('GODA for $22 with your HOYGI');
     await expect(page.locator('[data-pairc]')).toHaveAttribute('data-state', 'blocked');
+    await expect(page.locator('[data-pairc] [data-pairc-add]')).toHaveText('Add one of each');
   });
 
   test('cart page: quantity change updates in place without a reload, remove empties the bag', async ({ page }) => {
@@ -159,8 +168,11 @@ test.describe('storefront', () => {
 
   test('accordions and trust lines on the product page', async ({ page }) => {
     await go(page, '/products/' + HOYGI.handle);
+    // V15: the description's sections are open story blocks; the two
+    // store-wide accordions (Shipping & returns, FAQ) stay <details>.
+    await expect(page.locator('.pstory__h', { hasText: 'Good to know' })).toBeVisible();
     const accs = page.locator('details.acc');
-    expect(await accs.count()).toBeGreaterThanOrEqual(4);
+    expect(await accs.count()).toBeGreaterThanOrEqual(2);
     const second = accs.nth(1);
     await second.locator('summary').click();
     await expect(second).toHaveAttribute('open', '');
@@ -180,9 +192,12 @@ test.describe('storefront', () => {
     for (const path of ['/', '/products/' + GODA.handle, '/products/' + HOYGI.handle, '/cart', '/collections/the-pair', '/pages/faq']) {
       await go(page, path);
       const text = await page.locator('body').innerText();
-      // $84 / "save $14" / "Take both" were the old pair offer; $59 was the
-      // pair before GODA moved to $30. ($14 alone is now GODA's 3-tier saving.)
-      expect(text, path).not.toMatch(/\$84|Take both|\$59/i);
+      // $84 / "save $14" / "Take both — 10% off" were the old pair offers; $59
+      // was the pair before GODA moved to $30. ($14 alone is now GODA's
+      // 3-tier saving.) V15's empty bag says "take both as The ZOREV Pair,
+      // $47 together", which is the current offer, so only the expired
+      // discount's own wording counts.
+      expect(text, path).not.toMatch(/\$84|Take both\s*[—–-]|10% off|\$59/i);
     }
     // the announcement and the homepage buttons quote the pair's real price
     await go(page, '/');
@@ -274,7 +289,8 @@ test.describe('reduced motion', () => {
     await page.waitForTimeout(600);
     const s = await page.evaluate(() => ({
       breathe: getComputedStyle(document.querySelector('.zhf__breathe')).animationName,
-      mist: getComputedStyle(document.querySelector('.zhf__mist--far')).animationName,
+      // V15: drawn mist is off by default (hero setting "Drawn light and mist")
+      mist: document.querySelector('.zhf__mist--far') ? getComputedStyle(document.querySelector('.zhf__mist--far')).animationName : 'none',
       moved: [...document.querySelectorAll('[data-zv-depth]')].filter(e => e.style.transform).length,
       videos: [...document.querySelectorAll('video[data-zv-video]')].filter(v => !v.paused).length,
     }));
@@ -304,21 +320,25 @@ test.describe('film homepage', () => {
     expect(box.y + box.height).toBeGreaterThan(vh * 0.9);
   });
 
-  test('each product has its own chapter with the real ladder', async ({ page }) => {
+  // V15 (PLAN §2 B1): the chapters are calm editorial chapters with a text
+  // link to the product; their price ladders are off and the line-up above
+  // them carries the real multi-buy prices ("2 for $54 · 3 for $76").
+  test('each product has its own chapter linking to it, and the line-up quotes the real multi-buy prices', async ({ page }) => {
     await go(page, '/');
     const goda = page.locator('#goda');
     const hoygi = page.locator('#hoygi');
-    await expect(goda).toContainText('$30');
-    await expect(goda.locator('.zps__ladder')).toContainText('$54');
-    await expect(goda.locator('.zps__ladder')).toContainText('$76');
-    await expect(goda.locator('.zps__ladder')).toContainText('Save $6');
-    await expect(goda.locator('.zps__ladder')).toContainText('Save $14');
-    await expect(hoygi.locator('.zps__ladder')).toContainText('$44');
-    await expect(hoygi.locator('.zps__ladder')).toContainText('$63');
-    await expect(hoygi.locator('.zps__ladder')).toContainText('Save $6');
-    await expect(hoygi.locator('.zps__ladder')).toContainText('Save $12');
-    await expect(goda.locator('a.zv-btn')).toHaveAttribute('href', /goda-pheromone-perfume-oil/);
-    await expect(hoygi.locator('a.zv-btn')).toHaveAttribute('href', /hoygi-calcium-multi-balm/);
+    await expect(goda.locator('.zps__eyebrow')).toContainText('GODA');
+    await expect(hoygi.locator('.zps__eyebrow')).toContainText('HOYGI');
+    await expect(goda.locator('a.zps__link--main')).toHaveAttribute('href', /goda-pheromone-perfume-oil/);
+    await expect(hoygi.locator('a.zps__link--main')).toHaveAttribute('href', /hoygi-calcium-multi-balm/);
+    await expect(page.locator('.zps__ladder')).toHaveCount(0);
+    const line = page.locator('#line');
+    await expect(line).toContainText('$30');
+    await expect(line).toContainText('2 for $54');
+    await expect(line).toContainText('3 for $76');
+    await expect(line).toContainText('$25');
+    await expect(line).toContainText('2 for $44');
+    await expect(line).toContainText('3 for $63');
   });
 
   test('chapter copy keeps a readable column on every screen width', async ({ page }, testInfo) => {
@@ -347,48 +367,62 @@ test.describe('film homepage', () => {
     }
   });
 
-  test('Made to move: four scenes; on a phone a strip that scrolls sideways and reports progress', async ({ page }, testInfo) => {
+  // V15 (PLAN §2 B5): one horizontal editorial strip at every width, with
+  // numbered chapter buttons (and prev/next on wide screens) driving native
+  // scroll; the progress bar follows.
+  test('Made to move: four scenes in a sideways strip that reports progress, with chapter buttons', async ({ page }, testInfo) => {
     await go(page, '/');
     const mm = page.locator('#made-to-move');
     await expect(mm.locator('.zmm__item')).toHaveCount(4);
     const track = mm.locator('[data-zv-strip-track]');
+    await track.scrollIntoViewIfNeeded();
+    // scrollable, so it is a labelled, focusable region
+    await expect(track).toHaveAttribute('tabindex', '0');
+    const gos = mm.locator('[data-zv-strip-go]');
+    await expect(gos).toHaveCount(4);
+    await expect(gos.first()).toBeVisible();
+    const scale = v => parseFloat((/scaleX\(([\d.]+)\)/.exec(v) || [])[1]);
+    const before = await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform);
+    expect(scale(before)).toBeLessThan(1);
     if (testInfo.project.name === 'mobile') {
-      // scrollable, so it is a labelled, focusable region
-      await expect(track).toHaveAttribute('tabindex', '0');
-      await track.scrollIntoViewIfNeeded();
-      const before = await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform);
       await track.evaluate(t => t.scrollTo({ left: t.scrollWidth, behavior: 'instant' }));
-      await page.waitForTimeout(300);
-      const after = await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform);
-      expect(before).not.toBe(after);
-      // the browser normalises the inline value (1.000 -> 1), so compare numbers
-      const scale = v => parseFloat((/scaleX\(([\d.]+)\)/.exec(v) || [])[1]);
-      expect(scale(before)).toBeLessThan(1);
-      expect(scale(after)).toBeCloseTo(1, 2);
     } else {
-      // nothing to scroll on a wide screen, so no dead tab stop either
-      expect(await track.evaluate(t => t.scrollWidth <= t.clientWidth + 1)).toBe(true);
-      await expect(track).not.toHaveAttribute('tabindex', /.*/);
+      await gos.nth(3).click();
+      await expect(gos.nth(3)).toHaveAttribute('aria-current', 'true');
     }
+    await expect.poll(async () => scale(await mm.locator('[data-zv-strip-bar]').evaluate(b => b.style.transform))).toBeGreaterThan(scale(before));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 
-  test('real media never shows staged footage: honest empty state until a permitted clip exists', async ({ page }) => {
+  // V15 (PLAN §2 B1): the real-media section is switched off until a
+  // permitted clip exists; if it is switched back on it must still show the
+  // honest empty state, never staged footage.
+  test('real media never shows staged footage: off, or an honest empty state until a permitted clip exists', async ({ page }) => {
     await go(page, '/');
     const rm = page.locator('#real');
-    await expect(rm).toBeVisible();
-    await expect(rm).toHaveClass(/zrm--empty/);
-    expect(await rm.locator('video, .zrm__item').count()).toBe(0);
-    await expect(rm).toContainText('we will not stage it');
+    if (await rm.count()) {
+      await expect(rm).toHaveClass(/zrm--empty/);
+      expect(await rm.locator('video, .zrm__item').count()).toBe(0);
+      await expect(rm).toContainText('we will not stage it');
+    }
+    expect(await page.locator('.zrm__item').count()).toBe(0);
   });
 
-  test('product page shows its own in-use scene and never the other product\'s', async ({ page }) => {
+  // V15: the in-use scenes are composites, so the scene section and the
+  // gallery's scene blocks are off until the owner approves a real photo.
+  // The gallery is the makers' studio packshots, one per option, and never
+  // shows the other product.
+  test('product gallery is its own studio packshots, one per option, never the other product', async ({ page }) => {
     await go(page, '/products/' + GODA.handle);
-    await expect(page.locator('.zpsc')).toHaveCount(1);
-    expect(await page.locator('.zpsc img').getAttribute('alt')).toMatch(/GODA/);
-    expect(await page.locator('.gal__slide--photo img').evaluateAll(a => a.map(i => i.alt).join('|'))).not.toMatch(/Hoygi/i);
+    await expect(page.locator('.zpsc')).toHaveCount(0);
+    const shots = page.locator('.gal__slide--shot');
+    await expect(shots).toHaveCount(4);
+    const vars = await shots.evaluateAll(a => a.map(s => s.getAttribute('data-variant')));
+    expect(vars.sort()).toEqual([GODA.black, GODA.white, GODA.citrus, GODA.neutral].map(String).sort());
+    expect(await page.locator('.gal__slide img').evaluateAll(a => a.map(i => i.alt).join('|'))).not.toMatch(/Hoygi/i);
     await go(page, '/products/' + HOYGI.handle);
-    await expect(page.locator('.zpsc')).toHaveCount(1);
-    expect(await page.locator('.zpsc img').getAttribute('alt')).toMatch(/Hoygi/);
-    expect(await page.locator('.gal__slide--photo img').evaluateAll(a => a.map(i => i.alt).join('|'))).not.toMatch(/GODA/);
+    await expect(page.locator('.zpsc')).toHaveCount(0);
+    expect(await page.locator('.gal__slide--shot').count()).toBeGreaterThanOrEqual(1);
+    expect(await page.locator('.gal__slide img').evaluateAll(a => a.map(i => i.alt).join('|'))).not.toMatch(/GODA/);
   });
 });

@@ -8,15 +8,38 @@
   The sitelinks search target needs literal braces around
   search_term_string. Written inline they break Liquid's lexer, so the
   braces are assigned separately and captured.
+
+  Social image (V15): a product page shares its studio packshot (the
+  maker's own photograph for the selected option, Theme settings > Studio
+  images) when the studio set is on, else its featured image. Pages with
+  no image of their own share Theme settings > Brand > Social image, cut
+  to 1200x630 from the centre. Descriptions use escape_once: Shopify's
+  page_description arrives already escaped.
 {%- endcomment -%}
 
 {%- liquid
   assign og_title = seo_title | default: page_title
   assign og_desc = seo_desc | default: page_description | default: shop.description | default: settings.seo_home_description | default: shop.name
   assign og_type = 'website'
+  assign og_studio = false
   if request.page_type == 'product'
     assign og_type = 'product'
-    assign og_img = product.featured_media.preview_image
+    if settings.studio_mode == 'on'
+      assign og_vid = product.selected_or_first_available_variant.id | append: ''
+      for n in (1..10)
+        assign key_v = 'studio_' | append: n | append: '_variant'
+        assign key_i = 'studio_' | append: n | append: '_image'
+        assign slot_v = settings[key_v] | append: '' | strip
+        if slot_v == og_vid and settings[key_i] != blank
+          assign og_img = settings[key_i]
+          assign og_studio = true
+          break
+        endif
+      endfor
+    endif
+    unless og_img
+      assign og_img = product.featured_media.preview_image
+    endunless
   elsif request.page_type == 'article'
     assign og_type = 'article'
     assign og_img = article.image
@@ -26,23 +49,58 @@
   unless og_img
     assign og_img = settings.social_image
   endunless
+
+  comment
+    Never ask for more pixels than the file has. A wide image is cut to the
+    1200x630 card shape; a square or tall one is sent whole.
+  endcomment
+  if og_img
+    assign og_w = og_img.width | default: 1200
+    assign og_h = og_img.height | default: 1200
+    assign og_crop = false
+    if og_w >= 1200 and og_h >= 630
+      assign og_ratio = og_w | times: 100 | divided_by: og_h
+      if og_ratio >= 150
+        assign og_crop = true
+      endif
+    endif
+    if og_crop
+      assign og_url = og_img | image_url: width: 1200, height: 630, crop: 'center'
+      assign og_w = 1200
+      assign og_h = 630
+    else
+      if og_w > 1200
+        assign og_h = og_h | times: 1200 | divided_by: og_w
+        assign og_w = 1200
+      endif
+      assign og_url = og_img | image_url: width: og_w
+    endif
+    assign og_alt = og_img.alt
+    if og_alt == blank or og_studio
+      assign og_alt = og_title
+    endif
+  endif
 -%}
 
 <meta property="og:site_name" content="{{ shop.name }}">
 <meta property="og:type" content="{{ og_type }}">
 <meta property="og:title" content="{{ og_title | escape }}">
-<meta property="og:description" content="{{ og_desc | strip_html | truncate: 200 | escape }}">
+<meta property="og:description" content="{{ og_desc | strip_html | truncate: 200 | escape_once }}">
 <meta property="og:url" content="{{ canonical_url }}">
 {%- if og_img -%}
-  <meta property="og:image" content="https:{{ og_img | image_url: width: 1200 }}">
-  <meta property="og:image:width" content="1200">
+  <meta property="og:image" content="https:{{ og_url }}">
+  <meta property="og:image:secure_url" content="https:{{ og_url }}">
+  <meta property="og:image:width" content="{{ og_w }}">
+  <meta property="og:image:height" content="{{ og_h }}">
+  <meta property="og:image:alt" content="{{ og_alt | strip_html | escape_once }}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https:{{ og_img | image_url: width: 1200 }}">
+  <meta name="twitter:image" content="https:{{ og_url }}">
+  <meta name="twitter:image:alt" content="{{ og_alt | strip_html | escape_once }}">
 {%- else -%}
   <meta name="twitter:card" content="summary">
 {%- endif -%}
 <meta name="twitter:title" content="{{ og_title | escape }}">
-<meta name="twitter:description" content="{{ og_desc | strip_html | truncate: 200 | escape }}">
+<meta name="twitter:description" content="{{ og_desc | strip_html | truncate: 200 | escape_once }}">
 
 {%- if request.page_type == 'product' -%}
   {%- assign ld_sku = product.selected_or_first_available_variant.sku -%}
@@ -57,8 +115,47 @@
     "sku": {{ ld_sku | json }},
     {%- endif -%}
     "brand": { "@type": "Brand", "name": {{ product.vendor | json }} },
-    {%- if product.featured_media -%}
-    "image": [{% for m in product.media limit: 5 %}{{ m.preview_image | image_url: width: 1200 | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}{% endfor %}],
+    {%- liquid
+      comment
+        Images: the studio packshots of this product's options when the
+        studio set is on (the makers' own photographs), else its media.
+      endcomment
+      assign ld_imgs = ''
+      if settings.studio_mode == 'on'
+        assign ld_ids = ''
+        for v in product.variants
+          assign ld_ids = ld_ids | append: '|' | append: v.id | append: '|'
+        endfor
+        for n in (1..10)
+          assign key_v = 'studio_' | append: n | append: '_variant'
+          assign key_i = 'studio_' | append: n | append: '_image'
+          assign slot_v = settings[key_v] | append: '' | strip
+          assign slot_k = '|' | append: slot_v | append: '|'
+          if slot_v != blank and ld_ids contains slot_k and settings[key_i] != blank
+            assign ld_w = settings[key_i].width | default: 1200
+            if ld_w > 1200
+              assign ld_w = 1200
+            endif
+            assign ld_u = settings[key_i] | image_url: width: ld_w | prepend: 'https:' | json
+            if ld_imgs != ''
+              assign ld_imgs = ld_imgs | append: ','
+            endif
+            assign ld_imgs = ld_imgs | append: ld_u
+          endif
+        endfor
+      endif
+      if ld_imgs == '' and product.featured_media
+        for m in product.media limit: 5
+          assign ld_u = m.preview_image | image_url: width: 1200 | prepend: 'https:' | json
+          if ld_imgs != ''
+            assign ld_imgs = ld_imgs | append: ','
+          endif
+          assign ld_imgs = ld_imgs | append: ld_u
+        endfor
+      endif
+    -%}
+    {%- if ld_imgs != '' -%}
+    "image": [{{ ld_imgs }}],
     {%- endif -%}
     "offers": [
       {%- for v in product.variants -%}

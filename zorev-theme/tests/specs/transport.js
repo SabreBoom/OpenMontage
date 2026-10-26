@@ -97,6 +97,37 @@ function curlOnce(url, { method = 'GET', headers = {}, body = null, jar }) {
   });
 }
 
+// Static files under /cdn/ (theme CSS/JS, fonts, product photographs) are
+// versioned URLs that never change within a run. Every test starts a fresh
+// browser context with an empty cache, so a full run used to fetch the same
+// few hundred files from the store's own domain again and again — enough
+// traffic on its own to trip the store's rate limiting halfway through a
+// run (measured: HTTP 429 after ~30 tests). They are fetched once per
+// worker and replayed from memory; the bytes are the store's own response.
+// ZV_CDN_CACHE=0 turns this off.
+const cdnCache = new Map();
+const CDN_CACHE = process.env.ZV_CDN_CACHE !== '0';
+let cdnHits = 0, cdnMisses = 0;
+async function cdn(route, req, url) {
+  if (!CDN_CACHE || req.method() !== 'GET') return route.continue();
+  const hit = cdnCache.get(url);
+  if (hit) { cdnHits++; return route.fulfill(hit); }
+  try {
+    const resp = await route.fetch();
+    const body = await resp.body();
+    // the body is already decoded, so encoding/length headers would lie
+    const headers = {};
+    for (const [k, v] of Object.entries(resp.headers())) if (!DROP.has(k.toLowerCase())) headers[k] = v;
+    const entry = { status: resp.status(), headers, body };
+    if (resp.status() === 200 && body.length < 16 * 1024 * 1024) cdnCache.set(url, entry);
+    cdnMisses++;
+    if (process.env.ZV_TRANSPORT_DEBUG && cdnMisses % 25 === 0) process.stderr.write(`[transport] cdn cache ${cdnCache.size} files, ${cdnHits} hits, ${cdnMisses} misses\n`);
+    return route.fulfill(entry);
+  } catch (e) {
+    return route.continue().catch(() => {});
+  }
+}
+
 const states = new WeakMap();
 function newJar() { return path.join(os.tmpdir(), `zv-jar-${process.pid}-${Date.now()}-${++seq}.txt`); }
 
@@ -122,7 +153,8 @@ async function install(page, storeHost, block) {
     if (block && block.test(url)) return route.abort();
     let u;
     try { u = new URL(url); } catch (e) { return route.continue(); }
-    if (u.host !== storeHost || u.pathname.startsWith('/cdn/')) return route.continue();
+    if (u.host !== storeHost) return route.continue();
+    if (u.pathname.startsWith('/cdn/')) return cdn(route, req, url);
     const started = Date.now();
     try {
       const r = await curlFetch(url, { method: req.method(), headers: req.headers(), body: req.postDataBuffer(), jar: state.jar });

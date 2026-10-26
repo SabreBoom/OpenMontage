@@ -1,20 +1,22 @@
 {%- comment -%}
   ZOREV — product story.
 
-  One product as the hero of its own chapter: a photograph of the real
-  product in a real place, bled to the edge of the screen, beside a short
-  statement, three physical facts and the price ladder. The photograph is
-  the argument; the copy is a caption to it.
+  One product as the hero of its own chapter: a picture of the real
+  product beside a short statement, three physical facts and, optionally,
+  the price ladder. The picture is the argument; the copy is a caption to it.
 
-  Depth, cheapest first:
-    1  the photograph opens from a slightly inset frame as it arrives
-       ([data-zv-reveal="media"]), and settles from a small scale
-    2  inside its frame it drifts a little slower than the page
-       ([data-zv-scene] / [data-zv-depth], zorev-enhance.js)
-    3  a specimen card with the real cutout overlaps the frame's corner and
-       leans toward a fine pointer ([data-zv-tilt]); it is the product on
-       paper, never pasted into the photograph's light
-  All three are off under prefers-reduced-motion; the layout is identical.
+  Pictures, in order of preference:
+    studio   (Picture = "Studio image") the makers' own packshot from Theme
+             settings > Studio images, on the warm stone plate (.zv-studio),
+             with an optional row of every option's packshot under it.
+    photo    a square product photograph: a square frame in the content
+             column, standing still.
+    scene    a wide photograph or a film: bled to the screen edge, drifting a
+             little slower than the page ([data-zv-scene] / [data-zv-depth]).
+  The picture opens from a slightly inset frame as it arrives
+  ([data-zv-reveal="media"]); nothing moves under prefers-reduced-motion.
+
+  Tones: light (warm paper), stone (soft stone band), dark (a photo band).
 
   The ladder reads the product's own offer data (zorev.offer), the same
   data the product page and the line-up read. The saving itself is
@@ -29,26 +31,87 @@
   endif
   assign offer = p.metafields.zorev.offer.value
   assign short = p.vendor | upcase
+  assign dv = p.selected_or_first_available_variant
+
+  assign use_studio = false
+  if s.picture == 'studio' and has_p
+    assign use_studio = true
+  endif
   assign has_media = false
-  if s.photo != blank or s.video != blank
+  if use_studio or s.photo != blank or s.video != blank
     assign has_media = true
   endif
+
+  comment
+    A square-ish photograph (the store's own product shots are 1:1) gets
+    the plate layout: a square frame inside the content column instead of
+    the wide, edge-bled scene frame, so the whole product shows at every
+    width. A wide scene photograph or a film keeps the bleed layout.
+  endcomment
+  assign is_plate = false
+  if use_studio
+    assign is_plate = true
+  elsif s.video == blank and s.photo != blank and s.photo.aspect_ratio < 1.3
+    assign is_plate = true
+  endif
   assign sid = 'zps-' | append: section.id
+  assign tone = s.tone | default: 'light'
 -%}
-<section class="zps zps--{{ s.tone }} zps--media-{{ s.media_side }}{% if s.tone == 'dark' %} zv-dark{% endif %}" id="{{ s.anchor | default: sid | handleize }}"
+{%- if use_studio -%}
+  {%- capture dv_label -%}{% render 'zvlabel', t: dv.title %}{%- endcapture -%}
+  {%- liquid
+    assign studio_alt = s.photo_alt
+    if studio_alt == blank
+      assign studio_alt = p.title
+      unless p.has_only_default_variant
+        assign studio_alt = studio_alt | append: ', ' | append: dv_label
+      endunless
+    endif
+  -%}
+{%- endif -%}
+<section class="zps zps--{{ tone }} zps--media-{{ s.media_side }}{% if tone == 'dark' %} zv-dark{% endif %}{% if is_plate %} zps--plate{% endif %}" id="{{ s.anchor | default: sid | handleize }}"
          aria-labelledby="{{ sid }}-h"
          style="--zps-pos: {{ s.position | default: '50% 50%' }}; --zps-pos-m: {{ s.position_mobile | default: s.position | default: '50% 50%' }};">
   <div class="zps__grid">
     {%- if has_media -%}
       <figure class="zps__media">
-        <div class="zps__frame" data-zv-reveal="media" data-zv-scene data-zv-scene-scroll="-0.07">
-          <div class="zps__plate" data-zv-depth="1">
-            {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 900px) 60vw, 100vw', alt: s.photo_alt %}
+        {%- if use_studio -%}
+          <div class="zps__frame zv-studio{% if tone == 'stone' %} zv-studio--deep{% endif %} zv-studio--floor" data-zv-reveal="media">
+            <div class="zps__studio">
+              {%- comment -%}
+                The plate is half the content column on a wide screen (about
+                520 px at 1240) and the full width less the margins on a phone.
+              {%- endcomment -%}
+              {% render 'studio-image', product: p, variant: dv, index: 0, widths: '360,540,720,900,1100,1400', sizes: '(min-width: 1240px) 540px, (min-width: 900px) 44vw, calc(100vw - 40px)', class: 'zps__studio-img', loading: 'lazy', fetchpriority: 'auto', alt: studio_alt %}
+            </div>
           </div>
-        </div>
-        {%- if s.show_card and has_p -%}
-          <a class="zps__card zps__card--{{ s.card_corner | default: 'bottom-right' }}" href="{{ p.url }}" data-zv-tilt="5" data-zv-reveal>
-            <span class="zps__card-obj" aria-hidden="true">{% render 'product-cutout', product: p, sizes: '140px', alt: '' %}</span>
+          {%- if s.show_options and p.variants.size > 1 -%}
+            <ul class="zps__opts" role="list" aria-label="{{ short | escape }} options">
+              {%- for v in p.variants limit: 4 -%}
+                <li class="zps__opt">
+                  <span class="zps__opt-plate zv-studio{% if tone == 'stone' %} zv-studio--deep{% endif %}" aria-hidden="true">
+                    {% render 'studio-image', product: p, variant: v, index: 0, widths: '120,180,240,360', sizes: '(min-width: 900px) 120px, 22vw', class: 'zps__opt-img', loading: 'lazy', fetchpriority: 'auto', alt: '' %}
+                  </span>
+                  <span class="zps__opt-n">{% render 'zvlabel', t: v.title %}</span>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        {%- else -%}
+          <div class="zps__frame" data-zv-reveal="media"{% unless is_plate %} data-zv-scene data-zv-scene-scroll="-0.07"{% endunless %}>
+            <div class="zps__plate"{% unless is_plate %} data-zv-depth="1"{% endunless %}>
+              {%- if is_plate -%}
+                {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 1240px) 540px, (min-width: 900px) 44vw, calc(100vw - 40px)', alt: s.photo_alt %}
+              {%- else -%}
+                {%- comment -%} a wide scene covers a 4:5 phone frame: it is drawn about 2x the screen width there {%- endcomment -%}
+                {% render 'zv-media', media: s.video, image: s.photo, image_mobile: s.photo_mobile, sizes: '(min-width: 900px) 62vw, 200vw', sizes_mobile: '100vw', alt: s.photo_alt %}
+              {%- endif -%}
+            </div>
+          </div>
+        {%- endif -%}
+        {%- if s.show_card and has_p and use_studio == false -%}
+          <a class="zps__card zps__card--{{ s.card_corner | default: 'bottom-right' }}" href="{{ p.url }}" data-zv-reveal>
+            <span class="zps__card-plate" aria-hidden="true">{% render 'studio-image', product: p, variant: dv, index: 0, widths: '120,180', sizes: '60px', class: 'zps__card-img', loading: 'lazy', fetchpriority: 'auto', alt: '' %}</span>
             <span class="zps__card-t">
               <span class="zps__card-n">{{ short | escape }}</span>
               <span class="zps__card-d">{{ s.card_line | default: p.type | escape }}</span>
@@ -93,12 +156,18 @@
               </li>
             {%- endfor -%}
           </ol>
-          <p class="zps__fine">{% if p.variants.size > 1 %}Applied automatically in your bag. Mix any options; no code needed.{% else %}Applied automatically in your bag. No code needed.{% endif %}</p>
+          <p class="zps__fine">Applied automatically in your bag{% if p.variants.size > 1 %}, and you can mix options{% endif %}. No code.</p>
         {%- endif -%}
+        {%- assign cta = s.cta_label -%}
+        {%- if cta == blank -%}{%- assign cta = 'Shop ' | append: short -%}{%- endif -%}
         <div class="zps__act">
-          <a class="zv-btn" href="{{ p.url }}">{{ s.cta_label | default: 'Shop' | escape }}{% if s.cta_label == blank %} {{ short | escape }}{% endif %}</a>
+          {%- if s.cta_style == 'button' -%}
+            <a class="zv-btn" href="{{ p.url }}">{{ cta | escape }}</a>
+          {%- else -%}
+            <a class="zps__link zps__link--main" href="{{ p.url }}">{{ cta | escape }}<span aria-hidden="true">&rarr;</span></a>
+          {%- endif -%}
           {%- if s.link_label != blank -%}
-            <a class="zps__link" href="{{ s.link_url | default: p.url }}">{{ s.link_label | escape }}<span aria-hidden="true"> &rarr;</span></a>
+            <a class="zps__link" href="{{ s.link_url | default: p.url }}">{{ s.link_label | escape }}<span aria-hidden="true">&rarr;</span></a>
           {%- endif -%}
         </div>
       {%- endif -%}
@@ -113,18 +182,23 @@
   "settings": [
     { "type": "product", "id": "product", "label": "Product" },
     { "type": "select", "id": "tone", "label": "Tone", "default": "light",
-      "options": [ { "value": "light", "label": "Light paper" }, { "value": "dark", "label": "Dark" } ] },
-    { "type": "select", "id": "media_side", "label": "Photograph side", "default": "left",
+      "options": [ { "value": "light", "label": "Light paper" }, { "value": "stone", "label": "Soft stone" }, { "value": "dark", "label": "Dark" } ] },
+    { "type": "select", "id": "media_side", "label": "Picture side", "default": "left",
       "options": [ { "value": "left", "label": "Left" }, { "value": "right", "label": "Right" } ] },
     { "type": "text", "id": "anchor", "label": "Anchor", "info": "For links to this chapter, e.g. goda. Letters and dashes." },
-    { "type": "header", "content": "Photograph" },
-    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "The real product in a real place (briefs G1, Y1). 16:9 or wider, at least 2400 px across." },
+    { "type": "header", "content": "Picture" },
+    { "type": "select", "id": "picture", "label": "Picture", "default": "photo",
+      "info": "Studio image: the product's first studio packshot from Theme settings > Studio images, on a stone plate. Photograph: the image below.",
+      "options": [ { "value": "photo", "label": "Photograph" }, { "value": "studio", "label": "Studio image" } ] },
+    { "type": "checkbox", "id": "show_options", "label": "Show every option under the studio image", "default": false,
+      "info": "A small packshot of each option (up to four), named. Studio image only." },
+    { "type": "image_picker", "id": "photo", "label": "Photograph", "info": "A square product photograph (gets a square frame), or the real product in a real place, 16:9 or wider and at least 2400 px across (bled to the screen edge)." },
     { "type": "image_picker", "id": "photo_mobile", "label": "Photograph for phones (optional)", "info": "4:5, at least 1600 × 2000 px. Left empty, phones get a crop of the photograph above." },
     { "type": "video", "id": "video", "label": "Film (optional)", "info": "Silent, 6 to 10 seconds, loops cleanly. Uses the photograph as its poster." },
-    { "type": "text", "id": "photo_alt", "label": "Photograph description", "info": "Used only if the image has no alt text in Content > Files." },
-    { "type": "text", "id": "position", "label": "Crop on wide screens", "default": "50% 50%", "info": "Where the frame centres on the photograph, as x% y%." },
+    { "type": "text", "id": "photo_alt", "label": "Picture description", "info": "For the photograph, used only if the image has no alt text in Content > Files; for the studio image, empty means the product and option name." },
+    { "type": "text", "id": "position", "label": "Crop on wide screens", "default": "50% 50%", "info": "Where the frame centres on a wide photograph, as x% y%." },
     { "type": "text", "id": "position_mobile", "label": "Crop on phones", "info": "Same, for the taller phone frame. Empty: the wide-screen crop." },
-    { "type": "checkbox", "id": "show_card", "label": "Show the specimen card", "default": true },
+    { "type": "checkbox", "id": "show_card", "label": "Show the specimen card", "default": true, "info": "Photographs only." },
     { "type": "select", "id": "card_corner", "label": "Specimen card corner", "default": "bottom-right",
       "info": "Put it where it covers nothing that matters, never over the product in the photograph.",
       "options": [ { "value": "bottom-left", "label": "Bottom left" }, { "value": "bottom-right", "label": "Bottom right" }, { "value": "top-left", "label": "Top left" }, { "value": "top-right", "label": "Top right" } ] },
@@ -133,10 +207,12 @@
     { "type": "text", "id": "eyebrow", "label": "Eyebrow", "info": "Empty: the product type." },
     { "type": "inline_richtext", "id": "heading", "label": "Heading" },
     { "type": "richtext", "id": "body", "label": "Body", "info": "Two or three sentences about what it physically is and how it is used. Leave the maker's claims on the product page, labelled as theirs." },
-    { "type": "checkbox", "id": "show_ladder", "label": "Show the multi-buy ladder", "default": true },
-    { "type": "text", "id": "cta_label", "label": "Button", "info": "Empty: Shop and the maker's name." },
-    { "type": "text", "id": "link_label", "label": "Text link" },
-    { "type": "url", "id": "link_url", "label": "Text link URL", "info": "Empty: the product page." }
+    { "type": "checkbox", "id": "show_ladder", "label": "Show the multi-buy ladder", "default": true, "info": "The line-up already shows the multi-buy prices; the full ladder belongs on the product page." },
+    { "type": "text", "id": "cta_label", "label": "Link text", "info": "Empty: Shop and the maker's name." },
+    { "type": "select", "id": "cta_style", "label": "Link style", "default": "link",
+      "options": [ { "value": "link", "label": "Text link" }, { "value": "button", "label": "Button" } ] },
+    { "type": "text", "id": "link_label", "label": "Second text link" },
+    { "type": "url", "id": "link_url", "label": "Second text link URL", "info": "Empty: the product page." }
   ],
   "blocks": [
     { "type": "fact", "name": "Fact", "limit": 4,

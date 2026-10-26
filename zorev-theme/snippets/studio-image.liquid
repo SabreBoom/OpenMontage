@@ -1,0 +1,164 @@
+{%- comment -%}
+  A product's studio picture: the maker's own untouched packshot, chosen per
+  option in Theme settings > Studio images (slots 1–10, in display order).
+
+    {% render 'studio-image',
+       variant: v, product: p,
+       widths: '360,540,720,900', sizes: '(min-width: 900px) 40vw, 90vw',
+       class: 'my-img', loading: 'lazy', fetchpriority: 'auto',
+       alt: '', index: 0 %}
+
+  Renders one <img> (srcset from image_url, width/height attributes, no
+  wrapper). Put it in a .zv-studio plate (zorev-tokens.css).
+
+  variant        the option to show. Default: product's selected or first
+                 available variant.
+  product        optional when variant is given (variant.product is used).
+  index          0 = the option's first studio picture, 1 = its second…
+                 (slots whose variant id matches, in slot order).
+  widths         comma list of srcset widths. Widths above the original are
+                 dropped and the original width is offered instead: never
+                 upscaled. Default '360,540,720,900,1080'.
+  sizes          the sizes attribute. Default '100vw'.
+  class          classes for the <img>.
+  loading        'lazy' (default) or 'eager'. Eager images are not
+                 decoding="async".
+  fetchpriority  'high' for the one LCP image, else leave out.
+  alt            alt text. Default: the picture's own alt from Files, else
+                 "<product title> — <option>" (option only when there is
+                 more than one).
+  Extras:
+  vt_static      true on the product page's first picture (page-to-page
+                 view transition; same contract as product-cutout).
+  attrs          raw extra attributes, e.g. 'data-gal-img id="x"'.
+  output         'url' prints only the image URL (width url_width, default
+                 600, capped at the original) — for JSON maps and og tags.
+
+  Choice: when Theme settings > Studio images > Product pictures is "Studio
+  set" and a slot matches, that picture (data-zv-studio="true"). Otherwise
+  the option's own image from Shopify, then the product's featured image
+  (data-zv-studio="false"). Renders nothing when there is no picture.
+{%- endcomment -%}
+{%- liquid
+  assign v = variant
+  assign p = product
+  if v == blank and p != blank
+    assign v = p.selected_or_first_available_variant
+  endif
+  if p == blank and v != blank
+    assign p = v.product
+  endif
+
+  assign want = index | default: 0 | plus: 0
+  assign img = false
+  assign is_studio = false
+  if settings.studio_mode == 'on' and v != blank
+    assign vid = v.id | append: ''
+    assign hits = 0
+    for n in (1..10)
+      assign key_v = 'studio_' | append: n | append: '_variant'
+      assign key_i = 'studio_' | append: n | append: '_image'
+      assign slot_v = settings[key_v] | append: '' | strip
+      if slot_v == vid and settings[key_i] != blank
+        if hits == want
+          assign img = settings[key_i]
+          assign is_studio = true
+          break
+        endif
+        assign hits = hits | plus: 1
+      endif
+    endfor
+  endif
+  if img == blank and v != blank
+    assign img = v.featured_media.preview_image
+  endif
+  if img == blank and p != blank
+    assign img = p.featured_media.preview_image
+  endif
+-%}
+{%- if img != blank and output == 'url' -%}
+  {%- liquid
+    assign max_w = img.width | default: 1200
+    assign uw = url_width | default: 600 | plus: 0
+    if uw > max_w
+      assign uw = max_w
+    endif
+    echo img | image_url: width: uw
+  -%}
+{%- elsif img != blank -%}
+  {%- liquid
+    assign max_w = img.width | default: 1200
+    assign ws = widths | default: '360,540,720,900,1080' | split: ','
+    assign srcset = ''
+    assign first_w = 0
+    assign src_w = 0
+    assign dropped = false
+    for w in ws
+      assign wn = w | strip | plus: 0
+      if wn < 1
+        continue
+      endif
+      if wn > max_w
+        assign dropped = true
+        continue
+      endif
+      if first_w == 0
+        assign first_w = wn
+      endif
+      if wn <= 1000
+        assign src_w = wn
+      endif
+      assign u = img | image_url: width: wn
+      if srcset != ''
+        assign srcset = srcset | append: ', '
+      endif
+      assign srcset = srcset | append: u | append: ' ' | append: wn | append: 'w'
+    endfor
+    if dropped or first_w == 0
+      assign u = img | image_url: width: max_w
+      if srcset != ''
+        assign srcset = srcset | append: ', '
+      endif
+      assign srcset = srcset | append: u | append: ' ' | append: max_w | append: 'w'
+      if first_w == 0
+        assign first_w = max_w
+      endif
+    endif
+    if src_w == 0
+      assign src_w = first_w
+      if src_w > 1000
+        assign src_w = 1000
+      endif
+      if src_w > max_w
+        assign src_w = max_w
+      endif
+    endif
+    assign h_attr = img.height | default: max_w | times: src_w | divided_by: max_w | round
+
+    if alt != blank
+      assign alt_text = alt
+    elsif img.alt != blank and img.alt != p.title
+      assign alt_text = img.alt
+    else
+      assign alt_text = p.title
+      if p.has_only_default_variant == false and v != blank
+        capture opt_label
+          render 'zvlabel', t: v.title
+        endcapture
+        assign alt_text = alt_text | append: ' — ' | append: opt_label
+      endif
+    endif
+  -%}
+  <img{% if class != blank %} class="{{ class }}"{% endif %}
+       src="{{ img | image_url: width: src_w }}"
+       srcset="{{ srcset }}"
+       sizes="{{ sizes | default: '100vw' }}"
+       width="{{ src_w }}" height="{{ h_attr }}"
+       alt="{{ alt_text | strip_html | escape_once }}"
+       data-zv-studio="{{ is_studio }}"
+       {%- if p != blank %} data-vt-product="{{ p.handle | escape }}"{% endif -%}
+       {%- if vt_static %} data-vt-static{% endif -%}
+       {%- if loading == 'eager' %} loading="eager"{% else %} loading="lazy" decoding="async"{% endif -%}
+       {%- if fetchpriority == 'high' or fetchpriority == 'low' %} fetchpriority="{{ fetchpriority }}"{% endif -%}
+       {%- if attrs != blank %} {{ attrs }}{% endif %}>
+{%- endif -%}

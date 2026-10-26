@@ -23,7 +23,7 @@
 -%}
 <section class="zrm{% if shown == 0 %} zrm--empty{% endif %}" id="{{ s.anchor | default: 'real' | handleize }}" aria-labelledby="zrm-h-{{ section.id }}">
   <div class="zv-wrap">
-    <header class="zrm__head" data-zv-reveal>
+    <header class="zrm__head">
       {%- if s.eyebrow != blank -%}<span class="zv-eyebrow">{{ s.eyebrow | escape }}</span>{%- endif -%}
       <h2 class="zrm__h" id="zrm-h-{{ section.id }}">{% if shown > 0 %}{{ s.heading }}{% else %}{{ s.empty_heading }}{% endif %}</h2>
       {%- if shown > 0 and s.body != blank -%}

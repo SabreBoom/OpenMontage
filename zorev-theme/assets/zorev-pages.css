@@ -29,7 +29,7 @@
   text-decoration-color: var(--zv-hairline-2); text-underline-offset: 3px; }
 .zv-rte a:hover { text-decoration-color: currentColor; }
 .zv-rte strong { font-weight: 600; color: var(--zv-text); }
-.zv-rte img { max-width: 100%; height: auto; border-radius: var(--zv-r-md); }
+.zv-rte img { max-width: 100%; height: auto; border-radius: var(--zv-r-lg); }
 .zv-rte blockquote { margin: var(--zv-5) 0; padding-left: var(--zv-4);
   border-left: 2px solid var(--zv-hairline-2); font-family: var(--zv-serif);
   font-size: var(--zv-t-lead); }
@@ -76,20 +76,28 @@
 
 .zresult { display: flex; flex-direction: column; gap: var(--zv-2);
   padding: var(--zv-5); text-decoration: none; color: inherit;
-  border-radius: var(--zv-r-md); background: var(--zv-bg-sunken);
-  box-shadow: inset 0 0 0 1px var(--zv-line-input); }
+  border-radius: var(--zv-r-lg); background: var(--zv-bg-sunken);
+  box-shadow: inset 0 0 0 1px var(--zv-hairline-2);
+  transition: box-shadow var(--zv-d-hover) var(--zv-ease); }
+@media (hover: hover) and (pointer: fine) {
+  .zresult:hover { box-shadow: inset 0 0 0 1px var(--zv-line-input); }
+}
 .zresult__t { margin: 0; font-family: var(--zv-serif); font-weight: 400;
   font-size: var(--zv-t-h4); line-height: var(--zv-lh-snug); color: var(--zv-text); }
 
 /* ---- collection list ---------------------------------------------------- */
 .zcoll { display: flex; flex-direction: column; gap: var(--zv-3);
   text-decoration: none; color: inherit; }
-.zcoll__fig { aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--zv-r-md);
-  background: var(--zv-bg-sunken); box-shadow: inset 0 0 0 1px var(--zv-line-input); }
+.zcoll__fig { aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--zv-r-lg);
+  background: var(--zv-bg-sunken); box-shadow: var(--zv-plate-edge); }
 .zcoll__fig img { width: 100%; height: 100%; object-fit: cover; display: block;
-  transition: transform var(--zv-d-reveal) var(--zv-ease); }
+  transition: transform var(--zv-d-zoom) var(--zv-ease-reveal); }
 @media (hover: hover) and (pointer: fine) {
-  .zcoll:hover .zcoll__fig img { transform: scale(1.04); }
+  .zcoll:hover .zcoll__fig img { transform: scale(var(--zv-zoom)); }
+}
+@media (hover: none) {
+  .zcoll__fig { transition: transform var(--zv-d-tap) var(--zv-ease); }
+  .zcoll:active .zcoll__fig { transform: scale(var(--zv-press)); }
 }
 .zcoll__t { margin: 0; font-family: var(--zv-serif); font-weight: 400;
   font-size: var(--zv-t-h4); line-height: var(--zv-lh-snug); color: var(--zv-text); }

@@ -31,7 +31,7 @@
   /* ---- old names -> new palette ---- */
   --ground:    var(--zv-warm);
   --surface:   var(--zv-bg-sunken);
-  --surface-2: #E2DFD5;
+  --surface-2: var(--zv-bg-deep);
   --hairline:  var(--zv-line);
 
   --text:   var(--zv-ink);
@@ -70,7 +70,9 @@
   --gold:  var(--accent);
 }
 
-html{ -webkit-text-size-adjust: 100%; }
+/* The header is sticky (64px + hairline), so an anchor or a focused field
+   would otherwise land underneath it. */
+html{ -webkit-text-size-adjust: 100%; scroll-padding-top: 80px; }
 body{
   margin: 0;
   background: var(--zv-bg);
@@ -216,17 +218,17 @@ p{ margin: 0 0 var(--zv-4); color: var(--zv-text-2); max-width: var(--zv-measure
 .line img{ width: 76px; height: 76px; object-fit: contain; background: var(--plate);
   border-radius: var(--zv-r-sm); box-shadow: inset 0 0 0 1px var(--zv-line-input); }
 
-/* ---- surfaces on the sunken ground ----
-   --zv-muted was measured against warm white, where it is 4.52:1. On the
-   sunken ground (#EBE8E0) the same value is 4.13:1 — it just misses, and the
-   footer's policy links and every `.fine` line on a raised band were sitting
-   right there. Rather than fix each one, every surface that uses the sunken
-   ground re-points the tertiary text token to --zv-moss-strong, 6.42:1. */
+/* ---- surfaces on the stone grounds ----
+   --zv-muted passes on every light ground (5.8 warm / 5.3 stone / 4.8 deep
+   stone), but the footer's policy links and the `.fine` lines on raised
+   bands read better a step firmer, so these surfaces re-point the tertiary
+   text token to --zv-moss-strong (6.4 on stone, 5.8 on deep stone). */
 .band--raised, .zsec--raised, .ftr, .zresult, .zpag .current, .zcard__fig {
   --zv-text-3: var(--zv-moss-strong);
   --text-3:    var(--zv-moss-strong);
 }
 
-/* ---- footer ---- */
+/* ---- footer ----
+   The deeper stone (stone-2), so the page ends on a ground of its own. */
 .ftr{ border-top: 1px solid var(--zv-line); padding-block: var(--zv-8);
-  background: var(--zv-bg-sunken); }
+  background: var(--zv-bg-deep); color: var(--zv-text); }
