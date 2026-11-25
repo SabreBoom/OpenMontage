@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "remotion-superpowers": {
+      "source": {
+        "source": "github",
+        "repo": "DojoCodingLabs/remotion-superpowers"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "remotion-superpowers@remotion-superpowers": true
+  }
+}
