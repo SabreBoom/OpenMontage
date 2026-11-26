@@ -11,3 +11,5 @@ out/stills/
 
 # voice candidates (the chosen take is finished into public/ads/<key>/voice.wav)
 public/voice-test/
+# temp file while scripts/lipsync/restore_detail.py rewrites a take
+*.restored.mp4
