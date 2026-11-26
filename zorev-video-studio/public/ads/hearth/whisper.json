@@ -1,0 +1,205 @@
+[
+  {
+    "text": "Want",
+    "startMs": 170,
+    "endMs": 320,
+    "timestampMs": 320,
+    "confidence": 0.939588
+  },
+  {
+    "text": " that",
+    "startMs": 320,
+    "endMs": 700,
+    "timestampMs": 500,
+    "confidence": 0.993045
+  },
+  {
+    "text": " fireplace",
+    "startMs": 700,
+    "endMs": 1360,
+    "timestampMs": 820,
+    "confidence": 0.990199
+  },
+  {
+    "text": " glow",
+    "startMs": 1360,
+    "endMs": 1680,
+    "timestampMs": 1400,
+    "confidence": 0.991936
+  },
+  {
+    "text": " on",
+    "startMs": 1680,
+    "endMs": 1840,
+    "timestampMs": 1720,
+    "confidence": 0.996679
+  },
+  {
+    "text": " your",
+    "startMs": 1840,
+    "endMs": 2170,
+    "timestampMs": 1840,
+    "confidence": 0.998089
+  },
+  {
+    "text": " desk?",
+    "startMs": 2170,
+    "endMs": 2740,
+    "timestampMs": 2080,
+    "confidence": 0.998929
+  },
+  {
+    "text": " Hirth",
+    "startMs": 2740,
+    "endMs": 3110,
+    "timestampMs": 3100,
+    "confidence": 0.329746
+  },
+  {
+    "text": " pairs",
+    "startMs": 3110,
+    "endMs": 3500,
+    "timestampMs": 3540,
+    "confidence": 0.65453
+  },
+  {
+    "text": " a",
+    "startMs": 3500,
+    "endMs": 3560,
+    "timestampMs": 3860,
+    "confidence": 0.988125
+  },
+  {
+    "text": " flame-like",
+    "startMs": 3560,
+    "endMs": 4310,
+    "timestampMs": 4140,
+    "confidence": 0.839261
+  },
+  {
+    "text": " light",
+    "startMs": 4310,
+    "endMs": 4690,
+    "timestampMs": 4660,
+    "confidence": 0.978576
+  },
+  {
+    "text": " effect",
+    "startMs": 4690,
+    "endMs": 5240,
+    "timestampMs": 5040,
+    "confidence": 0.967445
+  },
+  {
+    "text": " with",
+    "startMs": 5240,
+    "endMs": 5660,
+    "timestampMs": 5400,
+    "confidence": 0.778002
+  },
+  {
+    "text": " cool",
+    "startMs": 5660,
+    "endMs": 5940,
+    "timestampMs": 5640,
+    "confidence": 0.875841
+  },
+  {
+    "text": " mist",
+    "startMs": 5940,
+    "endMs": 6440,
+    "timestampMs": 5980,
+    "confidence": 0.987959
+  },
+  {
+    "text": " for",
+    "startMs": 6440,
+    "endMs": 6710,
+    "timestampMs": 6680,
+    "confidence": 0.991263
+  },
+  {
+    "text": " a",
+    "startMs": 6710,
+    "endMs": 6860,
+    "timestampMs": 6780,
+    "confidence": 0.998843
+  },
+  {
+    "text": " cozy",
+    "startMs": 6860,
+    "endMs": 7170,
+    "timestampMs": 6980,
+    "confidence": 0.955775
+  },
+  {
+    "text": " corner",
+    "startMs": 7170,
+    "endMs": 7720,
+    "timestampMs": 7460,
+    "confidence": 0.997803
+  },
+  {
+    "text": " without",
+    "startMs": 7720,
+    "endMs": 8390,
+    "timestampMs": 7840,
+    "confidence": 0.993532
+  },
+  {
+    "text": " an",
+    "startMs": 8390,
+    "endMs": 8540,
+    "timestampMs": 8100,
+    "confidence": 0.996942
+  },
+  {
+    "text": " actual",
+    "startMs": 8540,
+    "endMs": 9600,
+    "timestampMs": 8460,
+    "confidence": 0.999352
+  },
+  {
+    "text": " flame.",
+    "startMs": 9600,
+    "endMs": 9600,
+    "timestampMs": 8860,
+    "confidence": 0.997978
+  },
+  {
+    "text": " Shop",
+    "startMs": 9600,
+    "endMs": 10250,
+    "timestampMs": 10060,
+    "confidence": 0.940956
+  },
+  {
+    "text": " Zorov.",
+    "startMs": 10250,
+    "endMs": 11280,
+    "timestampMs": 10260,
+    "confidence": 0.782476
+  },
+  {
+    "text": " Link",
+    "startMs": 11280,
+    "endMs": 11660,
+    "timestampMs": 11300,
+    "confidence": 0.401685
+  },
+  {
+    "text": " in",
+    "startMs": 11660,
+    "endMs": 11850,
+    "timestampMs": 11480,
+    "confidence": 0.893772
+  },
+  {
+    "text": " bio.",
+    "startMs": 11850,
+    "endMs": 12240,
+    "timestampMs": 11700,
+    "confidence": 0.7308
+  }
+]

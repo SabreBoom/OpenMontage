@@ -1,0 +1,198 @@
+[
+  {
+    "text": "Give",
+    "startMs": 180,
+    "endMs": 320,
+    "timestampMs": 280,
+    "confidence": 0.875699
+  },
+  {
+    "text": " your",
+    "startMs": 320,
+    "endMs": 640,
+    "timestampMs": 440,
+    "confidence": 0.981802
+  },
+  {
+    "text": " ceiling",
+    "startMs": 640,
+    "endMs": 1210,
+    "timestampMs": 720,
+    "confidence": 0.99477
+  },
+  {
+    "text": " a",
+    "startMs": 1210,
+    "endMs": 1360,
+    "timestampMs": 1100,
+    "confidence": 0.997571
+  },
+  {
+    "text": " different",
+    "startMs": 1360,
+    "endMs": 2230,
+    "timestampMs": 1360,
+    "confidence": 0.999325
+  },
+  {
+    "text": " view.",
+    "startMs": 2230,
+    "endMs": 2460,
+    "timestampMs": 1720,
+    "confidence": 0.998856
+  },
+  {
+    "text": " Nova",
+    "startMs": 2460,
+    "endMs": 2760,
+    "timestampMs": 2720,
+    "confidence": 0.661489
+  },
+  {
+    "text": " brings",
+    "startMs": 2760,
+    "endMs": 3210,
+    "timestampMs": 3160,
+    "confidence": 0.987421
+  },
+  {
+    "text": " space",
+    "startMs": 3210,
+    "endMs": 3580,
+    "timestampMs": 3460,
+    "confidence": 0.979522
+  },
+  {
+    "text": " scenes",
+    "startMs": 3580,
+    "endMs": 4040,
+    "timestampMs": 3900,
+    "confidence": 0.989753
+  },
+  {
+    "text": " into",
+    "startMs": 4040,
+    "endMs": 4440,
+    "timestampMs": 4360,
+    "confidence": 0.976546
+  },
+  {
+    "text": " your",
+    "startMs": 4440,
+    "endMs": 4840,
+    "timestampMs": 4520,
+    "confidence": 0.995963
+  },
+  {
+    "text": " room",
+    "startMs": 4840,
+    "endMs": 5260,
+    "timestampMs": 4840,
+    "confidence": 0.998647
+  },
+  {
+    "text": " with",
+    "startMs": 5260,
+    "endMs": 5560,
+    "timestampMs": 5480,
+    "confidence": 0.997246
+  },
+  {
+    "text": " adjustable",
+    "startMs": 5560,
+    "endMs": 6260,
+    "timestampMs": 5780,
+    "confidence": 0.975169
+  },
+  {
+    "text": " focus",
+    "startMs": 6260,
+    "endMs": 6760,
+    "timestampMs": 6460,
+    "confidence": 0.998209
+  },
+  {
+    "text": " to",
+    "startMs": 6760,
+    "endMs": 6820,
+    "timestampMs": 6820,
+    "confidence": 0.960063
+  },
+  {
+    "text": " help",
+    "startMs": 6820,
+    "endMs": 7180,
+    "timestampMs": 6980,
+    "confidence": 0.997967
+  },
+  {
+    "text": " you",
+    "startMs": 7180,
+    "endMs": 7450,
+    "timestampMs": 7160,
+    "confidence": 0.996443
+  },
+  {
+    "text": " find",
+    "startMs": 7450,
+    "endMs": 7810,
+    "timestampMs": 7400,
+    "confidence": 0.993591
+  },
+  {
+    "text": " the",
+    "startMs": 7810,
+    "endMs": 8080,
+    "timestampMs": 7600,
+    "confidence": 0.995325
+  },
+  {
+    "text": " right",
+    "startMs": 8080,
+    "endMs": 8510,
+    "timestampMs": 7800,
+    "confidence": 0.998506
+  },
+  {
+    "text": " look.",
+    "startMs": 8510,
+    "endMs": 9160,
+    "timestampMs": 8140,
+    "confidence": 0.996487
+  },
+  {
+    "text": " Shop",
+    "startMs": 9160,
+    "endMs": 9900,
+    "timestampMs": 9600,
+    "confidence": 0.92812
+  },
+  {
+    "text": " Zorev,",
+    "startMs": 9900,
+    "endMs": 11050,
+    "timestampMs": 9820,
+    "confidence": 0.805329
+  },
+  {
+    "text": " link",
+    "startMs": 11050,
+    "endMs": 11480,
+    "timestampMs": 11140,
+    "confidence": 0.320536
+  },
+  {
+    "text": " in",
+    "startMs": 11480,
+    "endMs": 11680,
+    "timestampMs": 11360,
+    "confidence": 0.966542
+  },
+  {
+    "text": " bio.",
+    "startMs": 11680,
+    "endMs": 12160,
+    "timestampMs": 11620,
+    "confidence": 0.559389
+  }
+]

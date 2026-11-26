@@ -1,0 +1,210 @@
+{
+ "key": "hearth",
+ "hookEndMs": 2700,
+ "splitMs": 6380,
+ "ctaStartMs": 9400,
+ "speechEndMs": 12240,
+ "captions": [
+  {
+   "text": "Want that fireplace glow",
+   "startMs": 170,
+   "endMs": 1680,
+   "words": [
+    {
+     "text": "Want",
+     "startMs": 170,
+     "endMs": 320
+    },
+    {
+     "text": "that",
+     "startMs": 320,
+     "endMs": 700
+    },
+    {
+     "text": "fireplace",
+     "startMs": 700,
+     "endMs": 1360
+    },
+    {
+     "text": "glow",
+     "startMs": 1360,
+     "endMs": 1680
+    }
+   ]
+  },
+  {
+   "text": "on your desk?",
+   "startMs": 1680,
+   "endMs": 2740,
+   "words": [
+    {
+     "text": "on",
+     "startMs": 1680,
+     "endMs": 1840
+    },
+    {
+     "text": "your",
+     "startMs": 1840,
+     "endMs": 2170
+    },
+    {
+     "text": "desk?",
+     "startMs": 2170,
+     "endMs": 2740
+    }
+   ]
+  },
+  {
+   "text": "Hearth pairs a flame-like",
+   "startMs": 2740,
+   "endMs": 4310,
+   "words": [
+    {
+     "text": "Hearth",
+     "startMs": 2740,
+     "endMs": 3110
+    },
+    {
+     "text": "pairs",
+     "startMs": 3110,
+     "endMs": 3500
+    },
+    {
+     "text": "a",
+     "startMs": 3500,
+     "endMs": 3560
+    },
+    {
+     "text": "flame-like",
+     "startMs": 3560,
+     "endMs": 4310
+    }
+   ]
+  },
+  {
+   "text": "light effect with cool mist,",
+   "startMs": 4310,
+   "endMs": 6440,
+   "words": [
+    {
+     "text": "light",
+     "startMs": 4310,
+     "endMs": 4690
+    },
+    {
+     "text": "effect",
+     "startMs": 4690,
+     "endMs": 5240
+    },
+    {
+     "text": "with",
+     "startMs": 5240,
+     "endMs": 5660
+    },
+    {
+     "text": "cool",
+     "startMs": 5660,
+     "endMs": 5940
+    },
+    {
+     "text": "mist,",
+     "startMs": 5940,
+     "endMs": 6440
+    }
+   ]
+  },
+  {
+   "text": "for a cozy corner",
+   "startMs": 6440,
+   "endMs": 7720,
+   "words": [
+    {
+     "text": "for",
+     "startMs": 6440,
+     "endMs": 6710
+    },
+    {
+     "text": "a",
+     "startMs": 6710,
+     "endMs": 6860
+    },
+    {
+     "text": "cozy",
+     "startMs": 6860,
+     "endMs": 7170
+    },
+    {
+     "text": "corner",
+     "startMs": 7170,
+     "endMs": 7720
+    }
+   ]
+  },
+  {
+   "text": "without an actual flame.",
+   "startMs": 7720,
+   "endMs": 9600,
+   "words": [
+    {
+     "text": "without",
+     "startMs": 7720,
+     "endMs": 8390
+    },
+    {
+     "text": "an",
+     "startMs": 8390,
+     "endMs": 8540
+    },
+    {
+     "text": "actual",
+     "startMs": 8540,
+     "endMs": 9600
+    },
+    {
+     "text": "flame.",
+     "startMs": 9600,
+     "endMs": 9600
+    }
+   ]
+  },
+  {
+   "text": "Shop Zorev.",
+   "startMs": 9600,
+   "endMs": 11280,
+   "words": [
+    {
+     "text": "Shop",
+     "startMs": 9600,
+     "endMs": 10250
+    },
+    {
+     "text": "Zorev.",
+     "startMs": 10250,
+     "endMs": 11280
+    }
+   ]
+  },
+  {
+   "text": "Link in bio.",
+   "startMs": 11280,
+   "endMs": 12240,
+   "words": [
+    {
+     "text": "Link",
+     "startMs": 11280,
+     "endMs": 11660
+    },
+    {
+     "text": "in",
+     "startMs": 11660,
+     "endMs": 11850
+    },
+    {
+     "text": "bio.",
+     "startMs": 11850,
+     "endMs": 12240
+    }
+   ]
+  }
+ ]
+}
