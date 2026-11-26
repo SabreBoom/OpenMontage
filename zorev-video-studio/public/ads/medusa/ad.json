@@ -1,0 +1,205 @@
+{
+ "key": "medusa",
+ "hookEndMs": 3140,
+ "splitMs": 6300,
+ "ctaStartMs": 9320,
+ "speechEndMs": 12480,
+ "captions": [
+  {
+   "text": "A jellyfish-inspired glow",
+   "startMs": 0,
+   "endMs": 1990,
+   "words": [
+    {
+     "text": "A",
+     "startMs": 0,
+     "endMs": 320
+    },
+    {
+     "text": "jellyfish-inspired",
+     "startMs": 320,
+     "endMs": 1670
+    },
+    {
+     "text": "glow",
+     "startMs": 1670,
+     "endMs": 1990
+    }
+   ]
+  },
+  {
+   "text": "for your desk.",
+   "startMs": 1990,
+   "endMs": 3180,
+   "words": [
+    {
+     "text": "for",
+     "startMs": 1990,
+     "endMs": 2260
+    },
+    {
+     "text": "your",
+     "startMs": 2260,
+     "endMs": 2610
+    },
+    {
+     "text": "desk.",
+     "startMs": 2610,
+     "endMs": 3180
+    }
+   ]
+  },
+  {
+   "text": "Medusa combines moving tentacles",
+   "startMs": 3180,
+   "endMs": 5200,
+   "words": [
+    {
+     "text": "Medusa",
+     "startMs": 3180,
+     "endMs": 3580
+    },
+    {
+     "text": "combines",
+     "startMs": 3580,
+     "endMs": 4130
+    },
+    {
+     "text": "moving",
+     "startMs": 4130,
+     "endMs": 4540
+    },
+    {
+     "text": "tentacles",
+     "startMs": 4540,
+     "endMs": 5200
+    }
+   ]
+  },
+  {
+   "text": "and colorful light",
+   "startMs": 5200,
+   "endMs": 6360,
+   "words": [
+    {
+     "text": "and",
+     "startMs": 5200,
+     "endMs": 5460
+    },
+    {
+     "text": "colorful",
+     "startMs": 5460,
+     "endMs": 5880
+    },
+    {
+     "text": "light",
+     "startMs": 5880,
+     "endMs": 6360
+    }
+   ]
+  },
+  {
+   "text": "in a lamp that gives",
+   "startMs": 6360,
+   "endMs": 7220,
+   "words": [
+    {
+     "text": "in",
+     "startMs": 6360,
+     "endMs": 6480
+    },
+    {
+     "text": "a",
+     "startMs": 6480,
+     "endMs": 6540
+    },
+    {
+     "text": "lamp",
+     "startMs": 6540,
+     "endMs": 6940
+    },
+    {
+     "text": "that",
+     "startMs": 6940,
+     "endMs": 7080
+    },
+    {
+     "text": "gives",
+     "startMs": 7080,
+     "endMs": 7220
+    }
+   ]
+  },
+  {
+   "text": "your space an underwater feel.",
+   "startMs": 7220,
+   "endMs": 9520,
+   "words": [
+    {
+     "text": "your",
+     "startMs": 7220,
+     "endMs": 7360
+    },
+    {
+     "text": "space",
+     "startMs": 7360,
+     "endMs": 7870
+    },
+    {
+     "text": "an",
+     "startMs": 7870,
+     "endMs": 7980
+    },
+    {
+     "text": "underwater",
+     "startMs": 7980,
+     "endMs": 8670
+    },
+    {
+     "text": "feel.",
+     "startMs": 8670,
+     "endMs": 9520
+    }
+   ]
+  },
+  {
+   "text": "Shop Zorev.",
+   "startMs": 9520,
+   "endMs": 11360,
+   "words": [
+    {
+     "text": "Shop",
+     "startMs": 9520,
+     "endMs": 10230
+    },
+    {
+     "text": "Zorev.",
+     "startMs": 10230,
+     "endMs": 11360
+    }
+   ]
+  },
+  {
+   "text": "Link in bio.",
+   "startMs": 11360,
+   "endMs": 12480,
+   "words": [
+    {
+     "text": "Link",
+     "startMs": 11360,
+     "endMs": 11790
+    },
+    {
+     "text": "in",
+     "startMs": 11790,
+     "endMs": 11990
+    },
+    {
+     "text": "bio.",
+     "startMs": 11990,
+     "endMs": 12480
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,191 @@
+[
+  {
+    "text": "A",
+    "startMs": 0,
+    "endMs": 410,
+    "timestampMs": 460,
+    "confidence": 0.910866
+  },
+  {
+    "text": " little",
+    "startMs": 410,
+    "endMs": 530,
+    "timestampMs": 620,
+    "confidence": 0.993034
+  },
+  {
+    "text": " rain",
+    "startMs": 530,
+    "endMs": 840,
+    "timestampMs": 880,
+    "confidence": 0.987803
+  },
+  {
+    "text": " right",
+    "startMs": 840,
+    "endMs": 1220,
+    "timestampMs": 1300,
+    "confidence": 0.916238
+  },
+  {
+    "text": " on",
+    "startMs": 1220,
+    "endMs": 1370,
+    "timestampMs": 1520,
+    "confidence": 0.997037
+  },
+  {
+    "text": " your",
+    "startMs": 1370,
+    "endMs": 1680,
+    "timestampMs": 1640,
+    "confidence": 0.997468
+  },
+  {
+    "text": " nightstand,",
+    "startMs": 1680,
+    "endMs": 2840,
+    "timestampMs": 1800,
+    "confidence": 0.989114
+  },
+  {
+    "text": " Nimbus",
+    "startMs": 2840,
+    "endMs": 3060,
+    "timestampMs": 3000,
+    "confidence": 0.448135
+  },
+  {
+    "text": " brings",
+    "startMs": 3060,
+    "endMs": 3500,
+    "timestampMs": 3420,
+    "confidence": 0.954985
+  },
+  {
+    "text": " falling",
+    "startMs": 3500,
+    "endMs": 4020,
+    "timestampMs": 3860,
+    "confidence": 0.982539
+  },
+  {
+    "text": " droplets",
+    "startMs": 4020,
+    "endMs": 4650,
+    "timestampMs": 4200,
+    "confidence": 0.977713
+  },
+  {
+    "text": " and",
+    "startMs": 4650,
+    "endMs": 4800,
+    "timestampMs": 4760,
+    "confidence": 0.874718
+  },
+  {
+    "text": " a",
+    "startMs": 4800,
+    "endMs": 4880,
+    "timestampMs": 4860,
+    "confidence": 0.926332
+  },
+  {
+    "text": " soft",
+    "startMs": 4880,
+    "endMs": 5390,
+    "timestampMs": 5160,
+    "confidence": 0.950539
+  },
+  {
+    "text": " glow",
+    "startMs": 5390,
+    "endMs": 5560,
+    "timestampMs": 5520,
+    "confidence": 0.975754
+  },
+  {
+    "text": " into",
+    "startMs": 5560,
+    "endMs": 5920,
+    "timestampMs": 5900,
+    "confidence": 0.839017
+  },
+  {
+    "text": " one",
+    "startMs": 5920,
+    "endMs": 6160,
+    "timestampMs": 6160,
+    "confidence": 0.992754
+  },
+  {
+    "text": " cloud-shaped",
+    "startMs": 6160,
+    "endMs": 7130,
+    "timestampMs": 6520,
+    "confidence": 0.957908
+  },
+  {
+    "text": " centerpiece.",
+    "startMs": 7130,
+    "endMs": 8320,
+    "timestampMs": 7460,
+    "confidence": 0.944398
+  },
+  {
+    "text": " Watch",
+    "startMs": 8320,
+    "endMs": 8830,
+    "timestampMs": 8400,
+    "confidence": 0.994024
+  },
+  {
+    "text": " the",
+    "startMs": 8830,
+    "endMs": 9180,
+    "timestampMs": 8680,
+    "confidence": 0.981571
+  },
+  {
+    "text": " waterfall,",
+    "startMs": 9180,
+    "endMs": 10270,
+    "timestampMs": 8940,
+    "confidence": 0.881883
+  },
+  {
+    "text": " shop",
+    "startMs": 10270,
+    "endMs": 10680,
+    "timestampMs": 10060,
+    "confidence": 0.543655
+  },
+  {
+    "text": " Zorev,",
+    "startMs": 10680,
+    "endMs": 11390,
+    "timestampMs": 10300,
+    "confidence": 0.444476
+  },
+  {
+    "text": " link",
+    "startMs": 11390,
+    "endMs": 11800,
+    "timestampMs": 11540,
+    "confidence": 0.325127
+  },
+  {
+    "text": " in",
+    "startMs": 11800,
+    "endMs": 12000,
+    "timestampMs": 11800,
+    "confidence": 0.897032
+  },
+  {
+    "text": " bio.",
+    "startMs": 12000,
+    "endMs": 12360,
+    "timestampMs": 12080,
+    "confidence": 0.925494
+  }
+]

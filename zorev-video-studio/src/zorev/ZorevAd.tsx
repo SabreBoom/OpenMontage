@@ -44,12 +44,51 @@ const Cover: React.FC<{ src: string; startFromSec: number }> = ({ src, startFrom
   </AbsoluteFill>
 );
 
+// Smooth bump, 0 outside [0, 1], peak 1 in the middle.
+const bump = (x: number) => (x <= 0 || x >= 1 ? 0 : Math.sin(Math.PI * x) ** 2);
+
+// For presenters animated from a still photo (local lip-sync): the slow sway of
+// a handheld phone plus a small nod as each phrase starts, so the shot breathes
+// like a real selfie video. Driven by the timeline frame, so it is deterministic.
+const HandheldMotion: React.FC<{ absFrame: number; phraseStartsMs: number[]; children: React.ReactNode }> = ({
+  absFrame,
+  phraseStartsMs,
+  children,
+}) => {
+  const t = absFrame / FPS;
+  const TAU = Math.PI * 2;
+  const nod = phraseStartsMs.reduce((s, ms) => s + bump((t - ms / 1000 + 0.05) / 0.42), 0);
+  const rotate = 0.45 * Math.sin((TAU * t) / 5.3) + 0.25 * Math.sin((TAU * t) / 3.1 + 1.1);
+  const x = 7 * Math.sin((TAU * t) / 6.1 + 0.4) + 3 * Math.sin((TAU * t) / 2.3);
+  const y = 5 * Math.sin((TAU * t) / 4.4 + 2.0) + 7 * Math.min(nod, 1);
+  const scale = 1.05 + 0.008 * Math.sin((TAU * t) / 7.7) + 0.006 * Math.min(nod, 1);
+  return (
+    <AbsoluteFill
+      style={{
+        transform: `translate(${x}px, ${y}px) rotate(${rotate}deg) scale(${scale})`,
+        transformOrigin: "50% 58%",
+      }}
+    >
+      {children}
+    </AbsoluteFill>
+  );
+};
+
 // The presenter take is one continuous shot whose audio is the voice track, so
 // its picture is always taken from the same moment as the timeline: whenever
 // her mouth is on screen it matches the narration.
-const PresenterAt: React.FC<{ src: string; fromFrame: number }> = ({ src, fromFrame }) => (
-  <Cover src={src} startFromSec={fromFrame / FPS} />
-);
+const PresenterAt: React.FC<{ ad: ProductAd; fromFrame: number }> = ({ ad, fromFrame }) => {
+  const frame = useCurrentFrame();
+  const take = <Cover src={ad.presenter} startFromSec={fromFrame / FPS} />;
+  if (!ad.presenterFromStill) return take;
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#000" }}>
+      <HandheldMotion absFrame={fromFrame + frame} phraseStartsMs={ad.timing.captions.map((c) => c.startMs)}>
+        {take}
+      </HandheldMotion>
+    </AbsoluteFill>
+  );
+};
 
 const Pill: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
   <div
@@ -252,7 +291,7 @@ export const ZorevAd: React.FC<{ ad: ProductAd }> = ({ ad }) => {
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {/* 1. Hook: presenter + product inset + headline */}
       <Sequence durationInFrames={hookEnd} name="Hook (presenter)">
-        <PresenterAt src={ad.presenter} fromFrame={0} />
+        <PresenterAt ad={ad} fromFrame={0} />
         <ProductInset src={ad.inset} bg={ad.insetBg} name={ad.name} />
         <Headline lines={ad.headline} durationInFrames={hookEnd} />
       </Sequence>
@@ -269,7 +308,7 @@ export const ZorevAd: React.FC<{ ad: ProductAd }> = ({ ad }) => {
 
       {/* 4. Presenter returns with the product, CTA and account */}
       <Sequence from={cta} durationInFrames={DURATION_FRAMES - cta} name="Close (presenter + CTA)">
-        <PresenterAt src={ad.presenter} fromFrame={cta} />
+        <PresenterAt ad={ad} fromFrame={cta} />
         <EndCard ad={ad} />
       </Sequence>
 

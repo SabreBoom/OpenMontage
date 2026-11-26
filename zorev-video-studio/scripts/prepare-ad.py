@@ -17,6 +17,22 @@ heard = [c for c in json.loads(raw.read_text()) if c["text"].strip()]
 
 norm = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
 words = script.split()
+# whisper sometimes joins two script words into one ("water fall" -> "waterfall"):
+# split that word's time across both, by letter count, so every script word is timed
+i = j = 0
+aligned = []
+while i < len(heard) and j < len(words):
+    h = heard[i]
+    if (norm(h["text"]) != norm(words[j]) and j + 1 < len(words)
+            and norm(h["text"]) == norm(words[j]) + norm(words[j + 1])):
+        a, b = len(norm(words[j])), len(norm(words[j + 1]))
+        mid = h["startMs"] + round((h["endMs"] - h["startMs"]) * a / (a + b))
+        aligned += [dict(h, text=words[j], endMs=mid), dict(h, text=words[j + 1], startMs=mid)]
+        i, j = i + 1, j + 2
+    else:
+        aligned.append(h)
+        i, j = i + 1, j + 1
+heard = aligned + heard[i:]
 if len(heard) != len(words):
     raise SystemExit(f"word count mismatch: script {len(words)} vs heard {len(heard)}: {[h['text'] for h in heard]}")
 timed = [{"text": w, "startMs": h["startMs"], "endMs": h["endMs"]} for w, h in zip(words, heard)]
