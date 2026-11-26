@@ -34,8 +34,9 @@ export type ProductAd = {
   headline: [string, string]; // opening headline, two lines
   timing: AdTiming;
   presenter: string;
-  // true when the take was lip-synced locally from a still photo: the edit
-  // adds handheld sway and phrase nods (scripts/lipsync adds the blinks)
+  // true when the take was made locally from a still photo (scripts/motion
+  // for head motion, blinks and expressions, scripts/lipsync for the mouth):
+  // the edit adds a handheld camera sway
   presenterFromStill?: boolean;
   voice: string;
   inset: string; // product still shown beside the presenter in the hook
