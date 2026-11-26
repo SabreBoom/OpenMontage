@@ -1,14 +1,14 @@
 {
  "key": "medusa",
- "hookEndMs": 3500,
- "splitMs": 6880,
+ "hookEndMs": 3560,
+ "splitMs": 6940,
  "ctaStartMs": 9900,
- "speechEndMs": 12240,
+ "speechEndMs": 12400,
  "captions": [
   {
    "text": "A jellyfish-inspired glow",
    "startMs": 0,
-   "endMs": 2170,
+   "endMs": 2390,
    "words": [
     {
      "text": "A",
@@ -18,60 +18,60 @@
     {
      "text": "jellyfish-inspired",
      "startMs": 290,
-     "endMs": 1790
+     "endMs": 1960
     },
     {
      "text": "glow",
-     "startMs": 1790,
-     "endMs": 2170
+     "startMs": 1960,
+     "endMs": 2390
     }
    ]
   },
   {
    "text": "for your desk.",
-   "startMs": 2170,
-   "endMs": 3540,
+   "startMs": 2390,
+   "endMs": 3600,
    "words": [
     {
      "text": "for",
-     "startMs": 2170,
-     "endMs": 2450
+     "startMs": 2390,
+     "endMs": 2680
     },
     {
      "text": "your",
-     "startMs": 2450,
-     "endMs": 2830
+     "startMs": 2680,
+     "endMs": 3080
     },
     {
      "text": "desk.",
-     "startMs": 2830,
-     "endMs": 3540
+     "startMs": 3080,
+     "endMs": 3600
     }
    ]
   },
   {
    "text": "Medusa combines moving tentacles",
-   "startMs": 3540,
+   "startMs": 3600,
    "endMs": 5790,
    "words": [
     {
      "text": "Medusa",
-     "startMs": 3540,
-     "endMs": 4000
+     "startMs": 3600,
+     "endMs": 4040
     },
     {
      "text": "combines",
-     "startMs": 4000,
-     "endMs": 4620
+     "startMs": 4040,
+     "endMs": 4640
     },
     {
      "text": "moving",
-     "startMs": 4620,
-     "endMs": 5080
+     "startMs": 4640,
+     "endMs": 5090
     },
     {
      "text": "tentacles",
-     "startMs": 5080,
+     "startMs": 5090,
      "endMs": 5790
     }
    ]
@@ -79,85 +79,85 @@
   {
    "text": "and colorful light",
    "startMs": 5790,
-   "endMs": 6940,
+   "endMs": 7000,
    "words": [
     {
      "text": "and",
      "startMs": 5790,
-     "endMs": 6090
+     "endMs": 5990
     },
     {
      "text": "colorful",
-     "startMs": 6090,
+     "startMs": 5990,
      "endMs": 6500
     },
     {
      "text": "light",
      "startMs": 6500,
-     "endMs": 6940
+     "endMs": 7000
     }
    ]
   },
   {
    "text": "in a lamp that gives",
-   "startMs": 6940,
-   "endMs": 8060,
+   "startMs": 7000,
+   "endMs": 8120,
    "words": [
     {
      "text": "in",
-     "startMs": 6940,
-     "endMs": 7110
+     "startMs": 7000,
+     "endMs": 7140
     },
     {
      "text": "a",
-     "startMs": 7110,
-     "endMs": 7150
+     "startMs": 7140,
+     "endMs": 7210
     },
     {
      "text": "lamp",
-     "startMs": 7150,
-     "endMs": 7430
+     "startMs": 7210,
+     "endMs": 7490
     },
     {
      "text": "that",
-     "startMs": 7430,
-     "endMs": 7710
+     "startMs": 7490,
+     "endMs": 7800
     },
     {
      "text": "gives",
-     "startMs": 7710,
-     "endMs": 8060
+     "startMs": 7800,
+     "endMs": 8120
     }
    ]
   },
   {
    "text": "your space an underwater feel.",
-   "startMs": 8060,
+   "startMs": 8120,
    "endMs": 10100,
    "words": [
     {
      "text": "your",
-     "startMs": 8060,
-     "endMs": 8340
+     "startMs": 8120,
+     "endMs": 8400
     },
     {
      "text": "space",
-     "startMs": 8340,
-     "endMs": 8680
+     "startMs": 8400,
+     "endMs": 8750
     },
     {
      "text": "an",
-     "startMs": 8680,
+     "startMs": 8750,
      "endMs": 8900
     },
     {
      "text": "underwater",
      "startMs": 8900,
-     "endMs": 9550
+     "endMs": 9590
     },
     {
      "text": "feel.",
-     "startMs": 9550,
+     "startMs": 9590,
      "endMs": 10100
     }
    ]
@@ -165,39 +165,39 @@
   {
    "text": "Shop Zorev.",
    "startMs": 10100,
-   "endMs": 11120,
+   "endMs": 11490,
    "words": [
     {
      "text": "Shop",
      "startMs": 10100,
-     "endMs": 10580
+     "endMs": 10540
     },
     {
      "text": "Zorev.",
-     "startMs": 10580,
-     "endMs": 11120
+     "startMs": 10540,
+     "endMs": 11490
     }
    ]
   },
   {
    "text": "Link in bio.",
-   "startMs": 11390,
-   "endMs": 12240,
+   "startMs": 11490,
+   "endMs": 12400,
    "words": [
     {
      "text": "Link",
-     "startMs": 11390,
-     "endMs": 11700
+     "startMs": 11490,
+     "endMs": 11750
     },
     {
      "text": "in",
-     "startMs": 11700,
-     "endMs": 11900
+     "startMs": 11750,
+     "endMs": 12000
     },
     {
      "text": "bio.",
-     "startMs": 11900,
-     "endMs": 12240
+     "startMs": 12000,
+     "endMs": 12400
     }
    ]
   }

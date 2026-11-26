@@ -11,7 +11,7 @@ const whisperPath = path.join(process.cwd(), ".tools", "whisper.cpp");
 const wav = path.join(mkdtempSync(path.join(os.tmpdir(), "zv-")), "in16k.wav");
 execFileSync("ffmpeg", ["-v", "error", "-y", "-i", input, "-ar", "16000", "-ac", "1", wav]);
 const whisperCppOutput = await transcribe({
-  inputPath: wav, whisperPath, whisperCppVersion: "1.7.5", model: "base.en",
+  inputPath: wav, whisperPath, whisperCppVersion: "1.7.5", model: process.env.WHISPER_MODEL || "base.en",
   tokenLevelTimestamps: true, splitOnWord: true, printOutput: false,
 });
 const { captions } = toCaptions({ whisperCppOutput });
