@@ -44,24 +44,17 @@ const Cover: React.FC<{ src: string; startFromSec: number }> = ({ src, startFrom
   </AbsoluteFill>
 );
 
-// Smooth bump, 0 outside [0, 1], peak 1 in the middle.
-const bump = (x: number) => (x <= 0 || x >= 1 ? 0 : Math.sin(Math.PI * x) ** 2);
-
-// For presenters animated from a still photo (local lip-sync): the slow sway of
-// a handheld phone plus a small nod as each phrase starts, so the shot breathes
-// like a real selfie video. Driven by the timeline frame, so it is deterministic.
-const HandheldMotion: React.FC<{ absFrame: number; phraseStartsMs: number[]; children: React.ReactNode }> = ({
-  absFrame,
-  phraseStartsMs,
-  children,
-}) => {
+// For presenters animated from a still photo (scripts/motion + scripts/lipsync):
+// the head already nods, turns and blinks in the take; this adds the slow sway
+// of a handheld phone so the camera breathes like a real selfie video.
+// Driven by the timeline frame, so it is deterministic.
+const HandheldMotion: React.FC<{ absFrame: number; children: React.ReactNode }> = ({ absFrame, children }) => {
   const t = absFrame / FPS;
   const TAU = Math.PI * 2;
-  const nod = phraseStartsMs.reduce((s, ms) => s + bump((t - ms / 1000 + 0.05) / 0.42), 0);
-  const rotate = 0.45 * Math.sin((TAU * t) / 5.3) + 0.25 * Math.sin((TAU * t) / 3.1 + 1.1);
-  const x = 7 * Math.sin((TAU * t) / 6.1 + 0.4) + 3 * Math.sin((TAU * t) / 2.3);
-  const y = 5 * Math.sin((TAU * t) / 4.4 + 2.0) + 7 * Math.min(nod, 1);
-  const scale = 1.05 + 0.008 * Math.sin((TAU * t) / 7.7) + 0.006 * Math.min(nod, 1);
+  const rotate = 0.35 * Math.sin((TAU * t) / 5.3) + 0.2 * Math.sin((TAU * t) / 3.1 + 1.1);
+  const x = 6 * Math.sin((TAU * t) / 6.1 + 0.4) + 2.5 * Math.sin((TAU * t) / 2.3);
+  const y = 5 * Math.sin((TAU * t) / 4.4 + 2.0);
+  const scale = 1.04 + 0.008 * Math.sin((TAU * t) / 7.7);
   return (
     <AbsoluteFill
       style={{
@@ -83,9 +76,7 @@ const PresenterAt: React.FC<{ ad: ProductAd; fromFrame: number }> = ({ ad, fromF
   if (!ad.presenterFromStill) return take;
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
-      <HandheldMotion absFrame={fromFrame + frame} phraseStartsMs={ad.timing.captions.map((c) => c.startMs)}>
-        {take}
-      </HandheldMotion>
+      <HandheldMotion absFrame={fromFrame + frame}>{take}</HandheldMotion>
     </AbsoluteFill>
   );
 };
