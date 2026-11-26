@@ -17,26 +17,46 @@ heard = [c for c in json.loads(raw.read_text()) if c["text"].strip()]
 
 norm = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
 words = script.split()
-# whisper sometimes joins two script words into one ("water fall" -> "waterfall"):
-# split that word's time across both, by letter count, so every script word is timed
-i = j = 0
-aligned = []
-while i < len(heard) and j < len(words):
-    h = heard[i]
-    if (norm(h["text"]) != norm(words[j]) and j + 1 < len(words)
-            and norm(h["text"]) == norm(words[j]) + norm(words[j + 1])):
-        a, b = len(norm(words[j])), len(norm(words[j + 1]))
-        mid = h["startMs"] + round((h["endMs"] - h["startMs"]) * a / (a + b))
-        aligned += [dict(h, text=words[j], endMs=mid), dict(h, text=words[j + 1], startMs=mid)]
-        i, j = i + 1, j + 2
-    else:
-        aligned.append(h)
-        i, j = i + 1, j + 1
-heard = aligned + heard[i:]
-if len(heard) != len(words):
-    raise SystemExit(f"word count mismatch: script {len(words)} vs heard {len(heard)}: {[h['text'] for h in heard]}")
-timed = [{"text": w, "startMs": h["startMs"], "endMs": h["endMs"]} for w, h in zip(words, heard)]
-mismatch = [(w["text"], h["text"].strip()) for w, h in zip(timed, heard) if norm(w["text"]) != norm(h["text"])]
+
+# Align script and transcript letter by letter, so the captions always show the
+# exact script even where whisper splits, joins or mishears a word
+# ("waterfall", "Lincoln Bio", "flame, like"). Each script word takes its time
+# from the transcript letters it lines up with.
+from difflib import SequenceMatcher
+S, s_word = "", []
+for k, w in enumerate(words):
+    S += norm(w); s_word += [k] * len(norm(w))
+R, r_time = "", []
+for h in heard:
+    n = norm(h["text"])
+    for o in range(len(n)):
+        a = h["startMs"] + (h["endMs"] - h["startMs"]) * o / len(n)
+        b = h["startMs"] + (h["endMs"] - h["startMs"]) * (o + 1) / len(n)
+        r_time.append((a, b))
+    R += n
+s2r = {}
+for blk in SequenceMatcher(None, S, R, autojunk=False).get_matching_blocks():
+    for d in range(blk.size):
+        s2r[blk.a + d] = blk.b + d
+timed, mismatch = [], []
+pos = 0
+for k, w in enumerate(words):
+    span = range(pos, pos + len(norm(w)))
+    pos += len(norm(w))
+    hit = [s2r[c] for c in span if c in s2r]
+    if len(hit) < 0.6 * len(span):
+        mismatch.append(w)
+    timed.append({"text": w, "startMs": round(r_time[hit[0]][0]) if hit else None,
+                  "endMs": round(r_time[hit[-1]][1]) if hit else None})
+# words with no matched letters: share the gap between their neighbours
+for k, w in enumerate(timed):
+    if w["startMs"] is None:
+        prev = next((x["endMs"] for x in reversed(timed[:k]) if x["endMs"] is not None), 0)
+        nxt = next((x["startMs"] for x in timed[k + 1:] if x["startMs"] is not None), prev + 300)
+        w["startMs"], w["endMs"] = prev, max(prev + 1, nxt)
+for a, b in zip(timed, timed[1:]):  # keep word times monotonic
+    b["startMs"] = max(b["startMs"], a["startMs"])
+    b["endMs"] = max(b["endMs"], b["startMs"] + 1)
 
 # caption segments: sentence -> comma clauses -> balanced chunks of at most 5 words,
 # never ending a chunk on a small function word
@@ -79,4 +99,4 @@ ad = {"key": key, "hookEndMs": hook_end, "splitMs": split, "ctaStartMs": cta,
       "speechEndMs": timed[-1]["endMs"], "captions": captions}
 (out / "ad.json").write_text(json.dumps(ad, indent=1))
 print(json.dumps({k: ad[k] for k in ("hookEndMs", "splitMs", "ctaStartMs", "speechEndMs")}),
-      "| segments:", [c["text"] for c in captions], "| heard-differently:", mismatch)
+      "| segments:", [c["text"] for c in captions], "| loosely matched:", mismatch)

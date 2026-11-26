@@ -1,205 +1,212 @@
 [
   {
     "text": "Want",
-    "startMs": 320,
-    "endMs": 340,
-    "timestampMs": 520,
-    "confidence": 0.967512
+    "startMs": 270,
+    "endMs": 300,
+    "timestampMs": 420,
+    "confidence": 0.964306
   },
   {
     "text": " that",
-    "startMs": 340,
-    "endMs": 650,
-    "timestampMs": 700,
-    "confidence": 0.991497
+    "startMs": 300,
+    "endMs": 540,
+    "timestampMs": 560,
+    "confidence": 0.987941
   },
   {
     "text": " fireplace",
-    "startMs": 650,
-    "endMs": 1350,
-    "timestampMs": 1020,
-    "confidence": 0.992638
+    "startMs": 540,
+    "endMs": 1150,
+    "timestampMs": 840,
+    "confidence": 0.875714
   },
   {
     "text": " glow",
-    "startMs": 1350,
-    "endMs": 1670,
-    "timestampMs": 1580,
-    "confidence": 0.994787
+    "startMs": 1150,
+    "endMs": 1420,
+    "timestampMs": 1340,
+    "confidence": 0.98781
   },
   {
     "text": " on",
-    "startMs": 1670,
-    "endMs": 1830,
-    "timestampMs": 1780,
-    "confidence": 0.9976
+    "startMs": 1420,
+    "endMs": 1550,
+    "timestampMs": 1560,
+    "confidence": 0.98714
   },
   {
     "text": " your",
-    "startMs": 1830,
-    "endMs": 2140,
-    "timestampMs": 1880,
-    "confidence": 0.997702
+    "startMs": 1550,
+    "endMs": 1820,
+    "timestampMs": 1660,
+    "confidence": 0.9972
   },
   {
     "text": " desk?",
-    "startMs": 2140,
-    "endMs": 2720,
-    "timestampMs": 2100,
-    "confidence": 0.999096
+    "startMs": 1820,
+    "endMs": 2320,
+    "timestampMs": 1880,
+    "confidence": 0.999054
   },
   {
     "text": " Hearth",
-    "startMs": 2720,
-    "endMs": 3140,
-    "timestampMs": 2940,
-    "confidence": 0.207175
+    "startMs": 2320,
+    "endMs": 2740,
+    "timestampMs": 2480,
+    "confidence": 0.358581
   },
   {
     "text": " pairs",
-    "startMs": 3140,
-    "endMs": 3430,
-    "timestampMs": 3220,
-    "confidence": 0.603477
+    "startMs": 2740,
+    "endMs": 3090,
+    "timestampMs": 2700,
+    "confidence": 0.623094
   },
   {
     "text": " a",
-    "startMs": 3430,
-    "endMs": 3490,
-    "timestampMs": 3500,
-    "confidence": 0.995319
+    "startMs": 3090,
+    "endMs": 3160,
+    "timestampMs": 2900,
+    "confidence": 0.994279
   },
   {
-    "text": " flame-like",
-    "startMs": 3490,
-    "endMs": 4120,
-    "timestampMs": 3780,
-    "confidence": 0.743755
+    "text": " flame,",
+    "startMs": 3160,
+    "endMs": 3620,
+    "timestampMs": 3100,
+    "confidence": 0.965702
+  },
+  {
+    "text": " like",
+    "startMs": 3620,
+    "endMs": 3830,
+    "timestampMs": 3680,
+    "confidence": 0.885613
   },
   {
     "text": " light",
-    "startMs": 4120,
-    "endMs": 4510,
-    "timestampMs": 4320,
-    "confidence": 0.98857
+    "startMs": 3830,
+    "endMs": 4100,
+    "timestampMs": 3980,
+    "confidence": 0.747548
   },
   {
     "text": " effect",
-    "startMs": 4510,
-    "endMs": 4940,
-    "timestampMs": 4660,
-    "confidence": 0.907311
+    "startMs": 4100,
+    "endMs": 4450,
+    "timestampMs": 4200,
+    "confidence": 0.954012
   },
   {
     "text": " with",
-    "startMs": 4940,
-    "endMs": 5210,
-    "timestampMs": 5000,
-    "confidence": 0.893354
+    "startMs": 4450,
+    "endMs": 4760,
+    "timestampMs": 4500,
+    "confidence": 0.959186
   },
   {
     "text": " cool",
-    "startMs": 5210,
-    "endMs": 5540,
-    "timestampMs": 5200,
-    "confidence": 0.904398
+    "startMs": 4760,
+    "endMs": 5080,
+    "timestampMs": 4700,
+    "confidence": 0.624103
   },
   {
-    "text": " mist",
-    "startMs": 5540,
-    "endMs": 6040,
-    "timestampMs": 5560,
-    "confidence": 0.9946
+    "text": " mist,",
+    "startMs": 5080,
+    "endMs": 5400,
+    "timestampMs": 5020,
+    "confidence": 0.997282
   },
   {
     "text": " for",
-    "startMs": 6040,
-    "endMs": 6260,
-    "timestampMs": 6160,
-    "confidence": 0.996542
+    "startMs": 5400,
+    "endMs": 5580,
+    "timestampMs": 5500,
+    "confidence": 0.980913
   },
   {
     "text": " a",
-    "startMs": 6260,
-    "endMs": 6350,
-    "timestampMs": 6280,
-    "confidence": 0.999272
+    "startMs": 5580,
+    "endMs": 5680,
+    "timestampMs": 5620,
+    "confidence": 0.996067
   },
   {
     "text": " cozy",
-    "startMs": 6350,
-    "endMs": 6630,
-    "timestampMs": 6480,
-    "confidence": 0.959002
+    "startMs": 5680,
+    "endMs": 5890,
+    "timestampMs": 5840,
+    "confidence": 0.957482
   },
   {
     "text": " corner",
-    "startMs": 6630,
-    "endMs": 7080,
-    "timestampMs": 6940,
-    "confidence": 0.996478
+    "startMs": 5890,
+    "endMs": 6260,
+    "timestampMs": 6200,
+    "confidence": 0.997691
   },
   {
     "text": " without",
-    "startMs": 7080,
-    "endMs": 7600,
-    "timestampMs": 7240,
-    "confidence": 0.996149
+    "startMs": 6260,
+    "endMs": 6690,
+    "timestampMs": 6480,
+    "confidence": 0.99445
   },
   {
     "text": " an",
-    "startMs": 7600,
-    "endMs": 7750,
-    "timestampMs": 7440,
-    "confidence": 0.996609
+    "startMs": 6690,
+    "endMs": 6810,
+    "timestampMs": 6720,
+    "confidence": 0.99293
   },
   {
     "text": " actual",
-    "startMs": 7750,
-    "endMs": 8200,
-    "timestampMs": 7740,
-    "confidence": 0.999237
+    "startMs": 6810,
+    "endMs": 7210,
+    "timestampMs": 6980,
+    "confidence": 0.999003
   },
   {
     "text": " flame.",
-    "startMs": 8200,
-    "endMs": 8820,
-    "timestampMs": 8120,
-    "confidence": 0.997923
+    "startMs": 7210,
+    "endMs": 7720,
+    "timestampMs": 7400,
+    "confidence": 0.998925
   },
   {
     "text": " Shop",
-    "startMs": 8820,
-    "endMs": 9270,
-    "timestampMs": 9060,
-    "confidence": 0.96527
+    "startMs": 7720,
+    "endMs": 8150,
+    "timestampMs": 7900,
+    "confidence": 0.859707
   },
   {
     "text": " Zorev,",
-    "startMs": 9270,
-    "endMs": 10100,
-    "timestampMs": 9240,
-    "confidence": 0.585095
+    "startMs": 8150,
+    "endMs": 8880,
+    "timestampMs": 8100,
+    "confidence": 0.0758083
   },
   {
     "text": " link",
-    "startMs": 10100,
-    "endMs": 10600,
-    "timestampMs": 10240,
-    "confidence": 0.709022
+    "startMs": 8880,
+    "endMs": 9310,
+    "timestampMs": 8940,
+    "confidence": 0.839528
   },
   {
     "text": " in",
-    "startMs": 10600,
-    "endMs": 10850,
-    "timestampMs": 10520,
-    "confidence": 0.991403
+    "startMs": 9310,
+    "endMs": 9520,
+    "timestampMs": 9240,
+    "confidence": 0.989368
   },
   {
     "text": " bio.",
-    "startMs": 10850,
-    "endMs": 11320,
-    "timestampMs": 10780,
-    "confidence": 0.71853
+    "startMs": 9520,
+    "endMs": 10040,
+    "timestampMs": 9500,
+    "confidence": 0.915061
   }
 ]

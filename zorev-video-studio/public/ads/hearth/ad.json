@@ -1,208 +1,208 @@
 {
  "key": "hearth",
- "hookEndMs": 2680,
- "splitMs": 5980,
- "ctaStartMs": 8620,
- "speechEndMs": 11320,
+ "hookEndMs": 2280,
+ "splitMs": 5340,
+ "ctaStartMs": 7520,
+ "speechEndMs": 10040,
  "captions": [
   {
    "text": "Want that fireplace glow",
-   "startMs": 320,
-   "endMs": 1670,
+   "startMs": 270,
+   "endMs": 1420,
    "words": [
     {
      "text": "Want",
-     "startMs": 320,
-     "endMs": 340
+     "startMs": 270,
+     "endMs": 300
     },
     {
      "text": "that",
-     "startMs": 340,
-     "endMs": 650
+     "startMs": 300,
+     "endMs": 540
     },
     {
      "text": "fireplace",
-     "startMs": 650,
-     "endMs": 1350
+     "startMs": 540,
+     "endMs": 1150
     },
     {
      "text": "glow",
-     "startMs": 1350,
-     "endMs": 1670
+     "startMs": 1150,
+     "endMs": 1420
     }
    ]
   },
   {
    "text": "on your desk?",
-   "startMs": 1670,
-   "endMs": 2720,
+   "startMs": 1420,
+   "endMs": 2320,
    "words": [
     {
      "text": "on",
-     "startMs": 1670,
-     "endMs": 1830
+     "startMs": 1420,
+     "endMs": 1550
     },
     {
      "text": "your",
-     "startMs": 1830,
-     "endMs": 2140
+     "startMs": 1550,
+     "endMs": 1820
     },
     {
      "text": "desk?",
-     "startMs": 2140,
-     "endMs": 2720
+     "startMs": 1820,
+     "endMs": 2320
     }
    ]
   },
   {
    "text": "Hearth pairs a flame-like",
-   "startMs": 2720,
-   "endMs": 4120,
+   "startMs": 2320,
+   "endMs": 3830,
    "words": [
     {
      "text": "Hearth",
-     "startMs": 2720,
-     "endMs": 3140
+     "startMs": 2320,
+     "endMs": 2740
     },
     {
      "text": "pairs",
-     "startMs": 3140,
-     "endMs": 3430
+     "startMs": 2740,
+     "endMs": 3090
     },
     {
      "text": "a",
-     "startMs": 3430,
-     "endMs": 3490
+     "startMs": 3090,
+     "endMs": 3160
     },
     {
      "text": "flame-like",
-     "startMs": 3490,
-     "endMs": 4120
+     "startMs": 3160,
+     "endMs": 3830
     }
    ]
   },
   {
    "text": "light effect with cool mist,",
-   "startMs": 4120,
-   "endMs": 6040,
+   "startMs": 3830,
+   "endMs": 5400,
    "words": [
     {
      "text": "light",
-     "startMs": 4120,
-     "endMs": 4510
+     "startMs": 3830,
+     "endMs": 4100
     },
     {
      "text": "effect",
-     "startMs": 4510,
-     "endMs": 4940
+     "startMs": 4100,
+     "endMs": 4450
     },
     {
      "text": "with",
-     "startMs": 4940,
-     "endMs": 5210
+     "startMs": 4450,
+     "endMs": 4760
     },
     {
      "text": "cool",
-     "startMs": 5210,
-     "endMs": 5540
+     "startMs": 4760,
+     "endMs": 5080
     },
     {
      "text": "mist,",
-     "startMs": 5540,
-     "endMs": 6040
+     "startMs": 5080,
+     "endMs": 5400
     }
    ]
   },
   {
    "text": "for a cozy corner",
-   "startMs": 6040,
-   "endMs": 7080,
+   "startMs": 5400,
+   "endMs": 6260,
    "words": [
     {
      "text": "for",
-     "startMs": 6040,
-     "endMs": 6260
+     "startMs": 5400,
+     "endMs": 5580
     },
     {
      "text": "a",
-     "startMs": 6260,
-     "endMs": 6350
+     "startMs": 5580,
+     "endMs": 5680
     },
     {
      "text": "cozy",
-     "startMs": 6350,
-     "endMs": 6630
+     "startMs": 5680,
+     "endMs": 5890
     },
     {
      "text": "corner",
-     "startMs": 6630,
-     "endMs": 7080
+     "startMs": 5890,
+     "endMs": 6260
     }
    ]
   },
   {
    "text": "without an actual flame.",
-   "startMs": 7080,
-   "endMs": 8820,
+   "startMs": 6260,
+   "endMs": 7720,
    "words": [
     {
      "text": "without",
-     "startMs": 7080,
-     "endMs": 7600
+     "startMs": 6260,
+     "endMs": 6690
     },
     {
      "text": "an",
-     "startMs": 7600,
-     "endMs": 7750
+     "startMs": 6690,
+     "endMs": 6810
     },
     {
      "text": "actual",
-     "startMs": 7750,
-     "endMs": 8200
+     "startMs": 6810,
+     "endMs": 7210
     },
     {
      "text": "flame.",
-     "startMs": 8200,
-     "endMs": 8820
+     "startMs": 7210,
+     "endMs": 7720
     }
    ]
   },
   {
    "text": "Shop Zorev.",
-   "startMs": 8820,
-   "endMs": 10100,
+   "startMs": 7720,
+   "endMs": 8880,
    "words": [
     {
      "text": "Shop",
-     "startMs": 8820,
-     "endMs": 9270
+     "startMs": 7720,
+     "endMs": 8150
     },
     {
      "text": "Zorev.",
-     "startMs": 9270,
-     "endMs": 10100
+     "startMs": 8150,
+     "endMs": 8880
     }
    ]
   },
   {
    "text": "Link in bio.",
-   "startMs": 10100,
-   "endMs": 11320,
+   "startMs": 8880,
+   "endMs": 10040,
    "words": [
     {
      "text": "Link",
-     "startMs": 10100,
-     "endMs": 10600
+     "startMs": 8880,
+     "endMs": 9310
     },
     {
      "text": "in",
-     "startMs": 10600,
-     "endMs": 10850
+     "startMs": 9310,
+     "endMs": 9520
     },
     {
      "text": "bio.",
-     "startMs": 10850,
-     "endMs": 11320
+     "startMs": 9520,
+     "endMs": 10040
     }
    ]
   }

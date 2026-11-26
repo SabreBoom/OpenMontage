@@ -8,3 +8,6 @@ out
 .tools/
 public/source/
 out/stills/
+
+# voice candidates (the chosen take is finished into public/ads/<key>/voice.wav)
+public/voice-test/
