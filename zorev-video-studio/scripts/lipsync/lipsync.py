@@ -77,9 +77,13 @@ subprocess.run(ff + ["-i", ls, "-i", motion, "-i", voice, "-filter_complex",
                      f"[0:v]trim=start_frame=0:end_frame={a1},setpts=PTS-STARTPTS[a];"
                      f"[0:v]trim=start_frame={a1 - 1}:end_frame={a1},setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration={hold - 1 / FPS:.3f}[m];"
                      f"[0:v]trim=start_frame={a1}:end_frame={a1 + n - b0},setpts=PTS-STARTPTS[b];"
-                     "[a][m][b]concat=n=3:v=1:a=0,setpts=PTS-STARTPTS[face];"
+                     # MuseTalk can drop the last frame or two: hold the final one
+                     "[a][m][b]concat=n=3:v=1:a=0,setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration=1[face];"
                      f"[1:v][face]overlay=x={bx}:y={by}:shortest=1[v]",
                      "-map", "[v]", "-map", "2:a", "-r", str(FPS), "-c:v", "libx264", "-crf", "12", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "192k", "-t", "15", out], check=True)
 shutil.rmtree(tmp, ignore_errors=True)
+# put back the skin/beard detail MuseTalk's 256 px mouth area loses
+subprocess.run([os.path.join(ROOT, ".tools/motion/venv/bin/python"), os.path.join(ROOT, "scripts/lipsync/restore_detail.py"),
+                motion, out], check=True)
 print(f"{key}: lip-synced a {side}px face square at ({bx},{by}), frames 0-{a1 - 1} and {b0}-{n - 1} -> {out}")
