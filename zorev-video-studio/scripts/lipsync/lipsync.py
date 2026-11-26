@@ -27,10 +27,33 @@ b0 = max(a1, int((ad["ctaStartMs"] / 1000 - 0.3) * FPS))  # closing window [b0, 
 tmp = tempfile.mkdtemp(prefix=f"ls_{key}_", dir=os.path.join(MT, "results"))
 cond_v, cond_a = os.path.join(tmp, f"{key}_cond.mp4"), os.path.join(tmp, f"{key}_cond.wav")
 ff = ["ffmpeg", "-v", "error", "-y"]
+
+# MuseTalk only needs the face: work on a square around it (4-5x faster than the
+# full 1080x1920 frame) and paste the result back at full resolution afterwards.
+# The box is sized from the face in the first frame with room for head motion.
+probe = os.path.join(tmp, "first.png")
+subprocess.run(ff + ["-i", motion, "-frames:v", "1", probe], check=True)
+det = subprocess.run([os.path.join(ROOT, ".tools/lipsync/venv/bin/python"), "-c", f"""
+import sys, cv2, numpy as np
+sys.path.insert(0, 'musetalk/utils')
+from face_detection import FaceAlignment, LandmarksType
+img = cv2.imread({probe!r})
+fa = FaceAlignment(LandmarksType._2D, flip_input=False, device='cpu')
+x1, y1, x2, y2 = fa.get_detections_for_batch(np.asarray([img]))[0][:4]
+print(img.shape[1], img.shape[0], x1, y1, x2, y2)
+"""], cwd=MT, capture_output=True, text=True, check=True)
+fw, fh, x1, y1, x2, y2 = map(float, det.stdout.split()[-6:])
+side = int(min(fw, fh, max(x2 - x1, y2 - y1) * 2.4)) // 2 * 2
+cx, cy = (x1 + x2) / 2, (y1 + y2) / 2 + 0.06 * (y2 - y1)
+bx = int(min(max(cx - side / 2, 0), fw - side)) // 2 * 2
+by = int(min(max(cy - side / 2, 0), fh - side)) // 2 * 2
+crop = f"crop={side}:{side}:{bx}:{by}"
+
 # condensed picture and sound: hook window followed by closing window
 subprocess.run(ff + ["-i", motion, "-filter_complex",
-                     f"[0:v]trim=start_frame=0:end_frame={a1},setpts=PTS-STARTPTS[a];"
-                     f"[0:v]trim=start_frame={b0}:end_frame={n},setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1:a=0[v]",
+                     f"[0:v]{crop},split[c1][c2];"
+                     f"[c1]trim=start_frame=0:end_frame={a1},setpts=PTS-STARTPTS[a];"
+                     f"[c2]trim=start_frame={b0}:end_frame={n},setpts=PTS-STARTPTS[b];[a][b]concat=n=2:v=1:a=0[v]",
                      "-map", "[v]", "-r", str(FPS), "-c:v", "libx264", "-crf", "10", "-pix_fmt", "yuv420p", cond_v],
                check=True)
 subprocess.run(ff + ["-i", voice, "-filter_complex",
@@ -46,15 +69,17 @@ subprocess.run([os.path.join(ROOT, ".tools/lipsync/venv/bin/python"), "-m", "scr
                 "--version", "v15", "--batch_size", "4", "--fps", str(FPS)], cwd=MT, env=env, check=True)
 ls = os.path.join(tmp, "v15", f"{key}_cond_ls.mp4")
 
-# expand back onto the 15 s timeline: hook, held frame for the hidden middle, closing
+# expand back onto the 15 s timeline (hook, held frame for the hidden middle,
+# closing) and paste the lip-synced face square over the full-resolution take
 out = os.path.join(ROOT, "public/ads", key, "presenter.mp4")
 hold = (b0 - a1) / FPS
-subprocess.run(ff + ["-i", ls, "-i", voice, "-filter_complex",
+subprocess.run(ff + ["-i", ls, "-i", motion, "-i", voice, "-filter_complex",
                      f"[0:v]trim=start_frame=0:end_frame={a1},setpts=PTS-STARTPTS[a];"
                      f"[0:v]trim=start_frame={a1 - 1}:end_frame={a1},setpts=PTS-STARTPTS,tpad=stop_mode=clone:stop_duration={hold - 1 / FPS:.3f}[m];"
                      f"[0:v]trim=start_frame={a1}:end_frame={a1 + n - b0},setpts=PTS-STARTPTS[b];"
-                     "[a][m][b]concat=n=3:v=1:a=0[v]",
-                     "-map", "[v]", "-map", "1:a", "-r", str(FPS), "-c:v", "libx264", "-crf", "12", "-pix_fmt", "yuv420p",
+                     "[a][m][b]concat=n=3:v=1:a=0,setpts=PTS-STARTPTS[face];"
+                     f"[1:v][face]overlay=x={bx}:y={by}:shortest=1[v]",
+                     "-map", "[v]", "-map", "2:a", "-r", str(FPS), "-c:v", "libx264", "-crf", "12", "-pix_fmt", "yuv420p",
                      "-c:a", "aac", "-b:a", "192k", "-t", "15", out], check=True)
 shutil.rmtree(tmp, ignore_errors=True)
-print(f"{key}: lip-synced frames 0-{a1 - 1} and {b0}-{n - 1} -> {out}")
+print(f"{key}: lip-synced a {side}px face square at ({bx},{by}), frames 0-{a1 - 1} and {b0}-{n - 1} -> {out}")

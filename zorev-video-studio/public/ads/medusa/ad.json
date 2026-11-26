@@ -1,203 +1,203 @@
 {
  "key": "medusa",
- "hookEndMs": 3140,
- "splitMs": 6300,
- "ctaStartMs": 9320,
- "speechEndMs": 12480,
+ "hookEndMs": 3500,
+ "splitMs": 6880,
+ "ctaStartMs": 9900,
+ "speechEndMs": 12240,
  "captions": [
   {
    "text": "A jellyfish-inspired glow",
    "startMs": 0,
-   "endMs": 1990,
+   "endMs": 2170,
    "words": [
     {
      "text": "A",
      "startMs": 0,
-     "endMs": 320
+     "endMs": 290
     },
     {
      "text": "jellyfish-inspired",
-     "startMs": 320,
-     "endMs": 1670
+     "startMs": 290,
+     "endMs": 1790
     },
     {
      "text": "glow",
-     "startMs": 1670,
-     "endMs": 1990
+     "startMs": 1790,
+     "endMs": 2170
     }
    ]
   },
   {
    "text": "for your desk.",
-   "startMs": 1990,
-   "endMs": 3180,
+   "startMs": 2170,
+   "endMs": 3540,
    "words": [
     {
      "text": "for",
-     "startMs": 1990,
-     "endMs": 2260
+     "startMs": 2170,
+     "endMs": 2450
     },
     {
      "text": "your",
-     "startMs": 2260,
-     "endMs": 2610
+     "startMs": 2450,
+     "endMs": 2830
     },
     {
      "text": "desk.",
-     "startMs": 2610,
-     "endMs": 3180
+     "startMs": 2830,
+     "endMs": 3540
     }
    ]
   },
   {
    "text": "Medusa combines moving tentacles",
-   "startMs": 3180,
-   "endMs": 5200,
+   "startMs": 3540,
+   "endMs": 5790,
    "words": [
     {
      "text": "Medusa",
-     "startMs": 3180,
-     "endMs": 3580
+     "startMs": 3540,
+     "endMs": 4000
     },
     {
      "text": "combines",
-     "startMs": 3580,
-     "endMs": 4130
+     "startMs": 4000,
+     "endMs": 4620
     },
     {
      "text": "moving",
-     "startMs": 4130,
-     "endMs": 4540
+     "startMs": 4620,
+     "endMs": 5080
     },
     {
      "text": "tentacles",
-     "startMs": 4540,
-     "endMs": 5200
+     "startMs": 5080,
+     "endMs": 5790
     }
    ]
   },
   {
    "text": "and colorful light",
-   "startMs": 5200,
-   "endMs": 6360,
+   "startMs": 5790,
+   "endMs": 6940,
    "words": [
     {
      "text": "and",
-     "startMs": 5200,
-     "endMs": 5460
+     "startMs": 5790,
+     "endMs": 6090
     },
     {
      "text": "colorful",
-     "startMs": 5460,
-     "endMs": 5880
+     "startMs": 6090,
+     "endMs": 6500
     },
     {
      "text": "light",
-     "startMs": 5880,
-     "endMs": 6360
+     "startMs": 6500,
+     "endMs": 6940
     }
    ]
   },
   {
    "text": "in a lamp that gives",
-   "startMs": 6360,
-   "endMs": 7220,
+   "startMs": 6940,
+   "endMs": 8060,
    "words": [
     {
      "text": "in",
-     "startMs": 6360,
-     "endMs": 6480
+     "startMs": 6940,
+     "endMs": 7110
     },
     {
      "text": "a",
-     "startMs": 6480,
-     "endMs": 6540
+     "startMs": 7110,
+     "endMs": 7150
     },
     {
      "text": "lamp",
-     "startMs": 6540,
-     "endMs": 6940
+     "startMs": 7150,
+     "endMs": 7430
     },
     {
      "text": "that",
-     "startMs": 6940,
-     "endMs": 7080
+     "startMs": 7430,
+     "endMs": 7710
     },
     {
      "text": "gives",
-     "startMs": 7080,
-     "endMs": 7220
+     "startMs": 7710,
+     "endMs": 8060
     }
    ]
   },
   {
    "text": "your space an underwater feel.",
-   "startMs": 7220,
-   "endMs": 9520,
+   "startMs": 8060,
+   "endMs": 10100,
    "words": [
     {
      "text": "your",
-     "startMs": 7220,
-     "endMs": 7360
+     "startMs": 8060,
+     "endMs": 8340
     },
     {
      "text": "space",
-     "startMs": 7360,
-     "endMs": 7870
+     "startMs": 8340,
+     "endMs": 8680
     },
     {
      "text": "an",
-     "startMs": 7870,
-     "endMs": 7980
+     "startMs": 8680,
+     "endMs": 8900
     },
     {
      "text": "underwater",
-     "startMs": 7980,
-     "endMs": 8670
+     "startMs": 8900,
+     "endMs": 9550
     },
     {
      "text": "feel.",
-     "startMs": 8670,
-     "endMs": 9520
+     "startMs": 9550,
+     "endMs": 10100
     }
    ]
   },
   {
    "text": "Shop Zorev.",
-   "startMs": 9520,
-   "endMs": 11360,
+   "startMs": 10100,
+   "endMs": 11120,
    "words": [
     {
      "text": "Shop",
-     "startMs": 9520,
-     "endMs": 10230
+     "startMs": 10100,
+     "endMs": 10580
     },
     {
      "text": "Zorev.",
-     "startMs": 10230,
-     "endMs": 11360
+     "startMs": 10580,
+     "endMs": 11120
     }
    ]
   },
   {
    "text": "Link in bio.",
-   "startMs": 11360,
-   "endMs": 12480,
+   "startMs": 11390,
+   "endMs": 12240,
    "words": [
     {
      "text": "Link",
-     "startMs": 11360,
-     "endMs": 11790
+     "startMs": 11390,
+     "endMs": 11700
     },
     {
      "text": "in",
-     "startMs": 11790,
-     "endMs": 11990
+     "startMs": 11700,
+     "endMs": 11900
     },
     {
      "text": "bio.",
-     "startMs": 11990,
-     "endMs": 12480
+     "startMs": 11900,
+     "endMs": 12240
     }
    ]
   }

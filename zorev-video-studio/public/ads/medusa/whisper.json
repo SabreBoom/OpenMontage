@@ -2,197 +2,197 @@
   {
     "text": "A",
     "startMs": 0,
-    "endMs": 320,
-    "timestampMs": 380,
-    "confidence": 0.770846
+    "endMs": 290,
+    "timestampMs": 360,
+    "confidence": 0.838238
   },
   {
     "text": " jellyfish-inspired",
-    "startMs": 320,
-    "endMs": 1670,
-    "timestampMs": 580,
-    "confidence": 0.937418
+    "startMs": 290,
+    "endMs": 1790,
+    "timestampMs": 620,
+    "confidence": 0.983516
   },
   {
     "text": " glow",
-    "startMs": 1670,
-    "endMs": 1990,
-    "timestampMs": 1800,
-    "confidence": 0.994684
+    "startMs": 1790,
+    "endMs": 2170,
+    "timestampMs": 2120,
+    "confidence": 0.993022
   },
   {
     "text": " for",
-    "startMs": 1990,
-    "endMs": 2260,
-    "timestampMs": 2120,
-    "confidence": 0.993002
+    "startMs": 2170,
+    "endMs": 2450,
+    "timestampMs": 2420,
+    "confidence": 0.989566
   },
   {
     "text": " your",
-    "startMs": 2260,
-    "endMs": 2610,
-    "timestampMs": 2260,
-    "confidence": 0.996677
+    "startMs": 2450,
+    "endMs": 2830,
+    "timestampMs": 2600,
+    "confidence": 0.99674
   },
   {
     "text": " desk.",
-    "startMs": 2610,
-    "endMs": 3180,
-    "timestampMs": 2520,
-    "confidence": 0.993792
+    "startMs": 2830,
+    "endMs": 3540,
+    "timestampMs": 2920,
+    "confidence": 0.994758
   },
   {
     "text": " Medusa",
-    "startMs": 3180,
-    "endMs": 3580,
-    "timestampMs": 3400,
-    "confidence": 0.938786
+    "startMs": 3540,
+    "endMs": 4000,
+    "timestampMs": 3820,
+    "confidence": 0.935758
   },
   {
     "text": " combines",
-    "startMs": 3580,
-    "endMs": 4130,
-    "timestampMs": 3960,
-    "confidence": 0.99811
+    "startMs": 4000,
+    "endMs": 4620,
+    "timestampMs": 4460,
+    "confidence": 0.998729
   },
   {
     "text": " moving",
-    "startMs": 4130,
-    "endMs": 4540,
-    "timestampMs": 4520,
-    "confidence": 0.997752
+    "startMs": 4620,
+    "endMs": 5080,
+    "timestampMs": 5100,
+    "confidence": 0.996542
   },
   {
     "text": " tentacles",
-    "startMs": 4540,
-    "endMs": 5200,
-    "timestampMs": 4840,
-    "confidence": 0.98933
+    "startMs": 5080,
+    "endMs": 5790,
+    "timestampMs": 5420,
+    "confidence": 0.987927
   },
   {
     "text": " and",
-    "startMs": 5200,
-    "endMs": 5460,
-    "timestampMs": 5340,
-    "confidence": 0.951996
+    "startMs": 5790,
+    "endMs": 6090,
+    "timestampMs": 5960,
+    "confidence": 0.921104
   },
   {
     "text": " colorful",
-    "startMs": 5460,
-    "endMs": 5880,
-    "timestampMs": 5660,
-    "confidence": 0.963869
+    "startMs": 6090,
+    "endMs": 6500,
+    "timestampMs": 6280,
+    "confidence": 0.974617
   },
   {
     "text": " light",
-    "startMs": 5880,
-    "endMs": 6360,
-    "timestampMs": 6080,
-    "confidence": 0.981244
+    "startMs": 6500,
+    "endMs": 6940,
+    "timestampMs": 6680,
+    "confidence": 0.959388
   },
   {
     "text": " in",
-    "startMs": 6360,
-    "endMs": 6480,
-    "timestampMs": 6400,
-    "confidence": 0.56367
+    "startMs": 6940,
+    "endMs": 7110,
+    "timestampMs": 7160,
+    "confidence": 0.997288
   },
   {
     "text": " a",
-    "startMs": 6480,
-    "endMs": 6540,
-    "timestampMs": 6480,
-    "confidence": 0.967538
+    "startMs": 7110,
+    "endMs": 7150,
+    "timestampMs": 7240,
+    "confidence": 0.997895
   },
   {
     "text": " lamp",
-    "startMs": 6540,
-    "endMs": 6940,
-    "timestampMs": 6740,
-    "confidence": 0.995499
+    "startMs": 7150,
+    "endMs": 7430,
+    "timestampMs": 7500,
+    "confidence": 0.998849
   },
   {
     "text": " that",
-    "startMs": 6940,
-    "endMs": 7080,
-    "timestampMs": 6980,
-    "confidence": 0.89277
+    "startMs": 7430,
+    "endMs": 7710,
+    "timestampMs": 7740,
+    "confidence": 0.998607
   },
   {
     "text": " gives",
-    "startMs": 7080,
-    "endMs": 7220,
-    "timestampMs": 7140,
-    "confidence": 0.980002
+    "startMs": 7710,
+    "endMs": 8060,
+    "timestampMs": 7960,
+    "confidence": 0.994886
   },
   {
     "text": " your",
-    "startMs": 7220,
-    "endMs": 7360,
-    "timestampMs": 7340,
-    "confidence": 0.866928
+    "startMs": 8060,
+    "endMs": 8340,
+    "timestampMs": 8200,
+    "confidence": 0.987826
   },
   {
     "text": " space",
-    "startMs": 7360,
-    "endMs": 7870,
-    "timestampMs": 7640,
-    "confidence": 0.970246
+    "startMs": 8340,
+    "endMs": 8680,
+    "timestampMs": 8480,
+    "confidence": 0.998098
   },
   {
     "text": " an",
-    "startMs": 7870,
-    "endMs": 7980,
-    "timestampMs": 7940,
-    "confidence": 0.976131
+    "startMs": 8680,
+    "endMs": 8900,
+    "timestampMs": 8760,
+    "confidence": 0.992305
   },
   {
     "text": " underwater",
-    "startMs": 7980,
-    "endMs": 8670,
-    "timestampMs": 8320,
-    "confidence": 0.981453
+    "startMs": 8900,
+    "endMs": 9550,
+    "timestampMs": 9120,
+    "confidence": 0.994831
   },
   {
     "text": " feel.",
-    "startMs": 8670,
-    "endMs": 9520,
-    "timestampMs": 8980,
-    "confidence": 0.865856
+    "startMs": 9550,
+    "endMs": 10100,
+    "timestampMs": 9680,
+    "confidence": 0.977397
   },
   {
     "text": " Shop",
-    "startMs": 9520,
-    "endMs": 10230,
-    "timestampMs": 10020,
-    "confidence": 0.90693
+    "startMs": 10100,
+    "endMs": 10580,
+    "timestampMs": 10480,
+    "confidence": 0.955817
   },
   {
-    "text": " Zorev.",
-    "startMs": 10230,
-    "endMs": 11360,
-    "timestampMs": 10240,
-    "confidence": 0.739564
+    "text": " Zoreth,",
+    "startMs": 10580,
+    "endMs": 11390,
+    "timestampMs": 10680,
+    "confidence": 0.602345
   },
   {
-    "text": " Link",
-    "startMs": 11360,
-    "endMs": 11790,
-    "timestampMs": 11400,
-    "confidence": 0.654036
+    "text": " link",
+    "startMs": 11390,
+    "endMs": 11700,
+    "timestampMs": 11500,
+    "confidence": 0.792954
   },
   {
     "text": " in",
-    "startMs": 11790,
-    "endMs": 11990,
-    "timestampMs": 11640,
-    "confidence": 0.973073
+    "startMs": 11700,
+    "endMs": 11900,
+    "timestampMs": 11720,
+    "confidence": 0.990167
   },
   {
     "text": " bio.",
-    "startMs": 11990,
-    "endMs": 12480,
-    "timestampMs": 11860,
-    "confidence": 0.503249
+    "startMs": 11900,
+    "endMs": 12240,
+    "timestampMs": 12060,
+    "confidence": 0.791974
   }
 ]
