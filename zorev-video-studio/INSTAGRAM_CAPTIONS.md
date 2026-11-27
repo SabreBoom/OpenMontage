@@ -23,3 +23,15 @@ Made with AI: the presenter and product scenes are AI-generated.
 **Medusa skit ("Wait… that's a jellyfish?")**
 Our roommate was not ready for this desk lamp. Medusa: rotating tentacles, color-shifting light, zero feeding required. Shop through the link in our bio. @zorevhousing
 Made with AI: the people, voices and product scenes are AI-generated (a staged skit, not real customers).
+
+**Nova skit ("Bedtime negotiations")**
+"I'm not tired." Then the ceiling turned into space. Nova: 13 space scenes, adjustable focus, and a sky that slowly turns. Shop through the link in our bio. @zorevhousing
+Made with AI: the child and the scenes are AI-generated (a staged skit, not a real family).
+
+**Hearth skit ("Landlord said no fireplaces")**
+Not a fire. Cool mist and warm light that flickers like one, with no real flame and nothing to burn. Shop through the link in our bio. @zorevhousing
+Made with AI: the scenes are AI-generated (a staged skit).
+
+**Nimbus skit ("Does it actually rain?")**
+Yes. Drop by drop, into its own base, glowing in 7 colors. Sound on. Shop through the link in our bio. @zorevhousing
+Made with AI: the scenes are AI-generated, the rain sound is synthesised.

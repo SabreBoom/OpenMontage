@@ -20,10 +20,10 @@ export const SKIT_TIMELINES: SkitTimelineConfig[] = [
     product: product("ZorevNova"),
     accent: "#9FD8FF",
     scenes: [
-      { name: "Kid: not tired", from: 0, to: 2.6, src: "skit/nova/kid-grumpy.mp4", grade: "warm", push: [1.1, 1.16], origin: "50% 30%" },
+      { name: "Kid: not tired", from: 0, to: 2.6, src: "skit/nova/kid-grumpy.mp4", grade: "warm", push: [1.42, 1.52], origin: "52% 31%" },
       { name: "Lights off", from: 2.6, to: 3.15, color: "#000" },
       { name: "Ceiling reveal", from: 3.15, to: 5.9, src: F + "nova_ceiling_phone.mp4", startFromSec: 0.3, push: [1.0, 1.12] },
-      { name: "Kid: whoa", from: 5.9, to: 9.3, src: "skit/nova/kid-awe.mp4", grade: "night", stars: true, push: [1.12, 1.2], origin: "50% 30%" },
+      { name: "Kid: whoa", from: 5.9, to: 9.3, src: "skit/nova/kid-awe.mp4", grade: "night", stars: true, push: [1.55, 1.7], origin: "52% 31%" },
       { name: "13 discs", from: 9.3, to: 10.6, src: F + "nova_ceiling_nightstand.mp4", startFromSec: 1.0, push: [1.04, 1.1] },
       { name: "Focus", from: 10.6, to: 11.8, src: F + "nova_ceiling_phone.mp4", startFromSec: 5.5, focusPull: 0.8, push: [1.08, 1.12] },
       { name: "Rotation", from: 11.8, to: 12.9, src: F + "nova_ceiling_nightstand.mp4", startFromSec: 6.0, push: [1.0, 1.05] },

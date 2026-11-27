@@ -53,7 +53,7 @@ const toF = (s: number) => Math.round(s * FPS);
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
 const gradeFilter = (g: Grade | undefined) =>
-  g === "night" ? "brightness(0.62) contrast(1.08) saturate(0.85)" : g === "dim" ? "brightness(0.45) saturate(0.7)" : g === "warm" ? "saturate(1.1) sepia(0.12)" : "none";
+  g === "night" ? "brightness(0.8) contrast(1.06) saturate(0.9)" : g === "dim" ? "brightness(0.45) saturate(0.7)" : g === "warm" ? "saturate(1.1) sepia(0.12)" : "none";
 
 // Star projector light: soft dots that drift around a centre point and twinkle.
 const Stars: React.FC = () => {
@@ -117,7 +117,7 @@ const SceneView: React.FC<{ scene: SkitScene }> = ({ scene }) => {
         </Interactive.Div>
       ) : null}
       {scene.grade === "night" ? (
-        <AbsoluteFill style={{ backgroundColor: "#3d3fb8", mixBlendMode: "multiply", opacity: 0.55 }} />
+        <AbsoluteFill style={{ backgroundColor: "#4a52d6", mixBlendMode: "multiply", opacity: 0.42 }} />
       ) : null}
       {scene.stars ? <Stars /> : null}
       {scene.grade === "night" || scene.grade === "dim" ? (
