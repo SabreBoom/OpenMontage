@@ -19,3 +19,7 @@ Made with AI: the presenter and product scenes are AI-generated.
 **Medusa**
 Rotating tentacles and color-shifting light in a jellyfish-shaped lamp for your desk. Shop through the link in our bio. @zorevhousing
 Made with AI: the presenter and product scenes are AI-generated.
+
+**Medusa skit ("Wait… that's a jellyfish?")**
+Our roommate was not ready for this desk lamp. Medusa: rotating tentacles, color-shifting light, zero feeding required. Shop through the link in our bio. @zorevhousing
+Made with AI: the people, voices and product scenes are AI-generated (a staged skit, not real customers).
