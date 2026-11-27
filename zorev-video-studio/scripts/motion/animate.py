@@ -32,7 +32,7 @@ from src.live_portrait_wrapper import LivePortraitWrapper  # noqa: E402
 from src.utils.camera import get_rotation_matrix  # noqa: E402
 from src.utils.crop import crop_image, paste_back, prepare_paste_back  # noqa: E402
 from src.utils.human_landmark_runner import LandmarkRunner  # noqa: E402
-from src.utils.retargeting_utils import calc_eye_close_ratio  # noqa: E402
+from src.utils.retargeting_utils import calc_eye_close_ratio, calc_lip_close_ratio  # noqa: E402
 
 FPS = 25
 W, H = 1080, 1920
@@ -224,9 +224,11 @@ class Animator:
         self.f_s = self.lp.extract_feature_3d(I_s)
         self.x_s = self.lp.transform_keypoint(self.info)
         self.eye_open = float(np.mean(calc_eye_close_ratio(self.src_lmk[None])))
+        self.lip_rest = float(np.mean(calc_lip_close_ratio(self.src_lmk[None])))
 
     @torch.no_grad()
-    def frame(self, pitch=0.0, yaw=0.0, roll=0.0, brow=0.0, smile=0.0, gaze_x=0.0, eye_close=0.0, breath=1.0):
+    def frame(self, pitch=0.0, yaw=0.0, roll=0.0, brow=0.0, smile=0.0, gaze_x=0.0, eye_close=0.0, breath=1.0,
+              gaze_y=0.0, mouth=0.0):
         i = self.info
         R = get_rotation_matrix(i["pitch"] + pitch, i["yaw"] + yaw, i["roll"] + roll)
         d = i["exp"].clone()
@@ -234,18 +236,55 @@ class Animator:
             add_smile(d, smile)
         if brow:
             add_eyebrow(d, brow)
-        if gaze_x:
-            add_gaze(d, gaze_x, 0.0)
+        if gaze_x or gaze_y:
+            add_gaze(d, gaze_x, gaze_y)
         t = i["t"].clone()
         t[..., 2] = 0
         x_d = breath * i["scale"] * (i["kp"] @ R + d) + t
         if abs(eye_close) > 0.01:  # > 0 closes (blinks), < 0 widens (surprise)
             ratio = self.lp.calc_combined_eye_ratio([[self.eye_open * (1 - eye_close)]], self.src_lmk)
             x_d = x_d + self.lp.retarget_eye(self.x_s, ratio)
+        if mouth > 0.01:  # open the jaw (0..1), e.g. a silent "whoa"
+            lip = self.lp.calc_combined_lip_ratio([[self.lip_rest + 0.55 * mouth]], self.src_lmk)
+            x_d = x_d + self.lp.retarget_lip(self.x_s, lip)
         x_d = self.lp.stitching(self.x_s, x_d)
         out = self.lp.warp_decode(self.f_s, self.x_s, x_d)
         out = self.lp.parse_output(out["out"])[0]
         return paste_back(out, self.M, self.img, self.mask)
+
+
+def keyed_performance(spec, n):
+    """A silent performance from keyframes: each curve is [[seconds, value], ...],
+    eased between keys; a little idle sway and breathing are added so the face
+    never freezes, and blinks land where the spec puts them."""
+    t = np.arange(n) / FPS
+    neutral = {"pitch": 0, "yaw": 0, "roll": 0, "brow": 0, "smile": 0, "gaze_x": 0, "gaze_y": 0,
+               "eye_close": 0, "mouth": 0, "breath": 1}
+    perf = {}
+    for name, base in neutral.items():
+        keys = spec.get("curves", {}).get(name)
+        if not keys:
+            perf[name] = np.full(n, float(base))
+            continue
+        kt, kv = np.array([k[0] for k in keys], float), np.array([k[1] for k in keys], float)
+        seg = np.clip(np.searchsorted(kt, t, side="right") - 1, 0, len(kt) - 1)
+        nxt = np.clip(seg + 1, 0, len(kt) - 1)
+        span = np.maximum(kt[nxt] - kt[seg], 1e-6)
+        u = np.clip((t - kt[seg]) / span, 0, 1)
+        u = u * u * (3 - 2 * u)  # ease in/out between keys
+        perf[name] = np.where(t < kt[0], kv[0], kv[seg] + (kv[nxt] - kv[seg]) * u)
+    perf["pitch"] = perf["pitch"] + 0.5 * np.sin(TAU * t / 4.3)
+    perf["yaw"] = perf["yaw"] + 0.6 * np.sin(TAU * t / 5.1 + 1.0)
+    perf["roll"] = perf["roll"] + 0.4 * np.sin(TAU * t / 3.9 + 2.0)
+    perf["breath"] = perf["breath"] * (1 + 0.004 * np.sin(TAU * t / 4.2))
+    closure = [0.5, 0.95, 1.0, 0.7, 0.35, 0.1]
+    for b in spec.get("blinks", []):
+        i0 = int(round(b * FPS))
+        for k, c in enumerate(closure):
+            if 0 <= i0 + k < n:
+                perf["eye_close"][i0 + k] = max(perf["eye_close"][i0 + k], c)
+    perf["blinks"] = spec.get("blinks", [])
+    return perf
 
 
 def main():
@@ -259,6 +298,8 @@ def main():
     ap.add_argument("--voice", help="narration wav (default public/ads/<key>/voice.wav)")
     ap.add_argument("--full", action="store_true", help="render every frame (no hidden windows)")
     ap.add_argument("--double-take", action="store_true", help="skit reaction: glance, snap back, wide eyes")
+    ap.add_argument("--keys", help="keyframed performance json (no narration): "
+                    '{"seconds": S, "curves": {"yaw": [[t, v], ...], ...}, "blinks": [t, ...]}')
     a = ap.parse_args()
 
     img = cv2.cvtColor(cv2.imread(a.image), cv2.COLOR_BGR2RGB)
@@ -266,8 +307,9 @@ def main():
     anim = Animator(img)
 
     if a.probe:
-        poses = [dict(), dict(pitch=-8), dict(yaw=8), dict(yaw=-12), dict(roll=6), dict(brow=14), dict(smile=0.4),
-                 dict(gaze_x=6), dict(eye_close=1.0), dict(eye_close=-0.35), dict(breath=1.06)]
+        poses = [dict(), dict(pitch=-8), dict(yaw=8), dict(yaw=-12), dict(roll=6), dict(brow=14), dict(brow=-14),
+                 dict(smile=0.4), dict(smile=-0.4), dict(gaze_x=6), dict(gaze_y=12), dict(mouth=1.0),
+                 dict(mouth=1.0, eye_close=-0.35, brow=12), dict(eye_close=1.0), dict(eye_close=-0.35)]
         tiles = []
         for p in poses:
             f = anim.frame(**p)
@@ -281,11 +323,16 @@ def main():
         print("probe ->", a.out)
         return
 
-    ad = json.load(open(a.ad or os.path.join(ROOT, "public/ads", a.key, "ad.json")))
-    voice = a.voice or os.path.join(ROOT, "public/ads", a.key, "voice.wav")
-    n = int(round(a.seconds * FPS))
-    perf = performance(ad, voice, n, double_take=a.double_take)
-    if a.full:
+    if a.keys:
+        spec = json.load(open(a.keys))
+        n = int(round(spec["seconds"] * FPS))
+        perf = keyed_performance(spec, n)
+    else:
+        ad = json.load(open(a.ad or os.path.join(ROOT, "public/ads", a.key, "ad.json")))
+        voice = a.voice or os.path.join(ROOT, "public/ads", a.key, "voice.wav")
+        n = int(round(a.seconds * FPS))
+        perf = performance(ad, voice, n, double_take=a.double_take)
+    if a.full or a.keys:
         vis = np.ones(n, bool)
     else:
         # on screen in the edit: hook (until hookEnd) and closing (from ctaStart); small margins
@@ -296,7 +343,8 @@ def main():
                             "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-crf", "12", "-pix_fmt", "yuv420p", a.out],
                            stdin=subprocess.PIPE)
     last = None
-    keys = ["pitch", "yaw", "roll", "brow", "smile", "gaze_x", "eye_close", "breath"]
+    keys = [x for x in ["pitch", "yaw", "roll", "brow", "smile", "gaze_x", "eye_close", "breath", "gaze_y", "mouth"]
+            if x in perf]
     for k in range(n):
         if vis[k] or last is None:
             last = anim.frame(**{x: float(perf[x][k]) for x in keys})
