@@ -98,7 +98,7 @@ def smooth_steps(t, times, values, tau):
     return out
 
 
-def performance(ad, voice_wav, n):
+def performance(ad, voice_wav, n, double_take=False):
     """per-frame pose / expression / blink curves from the narration"""
     import librosa
 
@@ -179,6 +179,26 @@ def performance(ad, voice_wav, n):
                 eye_close[i0 + k] = max(eye_close[i0 + k], c)
 
     breath = 1 + 0.004 * np.sin(TAU * t / 4.2)
+
+    if double_take:
+        # skit reaction, anchored to the line: looking at the thing off-screen,
+        # a quick "huh?" glance to camera, a snap back with wide eyes, raised
+        # brows and a lean-in on the first word, then he turns to camera to ask.
+        # (+yaw = towards camera for a subject turned to frame-right, see --probe)
+        s0 = words[0]["startMs"] / 1000
+        s1 = words[1]["startMs"] / 1000 if len(words) > 1 else s0 + 0.6
+        end = words[-1]["endMs"] / 1000
+        kt = [0, s0 - 0.55, s0 - 0.42, s0 - 0.12, s0, s1 - 0.12, s1 + 0.2, end + 0.4, end + 1.5]
+        ky = [0, 0, 12, 12, -6, -6, 10, 10, 6]
+        yaw = np.interp(t, kt, ky) + 0.4 * np.sin(TAU * t / 3.7)
+        shock = np.interp(t, [s0 - 0.12, s0, end, end + 0.8], [0, 1, 0.8, 0.2])
+        brow = brow * 0.5 + 14 * shock
+        eye_close = np.where(eye_close > 0.01, eye_close, -0.3 * shock)
+        breath = breath * (1 + 0.045 * np.interp(t, [s0 - 0.1, s0 + 0.15, s1 + 0.3, end + 0.6], [0, 1, 0.6, 0.1]))
+        pitch = pitch - 2.5 * np.interp(t, [s0 - 0.1, s0 + 0.1, s1, s1 + 0.4], [0, 1, 1, 0])
+        roll = roll * 0.5
+        smile = np.interp(t, [0, end + 0.3, end + 1.0], [0.0, 0.0, 0.25])
+        gaze_x = gaze_x * 0
     return dict(pitch=pitch, yaw=yaw, roll=roll, brow=brow, smile=smile, gaze_x=gaze_x,
                 eye_close=eye_close, breath=breath, blinks=blink_t)
 
@@ -219,7 +239,7 @@ class Animator:
         t = i["t"].clone()
         t[..., 2] = 0
         x_d = breath * i["scale"] * (i["kp"] @ R + d) + t
-        if eye_close > 0.01:
+        if abs(eye_close) > 0.01:  # > 0 closes (blinks), < 0 widens (surprise)
             ratio = self.lp.calc_combined_eye_ratio([[self.eye_open * (1 - eye_close)]], self.src_lmk)
             x_d = x_d + self.lp.retarget_eye(self.x_s, ratio)
         x_d = self.lp.stitching(self.x_s, x_d)
@@ -235,6 +255,10 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--probe", action="store_true")
     ap.add_argument("--seconds", type=float, default=15.0)
+    ap.add_argument("--ad", help="word timings json (default public/ads/<key>/ad.json)")
+    ap.add_argument("--voice", help="narration wav (default public/ads/<key>/voice.wav)")
+    ap.add_argument("--full", action="store_true", help="render every frame (no hidden windows)")
+    ap.add_argument("--double-take", action="store_true", help="skit reaction: glance, snap back, wide eyes")
     a = ap.parse_args()
 
     img = cv2.cvtColor(cv2.imread(a.image), cv2.COLOR_BGR2RGB)
@@ -242,8 +266,8 @@ def main():
     anim = Animator(img)
 
     if a.probe:
-        poses = [dict(), dict(pitch=-8), dict(yaw=8), dict(roll=6), dict(brow=10), dict(smile=0.4),
-                 dict(gaze_x=6), dict(eye_close=1.0), dict(eye_close=0.5)]
+        poses = [dict(), dict(pitch=-8), dict(yaw=8), dict(yaw=-12), dict(roll=6), dict(brow=14), dict(smile=0.4),
+                 dict(gaze_x=6), dict(eye_close=1.0), dict(eye_close=-0.35), dict(breath=1.06)]
         tiles = []
         for p in poses:
             f = anim.frame(**p)
@@ -257,14 +281,17 @@ def main():
         print("probe ->", a.out)
         return
 
-    ad = json.load(open(os.path.join(ROOT, "public/ads", a.key, "ad.json")))
-    voice = os.path.join(ROOT, "public/ads", a.key, "voice.wav")
+    ad = json.load(open(a.ad or os.path.join(ROOT, "public/ads", a.key, "ad.json")))
+    voice = a.voice or os.path.join(ROOT, "public/ads", a.key, "voice.wav")
     n = int(round(a.seconds * FPS))
-    perf = performance(ad, voice, n)
-    # on screen in the edit: hook (until hookEnd) and closing (from ctaStart); small margins
-    vis = np.zeros(n, bool)
-    vis[: int((ad["hookEndMs"] / 1000 + 0.3) * FPS)] = True
-    vis[int((ad["ctaStartMs"] / 1000 - 0.3) * FPS):] = True
+    perf = performance(ad, voice, n, double_take=a.double_take)
+    if a.full:
+        vis = np.ones(n, bool)
+    else:
+        # on screen in the edit: hook (until hookEnd) and closing (from ctaStart); small margins
+        vis = np.zeros(n, bool)
+        vis[: int((ad["hookEndMs"] / 1000 + 0.3) * FPS)] = True
+        vis[int((ad["ctaStartMs"] / 1000 - 0.3) * FPS):] = True
     enc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
                             "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-crf", "12", "-pix_fmt", "yuv420p", a.out],
                            stdin=subprocess.PIPE)

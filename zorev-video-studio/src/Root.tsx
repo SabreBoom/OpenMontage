@@ -2,6 +2,8 @@ import { Composition } from "remotion";
 import { MyComposition } from "./Composition";
 import { DURATION_FRAMES, FPS, ZorevAd } from "./zorev/ZorevAd";
 import { PRODUCTS } from "./zorev/products";
+import { SKITS } from "./zorev/skits";
+import { ZorevSkit } from "./zorev/ZorevSkit";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -17,6 +19,18 @@ export const RemotionRoot: React.FC = () => {
           width={1080}
           height={1920}
           defaultProps={{ ad }}
+        />
+      ))}
+      {SKITS.map((skit) => (
+        <Composition
+          key={skit.id}
+          id={skit.id}
+          component={ZorevSkit}
+          durationInFrames={Math.round(skit.data.seconds * FPS)}
+          fps={FPS}
+          width={1080}
+          height={1920}
+          defaultProps={{ skit }}
         />
       ))}
     </>

@@ -1,0 +1,111 @@
+{
+ "captions": [
+  {
+   "text": "Meet Medusa. Moving tentacles, colorful light, and you never have to feed it.",
+   "startMs": 452,
+   "endMs": 6457,
+   "words": [
+    {
+     "text": "Meet",
+     "startMs": 452,
+     "endMs": 1092
+    },
+    {
+     "text": "Medusa.",
+     "startMs": 1092,
+     "endMs": 2262
+    },
+    {
+     "text": "Moving",
+     "startMs": 2262,
+     "endMs": 2692
+    },
+    {
+     "text": "tentacles,",
+     "startMs": 2692,
+     "endMs": 3512
+    },
+    {
+     "text": "colorful",
+     "startMs": 3512,
+     "endMs": 4082
+    },
+    {
+     "text": "light,",
+     "startMs": 4082,
+     "endMs": 4702
+    },
+    {
+     "text": "and",
+     "startMs": 4702,
+     "endMs": 4892
+    },
+    {
+     "text": "you",
+     "startMs": 4892,
+     "endMs": 5172
+    },
+    {
+     "text": "never",
+     "startMs": 5172,
+     "endMs": 5492
+    },
+    {
+     "text": "have",
+     "startMs": 5492,
+     "endMs": 5752
+    },
+    {
+     "text": "to",
+     "startMs": 5752,
+     "endMs": 5892
+    },
+    {
+     "text": "feed",
+     "startMs": 5892,
+     "endMs": 6142
+    },
+    {
+     "text": "it.",
+     "startMs": 6142,
+     "endMs": 6372
+    }
+   ]
+  },
+  {
+   "text": "Shop Zorev. Link in bio.",
+   "startMs": 6807,
+   "endMs": 8941,
+   "words": [
+    {
+     "text": "Shop",
+     "startMs": 6807,
+     "endMs": 7207
+    },
+    {
+     "text": "Zorev.",
+     "startMs": 7207,
+     "endMs": 8027
+    },
+    {
+     "text": "Link",
+     "startMs": 8027,
+     "endMs": 8407
+    },
+    {
+     "text": "in",
+     "startMs": 8407,
+     "endMs": 8597
+    },
+    {
+     "text": "bio.",
+     "startMs": 8597,
+     "endMs": 8887
+    }
+   ]
+  }
+ ],
+ "speechEndMs": 8941,
+ "takeStartSec": 4.69,
+ "takeEndSec": 15.0
+}

@@ -14,7 +14,7 @@ import { loadFont } from "@remotion/fonts";
 import type { CaptionPos, CaptionSeg, ProductAd } from "./products";
 
 // Inter (variable, latin) is bundled in public/fonts so renders need no network.
-const fontFamily = "Inter";
+export const fontFamily = "Inter";
 loadFont({ family: fontFamily, url: staticFile("fonts/inter-latin-var.woff2"), weight: "100 900", format: "woff2" });
 
 export const FPS = 30;
@@ -22,17 +22,17 @@ export const DURATION_FRAMES = 15 * FPS; // 15.0 s
 
 // Instagram Reels safe area (1080x1920): keep essentials below the top bar,
 // above the caption/username block, and left of the action buttons.
-const SAFE_TOP = 190;
+export const SAFE_TOP = 190;
 // (bottom limit 1600: the end card and captions stay above it)
 const SAFE_RIGHT = 940;
 
-const INK = "rgba(18, 15, 12, 0.80)";
-const WARM = "#FFD9A0";
+export const INK = "rgba(18, 15, 12, 0.80)";
+export const WARM = "#FFD9A0";
 const MUSIC_VOLUME = 0.16;
 
 const msToFrame = (ms: number) => Math.round((ms / 1000) * FPS);
 
-const Cover: React.FC<{ src: string; startFromSec: number }> = ({ src, startFromSec }) => (
+export const Cover: React.FC<{ src: string; startFromSec: number }> = ({ src, startFromSec }) => (
   <AbsoluteFill style={{ backgroundColor: "#000" }}>
     <Video
       src={staticFile(src)}
@@ -48,7 +48,7 @@ const Cover: React.FC<{ src: string; startFromSec: number }> = ({ src, startFrom
 // the head already nods, turns and blinks in the take; this adds the slow sway
 // of a handheld phone so the camera breathes like a real selfie video.
 // Driven by the timeline frame, so it is deterministic.
-const HandheldMotion: React.FC<{ absFrame: number; children: React.ReactNode }> = ({ absFrame, children }) => {
+export const HandheldMotion: React.FC<{ absFrame: number; children: React.ReactNode }> = ({ absFrame, children }) => {
   const t = absFrame / FPS;
   const TAU = Math.PI * 2;
   const rotate = 0.35 * Math.sin((TAU * t) / 5.3) + 0.2 * Math.sin((TAU * t) / 3.1 + 1.1);
@@ -81,7 +81,7 @@ const PresenterAt: React.FC<{ ad: ProductAd; fromFrame: number }> = ({ ad, fromF
   );
 };
 
-const Pill: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+export const Pill: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
   <div
     style={{
       backgroundColor: INK,
@@ -196,7 +196,7 @@ const Captions: React.FC<{ captions: CaptionSeg[]; posAt: (ms: number) => Captio
 
 // Closing: presenter stays on screen, with a prominent product view, the
 // product name, the call to action and the account, all together.
-const EndCard: React.FC<{ ad: ProductAd }> = ({ ad }) => {
+export const EndCard: React.FC<{ ad: ProductAd }> = ({ ad }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const a = spring({ frame, fps, config: { damping: 200 }, durationInFrames: 16 });

@@ -1,0 +1,204 @@
+{
+ "seconds": 15.0,
+ "lines": [
+  {
+   "who": "roommate",
+   "text": "Wait... why is there a jellyfish on your desk?!",
+   "startMs": 650,
+   "endMs": 2977,
+   "words": [
+    {
+     "text": "Wait...",
+     "startMs": 650,
+     "endMs": 1020
+    },
+    {
+     "text": "why",
+     "startMs": 1020,
+     "endMs": 1160
+    },
+    {
+     "text": "is",
+     "startMs": 1160,
+     "endMs": 1270
+    },
+    {
+     "text": "there",
+     "startMs": 1270,
+     "endMs": 1560
+    },
+    {
+     "text": "a",
+     "startMs": 1560,
+     "endMs": 1600
+    },
+    {
+     "text": "jellyfish",
+     "startMs": 1600,
+     "endMs": 2130
+    },
+    {
+     "text": "on",
+     "startMs": 2130,
+     "endMs": 2240
+    },
+    {
+     "text": "your",
+     "startMs": 2240,
+     "endMs": 2490
+    },
+    {
+     "text": "desk?!",
+     "startMs": 2490,
+     "endMs": 2970
+    }
+   ],
+   "loose": [],
+   "take": "roommate"
+  },
+  {
+   "who": "owner",
+   "text": "It's a lamp.",
+   "startMs": 3577,
+   "endMs": 4592,
+   "words": [
+    {
+     "text": "It's",
+     "startMs": 3577,
+     "endMs": 3957
+    },
+    {
+     "text": "a",
+     "startMs": 3957,
+     "endMs": 3977
+    },
+    {
+     "text": "lamp.",
+     "startMs": 3977,
+     "endMs": 4577
+    }
+   ],
+   "loose": []
+  },
+  {
+   "who": "owner",
+   "text": "Meet Medusa. Moving tentacles, colorful light, and you never have to feed it.",
+   "startMs": 5142,
+   "endMs": 11147,
+   "words": [
+    {
+     "text": "Meet",
+     "startMs": 5142,
+     "endMs": 5782
+    },
+    {
+     "text": "Medusa.",
+     "startMs": 5782,
+     "endMs": 6952
+    },
+    {
+     "text": "Moving",
+     "startMs": 6952,
+     "endMs": 7382
+    },
+    {
+     "text": "tentacles,",
+     "startMs": 7382,
+     "endMs": 8202
+    },
+    {
+     "text": "colorful",
+     "startMs": 8202,
+     "endMs": 8772
+    },
+    {
+     "text": "light,",
+     "startMs": 8772,
+     "endMs": 9392
+    },
+    {
+     "text": "and",
+     "startMs": 9392,
+     "endMs": 9582
+    },
+    {
+     "text": "you",
+     "startMs": 9582,
+     "endMs": 9862
+    },
+    {
+     "text": "never",
+     "startMs": 9862,
+     "endMs": 10182
+    },
+    {
+     "text": "have",
+     "startMs": 10182,
+     "endMs": 10442
+    },
+    {
+     "text": "to",
+     "startMs": 10442,
+     "endMs": 10582
+    },
+    {
+     "text": "feed",
+     "startMs": 10582,
+     "endMs": 10832
+    },
+    {
+     "text": "it.",
+     "startMs": 10832,
+     "endMs": 11062
+    }
+   ],
+   "loose": [],
+   "take": "owner"
+  },
+  {
+   "who": "owner",
+   "text": "Shop Zorev. Link in bio.",
+   "startMs": 11497,
+   "endMs": 13631,
+   "words": [
+    {
+     "text": "Shop",
+     "startMs": 11497,
+     "endMs": 11897
+    },
+    {
+     "text": "Zorev.",
+     "startMs": 11897,
+     "endMs": 12717
+    },
+    {
+     "text": "Link",
+     "startMs": 12717,
+     "endMs": 13097
+    },
+    {
+     "text": "in",
+     "startMs": 13097,
+     "endMs": 13287
+    },
+    {
+     "text": "bio.",
+     "startMs": 13287,
+     "endMs": 13577
+    }
+   ],
+   "loose": [],
+   "take": "owner"
+  }
+ ],
+ "takes": {
+  "roommate": {
+   "startSec": 0.0,
+   "endSec": 3.58
+  },
+  "owner": {
+   "startSec": 4.69,
+   "endSec": 15.0
+  }
+ }
+}

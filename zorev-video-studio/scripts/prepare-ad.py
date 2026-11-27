@@ -15,48 +15,11 @@ raw = out / "whisper.json"
 subprocess.run(["node", "scripts/transcribe-local.mjs", take, str(raw)], check=True, capture_output=True)
 heard = [c for c in json.loads(raw.read_text()) if c["text"].strip()]
 
-norm = lambda s: re.sub(r"[^a-z0-9]", "", s.lower())
-words = script.split()
+sys.path.insert(0, str(Path(__file__).parent))
+from align_words import align, norm  # noqa: E402
 
-# Align script and transcript letter by letter, so the captions always show the
-# exact script even where whisper splits, joins or mishears a word
-# ("waterfall", "Lincoln Bio", "flame, like"). Each script word takes its time
-# from the transcript letters it lines up with.
-from difflib import SequenceMatcher
-S, s_word = "", []
-for k, w in enumerate(words):
-    S += norm(w); s_word += [k] * len(norm(w))
-R, r_time = "", []
-for h in heard:
-    n = norm(h["text"])
-    for o in range(len(n)):
-        a = h["startMs"] + (h["endMs"] - h["startMs"]) * o / len(n)
-        b = h["startMs"] + (h["endMs"] - h["startMs"]) * (o + 1) / len(n)
-        r_time.append((a, b))
-    R += n
-s2r = {}
-for blk in SequenceMatcher(None, S, R, autojunk=False).get_matching_blocks():
-    for d in range(blk.size):
-        s2r[blk.a + d] = blk.b + d
-timed, mismatch = [], []
-pos = 0
-for k, w in enumerate(words):
-    span = range(pos, pos + len(norm(w)))
-    pos += len(norm(w))
-    hit = [s2r[c] for c in span if c in s2r]
-    if len(hit) < 0.6 * len(span):
-        mismatch.append(w)
-    timed.append({"text": w, "startMs": round(r_time[hit[0]][0]) if hit else None,
-                  "endMs": round(r_time[hit[-1]][1]) if hit else None})
-# words with no matched letters: share the gap between their neighbours
-for k, w in enumerate(timed):
-    if w["startMs"] is None:
-        prev = next((x["endMs"] for x in reversed(timed[:k]) if x["endMs"] is not None), 0)
-        nxt = next((x["startMs"] for x in timed[k + 1:] if x["startMs"] is not None), prev + 300)
-        w["startMs"], w["endMs"] = prev, max(prev + 1, nxt)
-for a, b in zip(timed, timed[1:]):  # keep word times monotonic
-    b["startMs"] = max(b["startMs"], a["startMs"])
-    b["endMs"] = max(b["endMs"], b["startMs"] + 1)
+words = script.split()
+timed, mismatch = align(words, heard)
 
 # caption segments: sentence -> comma clauses -> balanced chunks of at most 5 words,
 # never ending a chunk on a small function word
