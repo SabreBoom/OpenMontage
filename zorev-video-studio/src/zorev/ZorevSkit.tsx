@@ -228,11 +228,11 @@ export const ZorevSkit: React.FC<{ skit: SkitConfig }> = ({ skit }) => {
           return (talking ? 0.1 : 0.2) * interpolate(f, [0, 6, N - 30, N - 2], [0, 1, 1, 0], clamp);
         }}
       />
-      <Sfx at={punch - 1} src="skit/sfx_boom.wav" volume={0.85} />
-      <Sfx at={cutA - 7} src="skit/sfx_whoosh.wav" volume={0.7} />
-      <Sfx at={toF(deadpan.startMs) - 2} src="skit/sfx_pop.wav" volume={0.5} />
-      <Sfx at={brollIn - 6} src="skit/sfx_whoosh.wav" volume={0.45} />
-      <Sfx at={endCardAt} src="skit/sfx_pop.wav" volume={0.55} />
+      <Sfx at={punch - 1} src="skit/sfx_boom.wav" volume={0.45} />
+      <Sfx at={cutA - 7} src="skit/sfx_whoosh.wav" volume={0.5} />
+      <Sfx at={toF(deadpan.startMs) - 2} src="skit/sfx_pop.wav" volume={0.35} />
+      <Sfx at={brollIn - 6} src="skit/sfx_whoosh.wav" volume={0.35} />
+      <Sfx at={endCardAt} src="skit/sfx_pop.wav" volume={0.4} />
     </AbsoluteFill>
   );
 };

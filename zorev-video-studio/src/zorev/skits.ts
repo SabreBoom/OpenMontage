@@ -18,9 +18,10 @@ export const SKITS: SkitConfig[] = [
     product: product("ZorevMedusa"),
     hook: "POV: your roommate walks in",
     punchWord: "jellyfish",
-    // the closer tentacle shot, then the wider desk shot (Medusa part of the montage, 7.9-11.7 s)
+    // reveal on the warm pink glow; the cutaway on "colorful light" shows the
+    // same lamp later in the clip, after it has shifted to blue/cyan
     reveal: { src: "ads/medusa/detail.mp4", startFromSec: 0.3 },
-    broll: { src: "ads/medusa/demo.mp4", startFromSec: 8.0, fromWord: "Moving", toWord: "and" },
+    broll: { src: "ads/medusa/detail.mp4", startFromSec: 7.0, fromWord: "Moving", toWord: "and" },
     keywords: ["jellyfish", "lamp.", "Medusa.", "feed"],
   },
 ];
