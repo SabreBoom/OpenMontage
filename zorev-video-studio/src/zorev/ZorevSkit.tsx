@@ -43,7 +43,7 @@ const ReactionCam: React.FC<{ src: string; punchFrame: number }> = ({ src, punch
   const { fps } = useVideoConfig();
   const hit = frame >= punchFrame;
   const zoomIn = spring({ frame: frame - punchFrame, fps, config: { damping: 16, stiffness: 320 } });
-  const scale = 1.02 + 0.02 * (frame / Math.max(punchFrame, 1)) + (hit ? 0.3 * zoomIn : 0);
+  const scale = 1.14 + 0.03 * (frame / Math.max(punchFrame, 1)) + (hit ? 0.34 * zoomIn : 0);
   const shake = hit ? interpolate(frame - punchFrame, [0, 3, 24], [16, 9, 2.5], clamp) : 0;
   const sx = (random(`sx${frame}`) - 0.5) * 2 * shake;
   const sy = (random(`sy${frame}`) - 0.5) * 2 * shake;
@@ -121,13 +121,19 @@ const chunkLines = (lines: Line[]): Chunk[] => {
   return out;
 };
 
-const PopCaptions: React.FC<{ chunks: Chunk[]; keywords: string[]; topFromMs: number }> = ({ chunks, keywords, topFromMs }) => {
+const PopCaptions: React.FC<{ chunks: Chunk[]; keywords: string[]; topFromMs: number; cutsMs: number[] }> = ({
+  chunks,
+  keywords,
+  topFromMs,
+  cutsMs,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const ms = (frame / FPS) * 1000;
   const idx = chunks.findIndex((c, i) => {
     const next = chunks[i + 1];
-    const until = next ? Math.min(next.startMs, c.endMs + 450) : c.endMs + 600;
+    const nextCut = cutsMs.find((x) => x >= c.endMs) ?? Infinity; // never carry a caption across a cut
+    const until = Math.min(next ? next.startMs : Infinity, c.endMs + (next ? 450 : 600), nextCut);
     return ms >= c.startMs - 50 && ms < until;
   });
   if (idx < 0) return null;
@@ -206,7 +212,12 @@ export const ZorevSkit: React.FC<{ skit: SkitConfig }> = ({ skit }) => {
         <EndCard ad={skit.product} />
       </Sequence>
 
-      <PopCaptions chunks={chunks} keywords={skit.keywords} topFromMs={cta.startMs - 200} />
+      <PopCaptions
+        chunks={chunks}
+        keywords={skit.keywords}
+        topFromMs={cta.startMs - 200}
+        cutsMs={[cutA, cutB, brollIn, brollOut, endCardAt].map((f) => (f / FPS) * 1000)}
+      />
 
       <Audio src={staticFile(`${dir}/voice.wav`)} />
       <Audio
