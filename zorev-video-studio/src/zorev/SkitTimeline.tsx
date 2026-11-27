@@ -3,7 +3,7 @@
 // Layout follows the cross-platform Reels/TikTok safe band: captions and key
 // visuals stay inside x 180-900 and y 220-1420 so the app UI never covers them.
 import React from "react";
-import { AbsoluteFill, Img, Interactive, Sequence, interpolate, random, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, Img, Interactive, Sequence, interpolate, random, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Audio, Video } from "@remotion/media";
 import type { ProductAd } from "./products";
 import { FPS, fontFamily } from "./ZorevAd";
@@ -91,7 +91,9 @@ const SceneView: React.FC<{ scene: SkitScene }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const dur = toF(scene.to - scene.from);
   const [s0, s1] = scene.push ?? [1, 1];
-  const pull = scene.focusPull ? interpolate(frame, [0, toF(scene.focusPull)], [16, 0], clamp) : 0;
+  const pull = scene.focusPull
+    ? interpolate(frame, [0, toF(scene.focusPull)], [16, 0], { ...clamp, easing: Easing.bezier(0.16, 1, 0.3, 1) })
+    : 0;
   return (
     <AbsoluteFill style={{ backgroundColor: scene.color ?? "#000", overflow: "hidden" }}>
       {scene.src ? (
@@ -100,7 +102,7 @@ const SceneView: React.FC<{ scene: SkitScene }> = ({ scene }) => {
           style={{
             position: "absolute",
             inset: 0,
-            scale: interpolate(frame, [0, dur], [s0, s1], clamp),
+            scale: interpolate(frame, [0, dur], [s0, s1], { ...clamp, easing: Easing.bezier(0.45, 0, 0.55, 1) }),
             transformOrigin: scene.origin ?? "50% 50%",
             filter: `${gradeFilter(scene.grade)} blur(${(scene.blur ?? 0) + pull}px)`,
           }}
@@ -166,6 +168,13 @@ const Caption: React.FC<{ c: SkitCaption; accent: string }> = ({ c, accent }) =>
 // End card inside the safe band: product photo, name, descriptor, CTA, handle.
 const SafeEndCard: React.FC<{ product: ProductAd; headline: string; accent: string }> = ({ product, headline, accent }) => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  // staggered pop-in: photo, then name, descriptor, CTA pill, handle
+  const pop = (delay: number) => spring({ frame: frame - delay, fps, config: { damping: 13, stiffness: 180 } });
+  const item = (delay: number): React.CSSProperties => ({
+    opacity: interpolate(frame - delay, [0, 5], [0, 1], clamp),
+    scale: String(0.86 + 0.14 * pop(delay)),
+  });
   return (
     <AbsoluteFill>
       <AbsoluteFill style={{ backgroundColor: "rgba(8,8,14,0.55)" }} />
@@ -182,12 +191,11 @@ const SafeEndCard: React.FC<{ product: ProductAd; headline: string; accent: stri
           alignItems: "center",
           fontFamily,
           color: "#fff",
-          opacity: interpolate(frame, [0, 8], [0, 1], clamp),
-          translate: interpolate(frame, [0, 10], ["0px 30px", "0px 0px"], clamp),
         }}
       >
         <div
           style={{
+            ...item(0),
             width: 380,
             height: 380,
             borderRadius: 32,
@@ -199,10 +207,11 @@ const SafeEndCard: React.FC<{ product: ProductAd; headline: string; accent: stri
         >
           <Img src={staticFile(product.endcard)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
-        <div style={{ marginTop: 34, fontWeight: 800, fontSize: 96, lineHeight: 1, letterSpacing: 2 }}>{product.name}</div>
-        <div style={{ marginTop: 12, fontWeight: 500, fontSize: 34, color: "rgba(255,255,255,0.9)" }}>{product.descriptor}</div>
+        <div style={{ ...item(4), marginTop: 34, fontWeight: 800, fontSize: 96, lineHeight: 1, letterSpacing: 2 }}>{product.name}</div>
+        <div style={{ ...item(7), marginTop: 12, fontWeight: 500, fontSize: 34, color: "rgba(255,255,255,0.9)" }}>{product.descriptor}</div>
         <div
           style={{
+            ...item(10),
             marginTop: 30,
             backgroundColor: "#fff",
             color: "#16120E",
@@ -215,7 +224,7 @@ const SafeEndCard: React.FC<{ product: ProductAd; headline: string; accent: stri
         >
           Shop now • Link in bio
         </div>
-        <div style={{ marginTop: 22, fontWeight: 700, fontSize: 40, color: accent }}>@zorevhousing</div>
+        <div style={{ ...item(13), marginTop: 22, fontWeight: 700, fontSize: 40, color: accent }}>@zorevhousing</div>
       </Interactive.Div>
     </AbsoluteFill>
   );
