@@ -1,0 +1,59 @@
+{
+ "captions": [
+  {
+   "text": "Wait... why is there a jellyfish on your desk?!",
+   "startMs": 650,
+   "endMs": 2977,
+   "words": [
+    {
+     "text": "Wait...",
+     "startMs": 650,
+     "endMs": 1020
+    },
+    {
+     "text": "why",
+     "startMs": 1020,
+     "endMs": 1160
+    },
+    {
+     "text": "is",
+     "startMs": 1160,
+     "endMs": 1270
+    },
+    {
+     "text": "there",
+     "startMs": 1270,
+     "endMs": 1560
+    },
+    {
+     "text": "a",
+     "startMs": 1560,
+     "endMs": 1600
+    },
+    {
+     "text": "jellyfish",
+     "startMs": 1600,
+     "endMs": 2130
+    },
+    {
+     "text": "on",
+     "startMs": 2130,
+     "endMs": 2240
+    },
+    {
+     "text": "your",
+     "startMs": 2240,
+     "endMs": 2490
+    },
+    {
+     "text": "desk?!",
+     "startMs": 2490,
+     "endMs": 2970
+    }
+   ]
+  }
+ ],
+ "speechEndMs": 2977,
+ "takeStartSec": 0.0,
+ "takeEndSec": 3.58
+}

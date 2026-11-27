@@ -1,0 +1,198 @@
+[
+  {
+    "text": "A",
+    "startMs": 0,
+    "endMs": 290,
+    "timestampMs": 360,
+    "confidence": 0.835316
+  },
+  {
+    "text": " jellyfish-inspired",
+    "startMs": 290,
+    "endMs": 1960,
+    "timestampMs": 620,
+    "confidence": 0.984125
+  },
+  {
+    "text": " glow",
+    "startMs": 1960,
+    "endMs": 2390,
+    "timestampMs": 2120,
+    "confidence": 0.993493
+  },
+  {
+    "text": " for",
+    "startMs": 2390,
+    "endMs": 2680,
+    "timestampMs": 2420,
+    "confidence": 0.989181
+  },
+  {
+    "text": " your",
+    "startMs": 2680,
+    "endMs": 3080,
+    "timestampMs": 2600,
+    "confidence": 0.996594
+  },
+  {
+    "text": " desk.",
+    "startMs": 3080,
+    "endMs": 3600,
+    "timestampMs": 2920,
+    "confidence": 0.99469
+  },
+  {
+    "text": " Medusa",
+    "startMs": 3600,
+    "endMs": 4040,
+    "timestampMs": 3820,
+    "confidence": 0.935875
+  },
+  {
+    "text": " combines",
+    "startMs": 4040,
+    "endMs": 4640,
+    "timestampMs": 4480,
+    "confidence": 0.998772
+  },
+  {
+    "text": " moving",
+    "startMs": 4640,
+    "endMs": 5090,
+    "timestampMs": 5100,
+    "confidence": 0.996075
+  },
+  {
+    "text": " tentacles",
+    "startMs": 5090,
+    "endMs": 5790,
+    "timestampMs": 5420,
+    "confidence": 0.988367
+  },
+  {
+    "text": " and",
+    "startMs": 5790,
+    "endMs": 5990,
+    "timestampMs": 5960,
+    "confidence": 0.912649
+  },
+  {
+    "text": " colorful",
+    "startMs": 5990,
+    "endMs": 6500,
+    "timestampMs": 6260,
+    "confidence": 0.975898
+  },
+  {
+    "text": " light",
+    "startMs": 6500,
+    "endMs": 7000,
+    "timestampMs": 6680,
+    "confidence": 0.945383
+  },
+  {
+    "text": " in",
+    "startMs": 7000,
+    "endMs": 7140,
+    "timestampMs": 7160,
+    "confidence": 0.995995
+  },
+  {
+    "text": " a",
+    "startMs": 7140,
+    "endMs": 7210,
+    "timestampMs": 7240,
+    "confidence": 0.997914
+  },
+  {
+    "text": " lamp",
+    "startMs": 7210,
+    "endMs": 7490,
+    "timestampMs": 7500,
+    "confidence": 0.998877
+  },
+  {
+    "text": " that",
+    "startMs": 7490,
+    "endMs": 7800,
+    "timestampMs": 7740,
+    "confidence": 0.99874
+  },
+  {
+    "text": " gives",
+    "startMs": 7800,
+    "endMs": 8120,
+    "timestampMs": 7960,
+    "confidence": 0.995309
+  },
+  {
+    "text": " your",
+    "startMs": 8120,
+    "endMs": 8400,
+    "timestampMs": 8200,
+    "confidence": 0.989417
+  },
+  {
+    "text": " space",
+    "startMs": 8400,
+    "endMs": 8750,
+    "timestampMs": 8480,
+    "confidence": 0.997997
+  },
+  {
+    "text": " an",
+    "startMs": 8750,
+    "endMs": 8900,
+    "timestampMs": 8760,
+    "confidence": 0.993773
+  },
+  {
+    "text": " underwater",
+    "startMs": 8900,
+    "endMs": 9590,
+    "timestampMs": 9120,
+    "confidence": 0.99574
+  },
+  {
+    "text": " feel.",
+    "startMs": 9590,
+    "endMs": 10100,
+    "timestampMs": 9680,
+    "confidence": 0.981964
+  },
+  {
+    "text": " Shop",
+    "startMs": 10100,
+    "endMs": 10540,
+    "timestampMs": 10560,
+    "confidence": 0.931754
+  },
+  {
+    "text": " Zorev,",
+    "startMs": 10540,
+    "endMs": 11490,
+    "timestampMs": 10780,
+    "confidence": 0.77749
+  },
+  {
+    "text": " link",
+    "startMs": 11490,
+    "endMs": 11750,
+    "timestampMs": 11620,
+    "confidence": 0.708149
+  },
+  {
+    "text": " in",
+    "startMs": 11750,
+    "endMs": 12000,
+    "timestampMs": 11860,
+    "confidence": 0.99186
+  },
+  {
+    "text": " bio.",
+    "startMs": 12000,
+    "endMs": 12400,
+    "timestampMs": 12180,
+    "confidence": 0.803594
+  }
+]

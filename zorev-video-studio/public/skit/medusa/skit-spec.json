@@ -1,0 +1,14 @@
+{
+ "seconds": 15.0,
+ "lead": 0.65,
+ "lines": [
+  {"who": "roommate", "take": "public/voice-test/skit/roommate-s3.wav", "text": "Wait... why is there a jellyfish on your desk?!"},
+  {"who": "owner", "take": "public/voice-test/skit/lamp-s2.wav", "text": "It's a lamp.", "pause": 0.6},
+  {"who": "owner", "take": "public/voice-test/skit/owner-s1.wav", "text": "Meet Medusa. Moving tentacles, colorful light, and you never have to feed it.", "pause": 0.55},
+  {"who": "owner", "take": "public/voice-test/cta/m4.wav", "text": "Shop Zorev. Link in bio.", "pause": 0.35}
+ ],
+ "takes": {
+  "roommate": {"lines": [0], "pre": 0.65, "post": 0.6},
+  "owner": {"lines": [2, 3], "pre": 0.45, "to_end": true}
+ }
+}

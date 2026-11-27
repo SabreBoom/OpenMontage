@@ -1,0 +1,205 @@
+{
+ "key": "nova",
+ "hookEndMs": 2420,
+ "splitMs": 5200,
+ "ctaStartMs": 8960,
+ "speechEndMs": 12160,
+ "captions": [
+  {
+   "text": "Give your ceiling",
+   "startMs": 180,
+   "endMs": 1210,
+   "words": [
+    {
+     "text": "Give",
+     "startMs": 180,
+     "endMs": 320
+    },
+    {
+     "text": "your",
+     "startMs": 320,
+     "endMs": 640
+    },
+    {
+     "text": "ceiling",
+     "startMs": 640,
+     "endMs": 1210
+    }
+   ]
+  },
+  {
+   "text": "a different view.",
+   "startMs": 1210,
+   "endMs": 2460,
+   "words": [
+    {
+     "text": "a",
+     "startMs": 1210,
+     "endMs": 1360
+    },
+    {
+     "text": "different",
+     "startMs": 1360,
+     "endMs": 2230
+    },
+    {
+     "text": "view.",
+     "startMs": 2230,
+     "endMs": 2460
+    }
+   ]
+  },
+  {
+   "text": "Nova brings space scenes",
+   "startMs": 2460,
+   "endMs": 4040,
+   "words": [
+    {
+     "text": "Nova",
+     "startMs": 2460,
+     "endMs": 2760
+    },
+    {
+     "text": "brings",
+     "startMs": 2760,
+     "endMs": 3210
+    },
+    {
+     "text": "space",
+     "startMs": 3210,
+     "endMs": 3580
+    },
+    {
+     "text": "scenes",
+     "startMs": 3580,
+     "endMs": 4040
+    }
+   ]
+  },
+  {
+   "text": "into your room,",
+   "startMs": 4040,
+   "endMs": 5260,
+   "words": [
+    {
+     "text": "into",
+     "startMs": 4040,
+     "endMs": 4440
+    },
+    {
+     "text": "your",
+     "startMs": 4440,
+     "endMs": 4840
+    },
+    {
+     "text": "room,",
+     "startMs": 4840,
+     "endMs": 5260
+    }
+   ]
+  },
+  {
+   "text": "with adjustable focus to help",
+   "startMs": 5260,
+   "endMs": 7180,
+   "words": [
+    {
+     "text": "with",
+     "startMs": 5260,
+     "endMs": 5560
+    },
+    {
+     "text": "adjustable",
+     "startMs": 5560,
+     "endMs": 6260
+    },
+    {
+     "text": "focus",
+     "startMs": 6260,
+     "endMs": 6760
+    },
+    {
+     "text": "to",
+     "startMs": 6760,
+     "endMs": 6820
+    },
+    {
+     "text": "help",
+     "startMs": 6820,
+     "endMs": 7180
+    }
+   ]
+  },
+  {
+   "text": "you find the right look.",
+   "startMs": 7180,
+   "endMs": 9160,
+   "words": [
+    {
+     "text": "you",
+     "startMs": 7180,
+     "endMs": 7450
+    },
+    {
+     "text": "find",
+     "startMs": 7450,
+     "endMs": 7810
+    },
+    {
+     "text": "the",
+     "startMs": 7810,
+     "endMs": 8080
+    },
+    {
+     "text": "right",
+     "startMs": 8080,
+     "endMs": 8510
+    },
+    {
+     "text": "look.",
+     "startMs": 8510,
+     "endMs": 9160
+    }
+   ]
+  },
+  {
+   "text": "Shop Zorev.",
+   "startMs": 9160,
+   "endMs": 11050,
+   "words": [
+    {
+     "text": "Shop",
+     "startMs": 9160,
+     "endMs": 9900
+    },
+    {
+     "text": "Zorev.",
+     "startMs": 9900,
+     "endMs": 11050
+    }
+   ]
+  },
+  {
+   "text": "Link in bio.",
+   "startMs": 11050,
+   "endMs": 12160,
+   "words": [
+    {
+     "text": "Link",
+     "startMs": 11050,
+     "endMs": 11480
+    },
+    {
+     "text": "in",
+     "startMs": 11480,
+     "endMs": 11680
+    },
+    {
+     "text": "bio.",
+     "startMs": 11680,
+     "endMs": 12160
+    }
+   ]
+  }
+ ]
+}

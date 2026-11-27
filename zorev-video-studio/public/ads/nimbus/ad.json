@@ -1,0 +1,205 @@
+{
+ "key": "nimbus",
+ "hookEndMs": 2960,
+ "splitMs": 6360,
+ "ctaStartMs": 10040,
+ "speechEndMs": 12520,
+ "captions": [
+  {
+   "text": "A little rain,",
+   "startMs": 0,
+   "endMs": 920,
+   "words": [
+    {
+     "text": "A",
+     "startMs": 0,
+     "endMs": 290
+    },
+    {
+     "text": "little",
+     "startMs": 290,
+     "endMs": 590
+    },
+    {
+     "text": "rain,",
+     "startMs": 590,
+     "endMs": 920
+    }
+   ]
+  },
+  {
+   "text": "right on your nightstand.",
+   "startMs": 920,
+   "endMs": 3000,
+   "words": [
+    {
+     "text": "right",
+     "startMs": 920,
+     "endMs": 1460
+    },
+    {
+     "text": "on",
+     "startMs": 1460,
+     "endMs": 1520
+    },
+    {
+     "text": "your",
+     "startMs": 1520,
+     "endMs": 1880
+    },
+    {
+     "text": "nightstand.",
+     "startMs": 1880,
+     "endMs": 3000
+    }
+   ]
+  },
+  {
+   "text": "Nimbus brings falling droplets",
+   "startMs": 3000,
+   "endMs": 4750,
+   "words": [
+    {
+     "text": "Nimbus",
+     "startMs": 3000,
+     "endMs": 3460
+    },
+    {
+     "text": "brings",
+     "startMs": 3460,
+     "endMs": 3720
+    },
+    {
+     "text": "falling",
+     "startMs": 3720,
+     "endMs": 4180
+    },
+    {
+     "text": "droplets",
+     "startMs": 4180,
+     "endMs": 4750
+    }
+   ]
+  },
+  {
+   "text": "and a soft glow",
+   "startMs": 4750,
+   "endMs": 6000,
+   "words": [
+    {
+     "text": "and",
+     "startMs": 4750,
+     "endMs": 4880
+    },
+    {
+     "text": "a",
+     "startMs": 4880,
+     "endMs": 4960
+    },
+    {
+     "text": "soft",
+     "startMs": 4960,
+     "endMs": 5390
+    },
+    {
+     "text": "glow",
+     "startMs": 5390,
+     "endMs": 6000
+    }
+   ]
+  },
+  {
+   "text": "into one cloud-shaped centerpiece.",
+   "startMs": 6000,
+   "endMs": 8720,
+   "words": [
+    {
+     "text": "into",
+     "startMs": 6000,
+     "endMs": 6160
+    },
+    {
+     "text": "one",
+     "startMs": 6160,
+     "endMs": 6420
+    },
+    {
+     "text": "cloud-shaped",
+     "startMs": 6420,
+     "endMs": 7460
+    },
+    {
+     "text": "centerpiece.",
+     "startMs": 7460,
+     "endMs": 8720
+    }
+   ]
+  },
+  {
+   "text": "Watch the water fall.",
+   "startMs": 8720,
+   "endMs": 10240,
+   "words": [
+    {
+     "text": "Watch",
+     "startMs": 8720,
+     "endMs": 9100
+    },
+    {
+     "text": "the",
+     "startMs": 9100,
+     "endMs": 9320
+    },
+    {
+     "text": "water",
+     "startMs": 9320,
+     "endMs": 9831
+    },
+    {
+     "text": "fall.",
+     "startMs": 9831,
+     "endMs": 10240
+    }
+   ]
+  },
+  {
+   "text": "Shop Zorev.",
+   "startMs": 10240,
+   "endMs": 11470,
+   "words": [
+    {
+     "text": "Shop",
+     "startMs": 10240,
+     "endMs": 10680
+    },
+    {
+     "text": "Zorev.",
+     "startMs": 10680,
+     "endMs": 11470
+    }
+   ]
+  },
+  {
+   "text": "Link in bio.",
+   "startMs": 11470,
+   "endMs": 12520,
+   "words": [
+    {
+     "text": "Link",
+     "startMs": 11470,
+     "endMs": 11890
+    },
+    {
+     "text": "in",
+     "startMs": 11890,
+     "endMs": 12110
+    },
+    {
+     "text": "bio.",
+     "startMs": 12110,
+     "endMs": 12520
+    }
+   ]
+  }
+ ]
+}
